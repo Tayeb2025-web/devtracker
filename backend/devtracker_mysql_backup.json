@@ -1,0 +1,2235 @@
+{
+  "exported_at": "2026-08-14T17:51:51.531Z",
+  "data": {
+    "achievements": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "badge_key": "first_session",
+        "badge_name": "First Study Session",
+        "badge_description": "Complete your first study session",
+        "badge_icon": "rocket",
+        "unlocked_at": "2026-07-11 21:56:40"
+      },
+      {
+        "id": "10",
+        "user_id": "1",
+        "badge_key": "node_beginner",
+        "badge_name": "Node Beginner",
+        "badge_description": "Study Node.js for 10+ hours",
+        "badge_icon": "nodejs",
+        "unlocked_at": "2026-07-15 12:52:51"
+      },
+      {
+        "id": "24",
+        "user_id": "1",
+        "badge_key": "streak_7",
+        "badge_name": "7 Days Streak",
+        "badge_description": "Study for 7 consecutive days",
+        "badge_icon": "fire",
+        "unlocked_at": "2026-07-18 12:19:35"
+      },
+      {
+        "id": "111",
+        "user_id": "1",
+        "badge_key": "hours_100",
+        "badge_name": "100 Hours",
+        "badge_description": "Reach 100 total study hours",
+        "badge_icon": "clock",
+        "unlocked_at": "2026-08-12 19:27:13"
+      }
+    ],
+    "auth_sessions": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "token_hash": "9a806c59225d09193b5961330bb5abc15bea69d947cce156e4e3137e548a4ee5",
+        "expires_at": "2026-08-14 22:52:01",
+        "created_at": "2026-07-15 18:22:01"
+      },
+      {
+        "id": "2",
+        "user_id": "1",
+        "token_hash": "fd2523c69737513f6284b5a22343111e75ea96768522b3c51985fe411e5644c7",
+        "expires_at": "2026-08-15 14:00:33",
+        "created_at": "2026-07-16 09:30:33"
+      },
+      {
+        "id": "3",
+        "user_id": "1",
+        "token_hash": "2cb86108aa5bcde38cdc70d38cf8013d57e41ee0abf9073041eab143f687e354",
+        "expires_at": "2026-08-15 17:02:29",
+        "created_at": "2026-07-16 12:32:29"
+      },
+      {
+        "id": "4",
+        "user_id": "1",
+        "token_hash": "387baca4564a0cb7ca5a67c408308159f794aa270e9ccb412834b597f6af004e",
+        "expires_at": "2026-08-15 22:36:06",
+        "created_at": "2026-07-16 18:06:06"
+      },
+      {
+        "id": "5",
+        "user_id": "1",
+        "token_hash": "7346ddc889c2e1c585464e3af528ff7917f6a290058ee9142f99d568b312e7be",
+        "expires_at": "2026-08-16 09:49:51",
+        "created_at": "2026-07-17 05:19:51"
+      },
+      {
+        "id": "6",
+        "user_id": "1",
+        "token_hash": "4b5af8cd8da42eec523baef88076536e534d976290bf387c106e7d09b47c81b9",
+        "expires_at": "2026-08-17 09:52:54",
+        "created_at": "2026-07-18 05:22:54"
+      },
+      {
+        "id": "7",
+        "user_id": "1",
+        "token_hash": "f20d1fe4b6e5ab9488cdf2082a1582cb959e440e4c088b9f11404cd4e8d86c42",
+        "expires_at": "2026-08-17 22:05:42",
+        "created_at": "2026-07-18 17:35:42"
+      },
+      {
+        "id": "8",
+        "user_id": "1",
+        "token_hash": "8578cf53c9da904d8e7958743ff4f83e6c11a16bbf04c9ae4da1b4f25ee6bde5",
+        "expires_at": "2026-08-18 15:50:19",
+        "created_at": "2026-07-19 11:20:19"
+      },
+      {
+        "id": "9",
+        "user_id": "1",
+        "token_hash": "8489e1e94d4d62e9c61ed799d1aae3dc7157d605a670e04b5c17dd9f446a05ba",
+        "expires_at": "2026-08-19 13:11:06",
+        "created_at": "2026-07-20 08:41:06"
+      },
+      {
+        "id": "10",
+        "user_id": "1",
+        "token_hash": "66eb68881808c7d69b28101acab366942bd4ab3e8261459c413572cae69b6238",
+        "expires_at": "2026-08-20 15:41:39",
+        "created_at": "2026-07-21 11:11:39"
+      },
+      {
+        "id": "11",
+        "user_id": "1",
+        "token_hash": "f65d9178a07de4e68a18e212a71f2e50c36b2fba326c0673b7126d597b4c393a",
+        "expires_at": "2026-08-21 23:04:24",
+        "created_at": "2026-07-22 18:34:24"
+      },
+      {
+        "id": "12",
+        "user_id": "1",
+        "token_hash": "9e775591027290aa52ad4a5bddfaa92686bd504acaf2a4a6112ee8851369dd70",
+        "expires_at": "2026-08-22 09:22:01",
+        "created_at": "2026-07-23 04:52:01"
+      },
+      {
+        "id": "13",
+        "user_id": "1",
+        "token_hash": "51f2c4fdde0764cbe4acf084992435620b8883b560864580bc2f16f1870cce03",
+        "expires_at": "2026-08-23 21:44:57",
+        "created_at": "2026-07-24 17:14:57"
+      },
+      {
+        "id": "14",
+        "user_id": "1",
+        "token_hash": "e79975ce0277e85a1887c8eb6c108acfa09759b59ec1fbab52f940fbb7260bd2",
+        "expires_at": "2026-08-24 12:54:04",
+        "created_at": "2026-07-25 08:24:04"
+      },
+      {
+        "id": "15",
+        "user_id": "1",
+        "token_hash": "0b0ed22c50100ea7cdd50f7ac987c72ad10d880c166408daf1c2ecb0e0323839",
+        "expires_at": "2026-08-26 02:59:38",
+        "created_at": "2026-07-26 22:29:38"
+      },
+      {
+        "id": "16",
+        "user_id": "1",
+        "token_hash": "a4f84c26c2d53cdd9a2b5c2b099a6f3a5604d5ae9cd0dfd3ba60ac556a3f6a65",
+        "expires_at": "2026-08-29 00:21:39",
+        "created_at": "2026-07-29 19:51:39"
+      },
+      {
+        "id": "17",
+        "user_id": "1",
+        "token_hash": "7e0b8944a75e952aeda69cfb777b2f12adb3835e6e57627bbcb7bc4bc73a41b0",
+        "expires_at": "2026-08-29 05:38:38",
+        "created_at": "2026-07-30 01:08:38"
+      },
+      {
+        "id": "18",
+        "user_id": "1",
+        "token_hash": "35bfa8feb4d9c3bfc8462e7346d992cf593337eb0c967fb5de64472a4b2df096",
+        "expires_at": "2026-08-29 21:56:42",
+        "created_at": "2026-07-30 17:26:42"
+      },
+      {
+        "id": "19",
+        "user_id": "1",
+        "token_hash": "12a2ce508f05a141d3cc172e8985e977074143864b5a1c56b14647f57110c021",
+        "expires_at": "2026-09-04 20:37:30",
+        "created_at": "2026-08-05 16:07:30"
+      },
+      {
+        "id": "22",
+        "user_id": "1",
+        "token_hash": "d9d53805c5caceeaa665a684a5e5a9f66b40c07337c1ff4462e42e860bb3db70",
+        "expires_at": "2026-09-05 13:03:44",
+        "created_at": "2026-08-06 08:33:44"
+      },
+      {
+        "id": "23",
+        "user_id": "1",
+        "token_hash": "34f22502d654ef8ae2a1f42e0d16234c51a8c6cf4f7249e7795f09fce1919aba",
+        "expires_at": "2026-09-05 21:03:01",
+        "created_at": "2026-08-06 16:33:01"
+      },
+      {
+        "id": "24",
+        "user_id": "1",
+        "token_hash": "0b6c1a25b21649e7825eff1a02e8b1cd470d80067d71704a98b7e185a35488ae",
+        "expires_at": "2026-09-11 14:45:57",
+        "created_at": "2026-08-12 10:15:57"
+      },
+      {
+        "id": "25",
+        "user_id": "1",
+        "token_hash": "b35473f18b9719d67becf1306e369e60375dd9a3c0204adf0b8c3af750370e65",
+        "expires_at": "2026-09-12 09:18:39",
+        "created_at": "2026-08-13 04:48:39"
+      },
+      {
+        "id": "26",
+        "user_id": "1",
+        "token_hash": "c201c19afd3c0da2a749346cdc434a9b83f2d81644ee752390482542818ff4c7",
+        "expires_at": "2026-09-12 17:52:21",
+        "created_at": "2026-08-13 13:22:21"
+      },
+      {
+        "id": "27",
+        "user_id": "1",
+        "token_hash": "c699e0cea62b976bb9c9658005e9be9cfcabb2b2ff1140ccf284193d91ee58b1",
+        "expires_at": "2026-09-13 00:47:55",
+        "created_at": "2026-08-13 20:17:55"
+      },
+      {
+        "id": "28",
+        "user_id": "1",
+        "token_hash": "a2e18928eadea7c88d1199794fb85b33a6b8adec3a13f43770eb996582e8febf",
+        "expires_at": "2026-09-13 09:49:39",
+        "created_at": "2026-08-14 05:19:39"
+      },
+      {
+        "id": "29",
+        "user_id": "1",
+        "token_hash": "e1a1830675f149008870c58de5fb62c02900ebce54764e5ddf8cfc1310730005",
+        "expires_at": "2026-09-13 16:22:56",
+        "created_at": "2026-08-14 11:52:56"
+      }
+    ],
+    "challenges": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "challenge_key": "30_days",
+        "challenge_name": "30 Days Challenge",
+        "challenge_description": "Study every day for 30 days",
+        "target_value": "30",
+        "current_value": "2",
+        "unit": "days",
+        "status": "active",
+        "started_at": "2026-07-13 17:36:08",
+        "completed_at": null
+      },
+      {
+        "id": "2",
+        "user_id": "1",
+        "challenge_key": "100_hours",
+        "challenge_name": "100 Hours Challenge",
+        "challenge_description": "Complete 100 hours of study",
+        "target_value": "100",
+        "current_value": "106",
+        "unit": "hours",
+        "status": "completed",
+        "started_at": "2026-07-13 17:36:08",
+        "completed_at": null
+      },
+      {
+        "id": "3",
+        "user_id": "1",
+        "challenge_key": "365_days",
+        "challenge_name": "365 Days Challenge",
+        "challenge_description": "Study every day for a full year",
+        "target_value": "365",
+        "current_value": "2",
+        "unit": "days",
+        "status": "active",
+        "started_at": "2026-07-13 17:36:08",
+        "completed_at": null
+      }
+    ],
+    "competitive_leagues": [
+      {
+        "id": "1",
+        "season_start": "2026-07-18",
+        "season_end": "2026-07-24",
+        "tier": "Bronze",
+        "group_number": "1",
+        "max_members": "30",
+        "created_at": "2026-07-20 10:06:14"
+      },
+      {
+        "id": "3",
+        "season_start": "2026-08-08",
+        "season_end": "2026-08-14",
+        "tier": "Bronze",
+        "group_number": "1",
+        "max_members": "30",
+        "created_at": "2026-08-13 20:20:39"
+      }
+    ],
+    "daily_goals": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "target_hours": "10.00",
+        "effective_date": null,
+        "created_at": "2026-07-11 08:51:28",
+        "updated_at": "2026-07-11 08:51:28"
+      },
+      {
+        "id": "2",
+        "user_id": "1",
+        "target_hours": "10.00",
+        "effective_date": null,
+        "created_at": "2026-07-13 17:33:21",
+        "updated_at": "2026-07-13 17:33:21"
+      },
+      {
+        "id": "3",
+        "user_id": "1",
+        "target_hours": "10.00",
+        "effective_date": null,
+        "created_at": "2026-07-13 17:36:08",
+        "updated_at": "2026-07-13 17:36:08"
+      },
+      {
+        "id": "4",
+        "user_id": "1",
+        "target_hours": "10.00",
+        "effective_date": null,
+        "created_at": "2026-07-13 21:22:57",
+        "updated_at": "2026-07-13 21:22:57"
+      },
+      {
+        "id": "5",
+        "user_id": "1",
+        "target_hours": "10.00",
+        "effective_date": null,
+        "created_at": "2026-07-15 18:06:49",
+        "updated_at": "2026-07-15 18:06:49"
+      }
+    ],
+    "daily_notes": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "note_date": "2026-07-12",
+        "content": "this is the first version of app by cursor and gpt 5.6",
+        "productivity_score": null,
+        "created_at": "2026-07-11 21:52:02",
+        "updated_at": "2026-07-11 21:52:02"
+      },
+      {
+        "id": "2",
+        "user_id": "1",
+        "note_date": "2026-07-14",
+        "content": "8nxMulvvmxK5BdtHnthis is the password when hosting mysql that site gave me",
+        "productivity_score": null,
+        "created_at": "2026-07-13 21:08:58",
+        "updated_at": "2026-07-14 06:02:39"
+      }
+    ],
+    "league_memberships": [
+      {
+        "league_id": "1",
+        "user_id": "1",
+        "season_start": "2026-07-18",
+        "joined_at": "2026-07-20 10:06:14"
+      },
+      {
+        "league_id": "3",
+        "user_id": "1",
+        "season_start": "2026-08-08",
+        "joined_at": "2026-08-13 20:20:39"
+      }
+    ],
+    "league_messages": [
+      {
+        "id": "1",
+        "league_id": "1",
+        "sender_id": "1",
+        "body": "hi there",
+        "created_at": "2026-07-20 10:06:44"
+      }
+    ],
+    "levels": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "current_level": "5",
+        "current_xp": "664",
+        "total_xp": "10664",
+        "xp_to_next_level": "5000",
+        "updated_at": "2026-08-13 19:18:06"
+      }
+    ],
+    "projects": [
+      {
+        "id": "2",
+        "user_id": "1",
+        "name": "Gemify - Haleem",
+        "color": "#F59E0B",
+        "description": "After finishing the node js course we are going to ask haleem sahib to define us the gemify project.nand we will do it all by ourself and give report to him by these:n1) react n2) tailwindn3) node jsn4) mysql/mangodb",
+        "total_hours": "0.00",
+        "created_at": "2026-07-25 16:38:56",
+        "updated_at": "2026-07-25 16:38:56"
+      },
+      {
+        "id": "3",
+        "user_id": "1",
+        "name": "Sarafi_php_(recreating of galaxy one)",
+        "color": "#06B6D4",
+        "description": "We have make a simple sarafi app by php but that was all by ourself.nthis time we will remake the one like T.Masih gave us by these:nFrontend -> HTML CSS Tailwind JS Jquery nBackend -> PhpnSource -> that zip file and source code of Sarafi appnHelper -> AI brah",
+        "total_hours": "0.00",
+        "created_at": "2026-07-25 16:49:37",
+        "updated_at": "2026-07-25 16:49:37"
+      },
+      {
+        "id": "4",
+        "user_id": "1",
+        "name": "Sarafi_React+laravel",
+        "color": "#06B6D4",
+        "description": "The same app with this technologies more features",
+        "total_hours": "0.00",
+        "created_at": "2026-07-25 16:50:51",
+        "updated_at": "2026-07-25 16:50:51"
+      },
+      {
+        "id": "5",
+        "user_id": "1",
+        "name": "Sarafi_react+node",
+        "color": "#06B6D4",
+        "description": null,
+        "total_hours": "0.00",
+        "created_at": "2026-07-25 16:51:11",
+        "updated_at": "2026-07-25 16:51:11"
+      },
+      {
+        "id": "6",
+        "user_id": "1",
+        "name": "Sarafi_full_next",
+        "color": "#06B6D4",
+        "description": null,
+        "total_hours": "0.00",
+        "created_at": "2026-07-25 16:51:38",
+        "updated_at": "2026-07-25 16:51:38"
+      },
+      {
+        "id": "7",
+        "user_id": "1",
+        "name": "Sarafi_next+laravel+tailwind (last dance)",
+        "color": "#8B5CF6",
+        "description": null,
+        "total_hours": "0.00",
+        "created_at": "2026-07-25 16:52:41",
+        "updated_at": "2026-07-25 16:52:41"
+      },
+      {
+        "id": "8",
+        "user_id": "1",
+        "name": "The last project of next js course from milad bahrami",
+        "color": "#EF4444",
+        "description": null,
+        "total_hours": "0.00",
+        "created_at": "2026-07-25 19:41:58",
+        "updated_at": "2026-07-25 19:41:58"
+      },
+      {
+        "id": "9",
+        "user_id": "1",
+        "name": "my personal portfolio website by next js",
+        "color": "#8B5CF6",
+        "description": null,
+        "total_hours": "0.00",
+        "created_at": "2026-07-25 19:42:24",
+        "updated_at": "2026-07-25 19:42:24"
+      },
+      {
+        "id": "10",
+        "user_id": "1",
+        "name": "Great Stack - Restaurant Booking",
+        "color": "#EF4444",
+        "description": "Building & Deploying Full Stack Multi Restaurant Booking Platform | MERN Stack Projectn-> 5 hours videonstart day -> 1405/5/9nthis cancelled cause the frontend was ready and by typescriptnmaybe later we will do it",
+        "total_hours": "0.00",
+        "created_at": "2026-07-31 15:34:58",
+        "updated_at": "2026-07-31 17:04:09"
+      },
+      {
+        "id": "11",
+        "user_id": "1",
+        "name": "Great Stack: E-commerce website",
+        "color": "#22C55E",
+        "description": "This is the very first full stack web project of mine.nStarting at 1405/5/9nMern Stackn13 hours video nvideo link: nhttps://youtu.be/7E6um7NGmeE?si=NQC6vuLDVseQwTly",
+        "total_hours": "28.43",
+        "created_at": "2026-07-31 17:07:11",
+        "updated_at": "2026-08-10 02:26:22"
+      },
+      {
+        "id": "12",
+        "user_id": "1",
+        "name": "Telegram Bot",
+        "color": "#8B5CF6",
+        "description": "node js _ milad bahrami",
+        "total_hours": "0.00",
+        "created_at": "2026-08-04 15:14:49",
+        "updated_at": "2026-08-04 15:14:49"
+      },
+      {
+        "id": "13",
+        "user_id": "1",
+        "name": "Portfolio Website",
+        "color": "#EF4444",
+        "description": "3 hour portfolio website react jsnhttps://youtu.be/4ag1LsgIUc0?si=aEVyI_ROvaqle0pp",
+        "total_hours": "0.00",
+        "created_at": "2026-08-09 19:55:27",
+        "updated_at": "2026-08-09 19:55:27"
+      },
+      {
+        "id": "14",
+        "user_id": "1",
+        "name": "MY_Gemify",
+        "color": "#F59E0B",
+        "description": "Start -> 1405/5/21",
+        "total_hours": "8.69",
+        "created_at": "2026-08-12 10:17:01",
+        "updated_at": "2026-08-13 19:18:06"
+      }
+    ],
+    "streaks": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "current_streak": "2",
+        "longest_streak": "8",
+        "last_study_date": "2026-08-13",
+        "updated_at": "2026-08-13 19:18:06"
+      }
+    ],
+    "study_sessions": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "technology_id": "1",
+        "project_id": null,
+        "session_date": "2026-07-12",
+        "start_time": "02:23:20",
+        "end_time": "02:26:40",
+        "duration_minutes": "1",
+        "duration_hours": "0.0167",
+        "note": "this is for react",
+        "created_at": "2026-07-11 21:56:40",
+        "updated_at": "2026-07-11 21:56:40"
+      },
+      {
+        "id": "2",
+        "user_id": "1",
+        "technology_id": "1",
+        "project_id": null,
+        "session_date": "2026-07-12",
+        "start_time": "14:49:05",
+        "end_time": "18:33:58",
+        "duration_minutes": "224",
+        "duration_hours": "3.7333",
+        "note": "react last project - freinds",
+        "created_at": "2026-07-12 14:03:58",
+        "updated_at": "2026-07-12 14:03:58"
+      },
+      {
+        "id": "3",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-12",
+        "start_time": "21:29:54",
+        "end_time": "22:30:25",
+        "duration_minutes": "60",
+        "duration_hours": "1.0000",
+        "note": "this is the node starting date:n# 1405/4/21 یکشنبهn- Milad Bahramin- Spot playern- 11 فصلn- 230 videos",
+        "created_at": "2026-07-12 18:00:25",
+        "updated_at": "2026-07-12 18:00:25"
+      },
+      {
+        "id": "4",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-12",
+        "start_time": "23:47:10",
+        "end_time": "01:41:28",
+        "duration_minutes": "98",
+        "duration_hours": "1.6333",
+        "note": "chatgpt node",
+        "created_at": "2026-07-12 21:11:28",
+        "updated_at": "2026-07-12 21:11:28"
+      },
+      {
+        "id": "5",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-13",
+        "start_time": "16:22:42",
+        "end_time": "17:36:23",
+        "duration_minutes": "72",
+        "duration_hours": "1.2000",
+        "note": "this is day 2 pomodro 1 node js",
+        "created_at": "2026-07-13 13:06:23",
+        "updated_at": "2026-07-13 13:06:23"
+      },
+      {
+        "id": "6",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-13",
+        "start_time": "18:45:55",
+        "end_time": "19:46:33",
+        "duration_minutes": "60",
+        "duration_hours": "1.0000",
+        "note": "pomodro 2",
+        "created_at": "2026-07-13 15:16:33",
+        "updated_at": "2026-07-13 15:16:33"
+      },
+      {
+        "id": "7",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-13",
+        "start_time": "19:49:41",
+        "end_time": "22:08:45",
+        "duration_minutes": "22",
+        "duration_hours": "0.3667",
+        "note": "node again",
+        "created_at": "2026-07-13 17:38:45",
+        "updated_at": "2026-07-13 17:38:45"
+      },
+      {
+        "id": "8",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-14",
+        "start_time": "16:40:04",
+        "end_time": "23:38:47",
+        "duration_minutes": "261",
+        "duration_hours": "4.3500",
+        "note": "lets see how much we can go through this nchallenge 1",
+        "created_at": "2026-07-14 19:08:47",
+        "updated_at": "2026-07-14 19:08:47"
+      },
+      {
+        "id": "9",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-15",
+        "start_time": "11:18:33",
+        "end_time": "17:22:51",
+        "duration_minutes": "153",
+        "duration_hours": "2.5500",
+        "note": "this is the second node challenge:nhow much can you stick todaynstart of express milad",
+        "created_at": "2026-07-15 12:52:51",
+        "updated_at": "2026-07-15 12:52:51"
+      },
+      {
+        "id": "10",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-15",
+        "start_time": "23:08:08",
+        "end_time": "02:18:24",
+        "duration_minutes": "73",
+        "duration_hours": "1.2167",
+        "note": "node brah the season 8",
+        "created_at": "2026-07-15 21:48:24",
+        "updated_at": "2026-07-15 21:48:24"
+      },
+      {
+        "id": "11",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-16",
+        "start_time": "14:02:27",
+        "end_time": "16:23:05",
+        "duration_minutes": "140",
+        "duration_hours": "2.3333",
+        "note": "node day 5 - P1",
+        "created_at": "2026-07-16 11:53:05",
+        "updated_at": "2026-07-16 11:53:05"
+      },
+      {
+        "id": "12",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-16",
+        "start_time": "22:58:51",
+        "end_time": "02:55:29",
+        "duration_minutes": "161",
+        "duration_hours": "2.6833",
+        "note": "day 5 node",
+        "created_at": "2026-07-16 22:25:29",
+        "updated_at": "2026-07-16 22:25:29"
+      },
+      {
+        "id": "13",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-17",
+        "start_time": "09:51:02",
+        "end_time": "12:24:54",
+        "duration_minutes": "112",
+        "duration_hours": "1.8667",
+        "note": "challenge 1: 3 straight hours",
+        "created_at": "2026-07-17 07:54:54",
+        "updated_at": "2026-07-17 07:54:54"
+      },
+      {
+        "id": "14",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-17",
+        "start_time": "12:38:16",
+        "end_time": "14:02:14",
+        "duration_minutes": "83",
+        "duration_hours": "1.3833",
+        "note": "the chapter 10: one straight session (20 vid)",
+        "created_at": "2026-07-17 09:32:14",
+        "updated_at": "2026-07-17 09:32:14"
+      },
+      {
+        "id": "15",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-17",
+        "start_time": "17:15:14",
+        "end_time": "18:16:09",
+        "duration_minutes": "60",
+        "duration_hours": "1.0000",
+        "note": "the auth chapter",
+        "created_at": "2026-07-17 13:46:09",
+        "updated_at": "2026-07-17 13:46:09"
+      },
+      {
+        "id": "16",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-18",
+        "start_time": "14:42:07",
+        "end_time": "16:49:34",
+        "duration_minutes": "120",
+        "duration_hours": "2.0000",
+        "note": "روز هفتم نود جی اس",
+        "created_at": "2026-07-18 12:19:35",
+        "updated_at": "2026-07-18 12:19:35"
+      },
+      {
+        "id": "18",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-22",
+        "start_time": "11:24:29",
+        "end_time": "14:45:08",
+        "duration_minutes": "148",
+        "duration_hours": "2.4667",
+        "note": "the last node milad",
+        "created_at": "2026-07-22 10:15:08",
+        "updated_at": "2026-07-22 10:15:08"
+      },
+      {
+        "id": "19",
+        "user_id": "1",
+        "technology_id": "6",
+        "project_id": null,
+        "session_date": "2026-07-23",
+        "start_time": "09:22:45",
+        "end_time": "14:34:47",
+        "duration_minutes": "202",
+        "duration_hours": "3.3667",
+        "note": "all the 20 videos of opencode in one session",
+        "created_at": "2026-07-23 10:04:47",
+        "updated_at": "2026-07-23 10:04:47"
+      },
+      {
+        "id": "20",
+        "user_id": "1",
+        "technology_id": "6",
+        "project_id": null,
+        "session_date": "2026-07-23",
+        "start_time": "15:12:15",
+        "end_time": "15:55:08",
+        "duration_minutes": "26",
+        "duration_hours": "0.4333",
+        "note": "w3School reviewn",
+        "created_at": "2026-07-23 11:25:08",
+        "updated_at": "2026-07-23 11:25:08"
+      },
+      {
+        "id": "21",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-23",
+        "start_time": "19:03:16",
+        "end_time": "23:53:49",
+        "duration_minutes": "230",
+        "duration_hours": "3.8333",
+        "note": "node js opencode 50 videos",
+        "created_at": "2026-07-23 19:23:49",
+        "updated_at": "2026-07-23 19:23:49"
+      },
+      {
+        "id": "22",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-24",
+        "start_time": "21:45:40",
+        "end_time": "23:46:48",
+        "duration_minutes": "120",
+        "duration_hours": "2.0000",
+        "note": "node js open code last sessiob 30 to 50",
+        "created_at": "2026-07-24 19:16:48",
+        "updated_at": "2026-07-24 19:16:48"
+      },
+      {
+        "id": "23",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-24",
+        "start_time": "23:47:09",
+        "end_time": "23:59:30",
+        "duration_minutes": "11",
+        "duration_hours": "0.1833",
+        "note": "random guy",
+        "created_at": "2026-07-24 19:29:30",
+        "updated_at": "2026-07-24 19:29:30"
+      },
+      {
+        "id": "24",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-25",
+        "start_time": "13:29:40",
+        "end_time": "15:17:42",
+        "duration_minutes": "88",
+        "duration_hours": "1.4667",
+        "note": "sarvinstyle1",
+        "created_at": "2026-07-25 10:47:42",
+        "updated_at": "2026-07-25 10:47:42"
+      },
+      {
+        "id": "25",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-25",
+        "start_time": "15:51:39",
+        "end_time": "16:42:33",
+        "duration_minutes": "45",
+        "duration_hours": "0.7500",
+        "note": "sarvin2",
+        "created_at": "2026-07-25 12:12:33",
+        "updated_at": "2026-07-25 12:12:33"
+      },
+      {
+        "id": "26",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-25",
+        "start_time": "20:44:34",
+        "end_time": "23:08:56",
+        "duration_minutes": "91",
+        "duration_hours": "1.5167",
+        "note": "sarvin 3",
+        "created_at": "2026-07-25 18:38:56",
+        "updated_at": "2026-07-25 18:38:56"
+      },
+      {
+        "id": "27",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-26",
+        "start_time": "00:12:49",
+        "end_time": "01:02:58",
+        "duration_minutes": "50",
+        "duration_hours": "0.8333",
+        "note": "mosh 1",
+        "created_at": "2026-07-25 20:32:58",
+        "updated_at": "2026-07-25 20:32:58"
+      },
+      {
+        "id": "28",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-26",
+        "start_time": "11:53:43",
+        "end_time": "16:27:22",
+        "duration_minutes": "180",
+        "duration_hours": "3.0000",
+        "note": "mosh 2",
+        "created_at": "2026-07-26 11:57:22",
+        "updated_at": "2026-07-26 11:57:22"
+      },
+      {
+        "id": "29",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-26",
+        "start_time": "16:29:07",
+        "end_time": "20:54:22",
+        "duration_minutes": "240",
+        "duration_hours": "4.0000",
+        "note": "mosh 3",
+        "created_at": "2026-07-26 16:24:22",
+        "updated_at": "2026-07-26 16:24:22"
+      },
+      {
+        "id": "30",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-26",
+        "start_time": "20:55:56",
+        "end_time": "23:24:06",
+        "duration_minutes": "105",
+        "duration_hours": "1.7500",
+        "note": "mosh4",
+        "created_at": "2026-07-26 18:54:06",
+        "updated_at": "2026-07-26 18:54:06"
+      },
+      {
+        "id": "31",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-27",
+        "start_time": "03:02:22",
+        "end_time": "08:30:59",
+        "duration_minutes": "143",
+        "duration_hours": "2.3833",
+        "note": "mosh 5",
+        "created_at": "2026-07-27 04:00:59",
+        "updated_at": "2026-07-27 04:00:59"
+      },
+      {
+        "id": "32",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-27",
+        "start_time": "09:06:14",
+        "end_time": "09:50:00",
+        "duration_minutes": "43",
+        "duration_hours": "0.7167",
+        "note": "mosh 6",
+        "created_at": "2026-07-27 05:20:00",
+        "updated_at": "2026-07-27 05:20:00"
+      },
+      {
+        "id": "33",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-28",
+        "start_time": "09:49:56",
+        "end_time": "15:23:52",
+        "duration_minutes": "149",
+        "duration_hours": "2.4833",
+        "note": "mosh 7",
+        "created_at": "2026-07-28 10:53:52",
+        "updated_at": "2026-07-28 10:53:52"
+      },
+      {
+        "id": "34",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-28",
+        "start_time": "14:23:14",
+        "end_time": "15:21:54",
+        "duration_minutes": "21",
+        "duration_hours": "0.3500",
+        "note": "mosh randomy",
+        "created_at": "2026-07-28 10:51:54",
+        "updated_at": "2026-07-28 10:51:54"
+      },
+      {
+        "id": "35",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-29",
+        "start_time": "12:39:13",
+        "end_time": "14:05:02",
+        "duration_minutes": "85",
+        "duration_hours": "1.4167",
+        "note": "mosh 8",
+        "created_at": "2026-07-29 09:35:02",
+        "updated_at": "2026-07-29 09:35:02"
+      },
+      {
+        "id": "36",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-29",
+        "start_time": "14:20:16",
+        "end_time": "18:19:17",
+        "duration_minutes": "196",
+        "duration_hours": "3.2667",
+        "note": "node mosh 9",
+        "created_at": "2026-07-29 13:49:17",
+        "updated_at": "2026-07-29 13:49:17"
+      },
+      {
+        "id": "37",
+        "user_id": "1",
+        "technology_id": "3",
+        "project_id": null,
+        "session_date": "2026-07-29",
+        "start_time": "22:05:25",
+        "end_time": "23:56:46",
+        "duration_minutes": "107",
+        "duration_hours": "1.7833",
+        "note": "mosh 10",
+        "created_at": "2026-07-29 19:26:46",
+        "updated_at": "2026-07-29 19:26:46"
+      },
+      {
+        "id": "38",
+        "user_id": "1",
+        "technology_id": "12",
+        "project_id": null,
+        "session_date": "2026-07-31",
+        "start_time": "12:23:52",
+        "end_time": "13:06:33",
+        "duration_minutes": "42",
+        "duration_hours": "0.7000",
+        "note": "VIP Sina 1",
+        "created_at": "2026-07-31 08:36:33",
+        "updated_at": "2026-07-31 08:36:33"
+      },
+      {
+        "id": "39",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "11",
+        "session_date": "2026-07-31",
+        "start_time": "21:38:10",
+        "end_time": "23:54:28",
+        "duration_minutes": "60",
+        "duration_hours": "1.0000",
+        "note": "GS E_com 1: starting the project",
+        "created_at": "2026-07-31 19:24:29",
+        "updated_at": "2026-07-31 19:24:29"
+      },
+      {
+        "id": "40",
+        "user_id": "1",
+        "technology_id": "12",
+        "project_id": null,
+        "session_date": "2026-08-01",
+        "start_time": "10:06:25",
+        "end_time": "11:06:25",
+        "duration_minutes": "60",
+        "duration_hours": "1.0000",
+        "note": "day 2 Sina Vip : 1hour",
+        "created_at": "2026-08-01 06:36:25",
+        "updated_at": "2026-08-01 06:36:25"
+      },
+      {
+        "id": "41",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "11",
+        "session_date": "2026-08-01",
+        "start_time": "12:13:42",
+        "end_time": "13:57:26",
+        "duration_minutes": "94",
+        "duration_hours": "1.5667",
+        "note": "GS: E-comm -> day 2",
+        "created_at": "2026-08-01 09:27:26",
+        "updated_at": "2026-08-01 09:27:26"
+      },
+      {
+        "id": "42",
+        "user_id": "1",
+        "technology_id": "12",
+        "project_id": null,
+        "session_date": "2026-08-01",
+        "start_time": "13:57:45",
+        "end_time": "14:30:03",
+        "duration_minutes": "31",
+        "duration_hours": "0.5167",
+        "note": "sina",
+        "created_at": "2026-08-01 10:00:03",
+        "updated_at": "2026-08-01 10:00:03"
+      },
+      {
+        "id": "44",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "11",
+        "session_date": "2026-08-01",
+        "start_time": "15:40:48",
+        "end_time": "16:41:20",
+        "duration_minutes": "60",
+        "duration_hours": "1.0000",
+        "note": "E-Comm 3",
+        "created_at": "2026-08-01 12:11:20",
+        "updated_at": "2026-08-01 12:11:20"
+      },
+      {
+        "id": "45",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "11",
+        "session_date": "2026-08-01",
+        "start_time": "22:35:24",
+        "end_time": "23:35:55",
+        "duration_minutes": "60",
+        "duration_hours": "1.0000",
+        "note": "day 2: last session",
+        "created_at": "2026-08-01 19:05:55",
+        "updated_at": "2026-08-01 19:05:55"
+      },
+      {
+        "id": "46",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "11",
+        "session_date": "2026-08-02",
+        "start_time": "14:44:09",
+        "end_time": "22:55:49",
+        "duration_minutes": "284",
+        "duration_hours": "4.7333",
+        "note": "this is new record",
+        "created_at": "2026-08-02 18:25:49",
+        "updated_at": "2026-08-02 18:25:49"
+      },
+      {
+        "id": "47",
+        "user_id": "1",
+        "technology_id": "12",
+        "project_id": null,
+        "session_date": "2026-08-02",
+        "start_time": "22:57:21",
+        "end_time": "23:30:32",
+        "duration_minutes": "31",
+        "duration_hours": "0.5167",
+        "note": "sina day 3",
+        "created_at": "2026-08-02 19:00:32",
+        "updated_at": "2026-08-02 19:00:32"
+      },
+      {
+        "id": "48",
+        "user_id": "1",
+        "technology_id": "13",
+        "project_id": "11",
+        "session_date": "2026-08-03",
+        "start_time": "10:40:13",
+        "end_time": "21:30:48",
+        "duration_minutes": "102",
+        "duration_hours": "1.7000",
+        "note": "this is day 4 GS: E-com",
+        "created_at": "2026-08-03 17:00:48",
+        "updated_at": "2026-08-03 17:00:48"
+      },
+      {
+        "id": "49",
+        "user_id": "1",
+        "technology_id": "13",
+        "project_id": "11",
+        "session_date": "2026-08-04",
+        "start_time": "15:15:44",
+        "end_time": "21:53:07",
+        "duration_minutes": "237",
+        "duration_hours": "3.9500",
+        "note": "day 5 of the E - Com",
+        "created_at": "2026-08-04 17:23:07",
+        "updated_at": "2026-08-04 17:23:07"
+      },
+      {
+        "id": "50",
+        "user_id": "1",
+        "technology_id": "12",
+        "project_id": null,
+        "session_date": "2026-08-04",
+        "start_time": "22:14:36",
+        "end_time": "22:29:53",
+        "duration_minutes": "15",
+        "duration_hours": "0.2500",
+        "note": "sina",
+        "created_at": "2026-08-04 17:59:53",
+        "updated_at": "2026-08-04 17:59:53"
+      },
+      {
+        "id": "51",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "11",
+        "session_date": "2026-08-05",
+        "start_time": "11:58:28",
+        "end_time": "22:49:30",
+        "duration_minutes": "132",
+        "duration_hours": "2.2000",
+        "note": "day 6 E-Comm",
+        "created_at": "2026-08-05 18:19:31",
+        "updated_at": "2026-08-05 18:19:31"
+      },
+      {
+        "id": "52",
+        "user_id": "1",
+        "technology_id": "12",
+        "project_id": null,
+        "session_date": "2026-08-08",
+        "start_time": "20:58:15",
+        "end_time": "21:14:35",
+        "duration_minutes": "12",
+        "duration_hours": "0.2000",
+        "note": "sina",
+        "created_at": "2026-08-08 16:44:36",
+        "updated_at": "2026-08-08 16:44:36"
+      },
+      {
+        "id": "53",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "11",
+        "session_date": "2026-08-08",
+        "start_time": "21:15:00",
+        "end_time": "23:12:34",
+        "duration_minutes": "81",
+        "duration_hours": "1.3500",
+        "note": "day 9 E-Com",
+        "created_at": "2026-08-08 18:42:34",
+        "updated_at": "2026-08-08 18:42:34"
+      },
+      {
+        "id": "54",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "11",
+        "session_date": "2026-08-09",
+        "start_time": "19:39:43",
+        "end_time": "23:59:08",
+        "duration_minutes": "230",
+        "duration_hours": "3.8333",
+        "note": "day 10 E-com project",
+        "created_at": "2026-08-09 19:29:09",
+        "updated_at": "2026-08-09 19:29:09"
+      },
+      {
+        "id": "55",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "11",
+        "session_date": "2026-08-10",
+        "start_time": "00:49:43",
+        "end_time": "06:56:22",
+        "duration_minutes": "366",
+        "duration_hours": "6.1000",
+        "note": "last day Ecom 6 hours straight",
+        "created_at": "2026-08-10 02:26:22",
+        "updated_at": "2026-08-10 02:26:22"
+      },
+      {
+        "id": "56",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "14",
+        "session_date": "2026-08-12",
+        "start_time": "14:47:46",
+        "end_time": "23:57:12",
+        "duration_minutes": "319",
+        "duration_hours": "5.3167",
+        "note": "Project: MY_Gemify day 1",
+        "created_at": "2026-08-12 19:27:13",
+        "updated_at": "2026-08-12 19:27:13"
+      },
+      {
+        "id": "57",
+        "user_id": "1",
+        "technology_id": null,
+        "project_id": "14",
+        "session_date": "2026-08-13",
+        "start_time": "17:52:55",
+        "end_time": "23:48:04",
+        "duration_minutes": "202",
+        "duration_hours": "3.3667",
+        "note": "day 2 gemify",
+        "created_at": "2026-08-13 19:18:06",
+        "updated_at": "2026-08-13 19:18:06"
+      }
+    ],
+    "technologies": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "name": "React",
+        "color": "#61DAFB",
+        "icon": "react",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "3.75",
+        "created_at": "2026-07-11 08:51:28",
+        "updated_at": "2026-07-13 21:49:08"
+      },
+      {
+        "id": "2",
+        "user_id": "1",
+        "name": "Next.js",
+        "color": "#000000",
+        "icon": "nextjs",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "0.00",
+        "created_at": "2026-07-11 08:51:28",
+        "updated_at": "2026-07-13 17:47:33"
+      },
+      {
+        "id": "3",
+        "user_id": "1",
+        "name": "Node.js",
+        "color": "#339933",
+        "icon": "nodejs",
+        "custom_icon": null,
+        "category_id": "2",
+        "total_hours": "58.78",
+        "created_at": "2026-07-11 08:51:28",
+        "updated_at": "2026-08-01 11:09:56"
+      },
+      {
+        "id": "5",
+        "user_id": "1",
+        "name": "Tailwind",
+        "color": "#06B6D4",
+        "icon": "tailwind",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "0.00",
+        "created_at": "2026-07-11 08:51:28",
+        "updated_at": "2026-07-13 17:47:43"
+      },
+      {
+        "id": "6",
+        "user_id": "1",
+        "name": "TypeScript",
+        "color": "#3178C6",
+        "icon": "typescript",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "3.80",
+        "created_at": "2026-07-11 08:51:28",
+        "updated_at": "2026-07-23 11:25:08"
+      },
+      {
+        "id": "9",
+        "user_id": "1",
+        "name": "DSA",
+        "color": "#FF6B6B",
+        "icon": "dsa",
+        "custom_icon": null,
+        "category_id": "5",
+        "total_hours": "0.00",
+        "created_at": "2026-07-11 08:51:28",
+        "updated_at": "2026-07-13 21:06:58"
+      },
+      {
+        "id": "11",
+        "user_id": "1",
+        "name": "UI UX",
+        "color": "#22C55E",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "0.00",
+        "created_at": "2026-07-11 21:50:26",
+        "updated_at": "2026-07-25 09:38:23"
+      },
+      {
+        "id": "12",
+        "user_id": "1",
+        "name": "Wordpress",
+        "color": "#3B82F6",
+        "icon": "wordpress",
+        "custom_icon": null,
+        "category_id": "3",
+        "total_hours": "3.19",
+        "created_at": "2026-07-12 10:46:30",
+        "updated_at": "2026-08-08 16:44:36"
+      },
+      {
+        "id": "13",
+        "user_id": "1",
+        "name": "Claude King By Mosh",
+        "color": "#F59E0B",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "4",
+        "total_hours": "0.00",
+        "created_at": "2026-07-12 14:40:43",
+        "updated_at": "2026-08-04 17:27:48"
+      },
+      {
+        "id": "18",
+        "user_id": "1",
+        "name": "Laravel",
+        "color": "#EF4444",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "2",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:00:05",
+        "updated_at": "2026-07-24 19:43:49"
+      },
+      {
+        "id": "26",
+        "user_id": "1",
+        "name": "PHP",
+        "color": "#3B82F6",
+        "icon": "php",
+        "custom_icon": null,
+        "category_id": "2",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:41:47",
+        "updated_at": "2026-07-25 09:38:17"
+      },
+      {
+        "id": "27",
+        "user_id": "1",
+        "name": "JavaScript",
+        "color": "#F59E0B",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:42:51",
+        "updated_at": "2026-07-25 09:38:01"
+      },
+      {
+        "id": "28",
+        "user_id": "1",
+        "name": "CSS",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:43:05",
+        "updated_at": "2026-07-25 09:38:11"
+      },
+      {
+        "id": "29",
+        "user_id": "1",
+        "name": "HTML",
+        "color": "#EF4444",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:43:15",
+        "updated_at": "2026-07-25 09:38:07"
+      },
+      {
+        "id": "31",
+        "user_id": "1",
+        "name": "SEO",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "3",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:43:58",
+        "updated_at": "2026-07-13 21:43:58"
+      },
+      {
+        "id": "32",
+        "user_id": "1",
+        "name": "Plugin Development [JS/PHP]",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "3",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:44:49",
+        "updated_at": "2026-07-13 21:45:08"
+      },
+      {
+        "id": "33",
+        "user_id": "1",
+        "name": "Site Speed",
+        "color": "#EC4899",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "3",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:45:48",
+        "updated_at": "2026-07-13 21:45:48"
+      },
+      {
+        "id": "34",
+        "user_id": "1",
+        "name": "Site Security",
+        "color": "#8B5CF6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "3",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:46:16",
+        "updated_at": "2026-07-13 21:46:16"
+      },
+      {
+        "id": "35",
+        "user_id": "1",
+        "name": "System design",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "5",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:50:10",
+        "updated_at": "2026-07-13 21:50:10"
+      },
+      {
+        "id": "36",
+        "user_id": "1",
+        "name": "Design Patterns",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "5",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:50:20",
+        "updated_at": "2026-07-13 21:50:20"
+      },
+      {
+        "id": "37",
+        "user_id": "1",
+        "name": "Clean Code",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "5",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:50:35",
+        "updated_at": "2026-07-13 21:50:35"
+      },
+      {
+        "id": "38",
+        "user_id": "1",
+        "name": "System Architecture",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "5",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 21:50:45",
+        "updated_at": "2026-07-13 21:50:58"
+      },
+      {
+        "id": "39",
+        "user_id": "1",
+        "name": "n8n",
+        "color": "#22C55E",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "6",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 22:08:53",
+        "updated_at": "2026-07-14 10:46:23"
+      },
+      {
+        "id": "40",
+        "user_id": "1",
+        "name": "telegram bot",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "6",
+        "total_hours": "0.00",
+        "created_at": "2026-07-13 22:09:06",
+        "updated_at": "2026-07-13 22:09:06"
+      },
+      {
+        "id": "43",
+        "user_id": "1",
+        "name": "SASS",
+        "color": "#EC4899",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "0.00",
+        "created_at": "2026-07-14 19:10:36",
+        "updated_at": "2026-07-14 19:10:36"
+      },
+      {
+        "id": "44",
+        "user_id": "1",
+        "name": "Docker",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "2",
+        "total_hours": "0.00",
+        "created_at": "2026-07-14 19:12:05",
+        "updated_at": "2026-07-14 19:12:05"
+      },
+      {
+        "id": "45",
+        "user_id": "1",
+        "name": "Framer Motion",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "1",
+        "total_hours": "0.00",
+        "created_at": "2026-07-14 19:12:36",
+        "updated_at": "2026-07-14 19:12:36"
+      },
+      {
+        "id": "50",
+        "user_id": "1",
+        "name": "Regex",
+        "color": "#8B5CF6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "7",
+        "total_hours": "0.00",
+        "created_at": "2026-07-17 07:59:20",
+        "updated_at": "2026-07-17 07:59:41"
+      },
+      {
+        "id": "51",
+        "user_id": "1",
+        "name": "Git/ Github",
+        "color": "#3B82F6",
+        "icon": "code",
+        "custom_icon": null,
+        "category_id": "7",
+        "total_hours": "0.00",
+        "created_at": "2026-07-17 07:59:31",
+        "updated_at": "2026-07-17 07:59:31"
+      }
+    ],
+    "technology_categories": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "name": "Frontend",
+        "color": "#3B82F6",
+        "sort_order": "0",
+        "created_at": "2026-07-13 17:46:39",
+        "updated_at": "2026-07-13 21:25:26"
+      },
+      {
+        "id": "2",
+        "user_id": "1",
+        "name": "Backend",
+        "color": "#3B82F6",
+        "sort_order": "1",
+        "created_at": "2026-07-13 17:47:58",
+        "updated_at": "2026-07-13 21:25:26"
+      },
+      {
+        "id": "3",
+        "user_id": "1",
+        "name": "Wordpress",
+        "color": "#61DAFB",
+        "sort_order": "3",
+        "created_at": "2026-07-13 21:04:13",
+        "updated_at": "2026-07-13 22:10:04"
+      },
+      {
+        "id": "4",
+        "user_id": "1",
+        "name": "Ai For Coding | Agentic Code",
+        "color": "#3B82F6",
+        "sort_order": "2",
+        "created_at": "2026-07-13 21:05:36",
+        "updated_at": "2026-07-13 22:10:04"
+      },
+      {
+        "id": "5",
+        "user_id": "1",
+        "name": "Software Engineer 🙂",
+        "color": "#EC4899",
+        "sort_order": "5",
+        "created_at": "2026-07-13 21:06:51",
+        "updated_at": "2026-07-13 22:09:49"
+      },
+      {
+        "id": "6",
+        "user_id": "1",
+        "name": "Automations",
+        "color": "#3B82F6",
+        "sort_order": "4",
+        "created_at": "2026-07-13 22:08:26",
+        "updated_at": "2026-07-13 22:09:49"
+      },
+      {
+        "id": "7",
+        "user_id": "1",
+        "name": "Web _ Sides",
+        "color": "#F59E0B",
+        "sort_order": "6",
+        "created_at": "2026-07-17 07:59:05",
+        "updated_at": "2026-07-17 08:00:08"
+      }
+    ],
+    "users": [
+      {
+        "id": "1",
+        "username": "tayeb",
+        "email": "sayedtayebpuya2024@gmail.com",
+        "password_hash": "7d47914f92007d4352e775c69d555811:c43623d3af4948faf8aa982499854e1cddf97639251492c14f9a9e46a4a1f61c6ae24745580c34ca9c1ad9ab9c8be8734c8946f90e0d4558fc0592de7bc66d7e",
+        "display_name": "Tayeb",
+        "avatar_url": "/images/profile.jpg",
+        "bio": null,
+        "is_profile_public": "1",
+        "allow_direct_messages": "everyone",
+        "theme": "dark",
+        "notification_enabled": "1",
+        "notification_time": "09:00:00",
+        "created_at": "2026-07-11 08:51:28",
+        "updated_at": "2026-08-13 22:23:24"
+      }
+    ],
+    "xp_history": [
+      {
+        "id": "1",
+        "user_id": "1",
+        "session_id": "1",
+        "xp_amount": "2",
+        "source": "study",
+        "description": "Earned 2 XP from study session",
+        "created_at": "2026-07-11 21:56:40"
+      },
+      {
+        "id": "2",
+        "user_id": "1",
+        "session_id": "2",
+        "xp_amount": "373",
+        "source": "study",
+        "description": "Earned 373 XP from study session",
+        "created_at": "2026-07-12 14:03:58"
+      },
+      {
+        "id": "3",
+        "user_id": "1",
+        "session_id": "3",
+        "xp_amount": "100",
+        "source": "study",
+        "description": "Earned 100 XP from study session",
+        "created_at": "2026-07-12 18:00:25"
+      },
+      {
+        "id": "4",
+        "user_id": "1",
+        "session_id": "4",
+        "xp_amount": "163",
+        "source": "study",
+        "description": "Earned 163 XP from study session",
+        "created_at": "2026-07-12 21:11:28"
+      },
+      {
+        "id": "5",
+        "user_id": "1",
+        "session_id": "5",
+        "xp_amount": "120",
+        "source": "study",
+        "description": "Earned 120 XP from study session",
+        "created_at": "2026-07-13 13:06:23"
+      },
+      {
+        "id": "6",
+        "user_id": "1",
+        "session_id": "6",
+        "xp_amount": "100",
+        "source": "study",
+        "description": "Earned 100 XP from study session",
+        "created_at": "2026-07-13 15:16:33"
+      },
+      {
+        "id": "7",
+        "user_id": "1",
+        "session_id": "7",
+        "xp_amount": "37",
+        "source": "study",
+        "description": "Earned 37 XP from study session",
+        "created_at": "2026-07-13 17:38:45"
+      },
+      {
+        "id": "8",
+        "user_id": "1",
+        "session_id": "8",
+        "xp_amount": "435",
+        "source": "study",
+        "description": "Earned 435 XP from study session",
+        "created_at": "2026-07-14 19:08:47"
+      },
+      {
+        "id": "9",
+        "user_id": "1",
+        "session_id": "9",
+        "xp_amount": "255",
+        "source": "study",
+        "description": "Earned 255 XP from study session",
+        "created_at": "2026-07-15 12:52:51"
+      },
+      {
+        "id": "10",
+        "user_id": "1",
+        "session_id": "10",
+        "xp_amount": "122",
+        "source": "study",
+        "description": "Earned 122 XP from study session",
+        "created_at": "2026-07-15 21:48:24"
+      },
+      {
+        "id": "11",
+        "user_id": "1",
+        "session_id": "11",
+        "xp_amount": "233",
+        "source": "study",
+        "description": "Earned 233 XP from study session",
+        "created_at": "2026-07-16 11:53:05"
+      },
+      {
+        "id": "12",
+        "user_id": "1",
+        "session_id": "12",
+        "xp_amount": "268",
+        "source": "study",
+        "description": "Earned 268 XP from study session",
+        "created_at": "2026-07-16 22:25:29"
+      },
+      {
+        "id": "13",
+        "user_id": "1",
+        "session_id": "13",
+        "xp_amount": "187",
+        "source": "study",
+        "description": "Earned 187 XP from study session",
+        "created_at": "2026-07-17 07:54:54"
+      },
+      {
+        "id": "14",
+        "user_id": "1",
+        "session_id": "14",
+        "xp_amount": "138",
+        "source": "study",
+        "description": "Earned 138 XP from study session",
+        "created_at": "2026-07-17 09:32:14"
+      },
+      {
+        "id": "15",
+        "user_id": "1",
+        "session_id": "15",
+        "xp_amount": "100",
+        "source": "study",
+        "description": "Earned 100 XP from study session",
+        "created_at": "2026-07-17 13:46:09"
+      },
+      {
+        "id": "16",
+        "user_id": "1",
+        "session_id": "16",
+        "xp_amount": "200",
+        "source": "study",
+        "description": "Earned 200 XP from study session",
+        "created_at": "2026-07-18 12:19:35"
+      },
+      {
+        "id": "18",
+        "user_id": "1",
+        "session_id": "18",
+        "xp_amount": "247",
+        "source": "study",
+        "description": "Earned 247 XP from study session",
+        "created_at": "2026-07-22 10:15:08"
+      },
+      {
+        "id": "19",
+        "user_id": "1",
+        "session_id": "19",
+        "xp_amount": "337",
+        "source": "study",
+        "description": "Earned 337 XP from study session",
+        "created_at": "2026-07-23 10:04:48"
+      },
+      {
+        "id": "20",
+        "user_id": "1",
+        "session_id": "20",
+        "xp_amount": "43",
+        "source": "study",
+        "description": "Earned 43 XP from study session",
+        "created_at": "2026-07-23 11:25:08"
+      },
+      {
+        "id": "21",
+        "user_id": "1",
+        "session_id": "21",
+        "xp_amount": "383",
+        "source": "study",
+        "description": "Earned 383 XP from study session",
+        "created_at": "2026-07-23 19:23:49"
+      },
+      {
+        "id": "22",
+        "user_id": "1",
+        "session_id": "22",
+        "xp_amount": "200",
+        "source": "study",
+        "description": "Earned 200 XP from study session",
+        "created_at": "2026-07-24 19:16:49"
+      },
+      {
+        "id": "23",
+        "user_id": "1",
+        "session_id": "23",
+        "xp_amount": "18",
+        "source": "study",
+        "description": "Earned 18 XP from study session",
+        "created_at": "2026-07-24 19:29:30"
+      },
+      {
+        "id": "24",
+        "user_id": "1",
+        "session_id": "24",
+        "xp_amount": "147",
+        "source": "study",
+        "description": "Earned 147 XP from study session",
+        "created_at": "2026-07-25 10:47:42"
+      },
+      {
+        "id": "25",
+        "user_id": "1",
+        "session_id": "25",
+        "xp_amount": "75",
+        "source": "study",
+        "description": "Earned 75 XP from study session",
+        "created_at": "2026-07-25 12:12:33"
+      },
+      {
+        "id": "26",
+        "user_id": "1",
+        "session_id": "26",
+        "xp_amount": "152",
+        "source": "study",
+        "description": "Earned 152 XP from study session",
+        "created_at": "2026-07-25 18:38:56"
+      },
+      {
+        "id": "27",
+        "user_id": "1",
+        "session_id": "27",
+        "xp_amount": "83",
+        "source": "study",
+        "description": "Earned 83 XP from study session",
+        "created_at": "2026-07-25 20:32:58"
+      },
+      {
+        "id": "28",
+        "user_id": "1",
+        "session_id": "28",
+        "xp_amount": "300",
+        "source": "study",
+        "description": "Earned 300 XP from study session",
+        "created_at": "2026-07-26 11:57:22"
+      },
+      {
+        "id": "29",
+        "user_id": "1",
+        "session_id": "29",
+        "xp_amount": "400",
+        "source": "study",
+        "description": "Earned 400 XP from study session",
+        "created_at": "2026-07-26 16:24:22"
+      },
+      {
+        "id": "30",
+        "user_id": "1",
+        "session_id": "30",
+        "xp_amount": "175",
+        "source": "study",
+        "description": "Earned 175 XP from study session",
+        "created_at": "2026-07-26 18:54:06"
+      },
+      {
+        "id": "31",
+        "user_id": "1",
+        "session_id": "31",
+        "xp_amount": "238",
+        "source": "study",
+        "description": "Earned 238 XP from study session",
+        "created_at": "2026-07-27 04:00:59"
+      },
+      {
+        "id": "32",
+        "user_id": "1",
+        "session_id": "32",
+        "xp_amount": "72",
+        "source": "study",
+        "description": "Earned 72 XP from study session",
+        "created_at": "2026-07-27 05:20:00"
+      },
+      {
+        "id": "33",
+        "user_id": "1",
+        "session_id": "33",
+        "xp_amount": "248",
+        "source": "study",
+        "description": "Earned 248 XP from study session",
+        "created_at": "2026-07-28 10:53:52"
+      },
+      {
+        "id": "34",
+        "user_id": "1",
+        "session_id": "34",
+        "xp_amount": "35",
+        "source": "study",
+        "description": "Earned 35 XP from study session",
+        "created_at": "2026-07-28 10:51:54"
+      },
+      {
+        "id": "35",
+        "user_id": "1",
+        "session_id": "35",
+        "xp_amount": "142",
+        "source": "study",
+        "description": "Earned 142 XP from study session",
+        "created_at": "2026-07-29 09:35:02"
+      },
+      {
+        "id": "36",
+        "user_id": "1",
+        "session_id": "36",
+        "xp_amount": "327",
+        "source": "study",
+        "description": "Earned 327 XP from study session",
+        "created_at": "2026-07-29 13:49:17"
+      },
+      {
+        "id": "37",
+        "user_id": "1",
+        "session_id": "37",
+        "xp_amount": "178",
+        "source": "study",
+        "description": "Earned 178 XP from study session",
+        "created_at": "2026-07-29 19:26:46"
+      },
+      {
+        "id": "38",
+        "user_id": "1",
+        "session_id": "38",
+        "xp_amount": "70",
+        "source": "study",
+        "description": "Earned 70 XP from study session",
+        "created_at": "2026-07-31 08:36:34"
+      },
+      {
+        "id": "39",
+        "user_id": "1",
+        "session_id": "39",
+        "xp_amount": "100",
+        "source": "study",
+        "description": "Earned 100 XP from study session",
+        "created_at": "2026-07-31 19:24:29"
+      },
+      {
+        "id": "40",
+        "user_id": "1",
+        "session_id": "40",
+        "xp_amount": "100",
+        "source": "study",
+        "description": "Earned 100 XP from study session",
+        "created_at": "2026-08-01 06:36:25"
+      },
+      {
+        "id": "41",
+        "user_id": "1",
+        "session_id": "41",
+        "xp_amount": "157",
+        "source": "study",
+        "description": "Earned 157 XP from study session",
+        "created_at": "2026-08-01 09:27:26"
+      },
+      {
+        "id": "42",
+        "user_id": "1",
+        "session_id": "42",
+        "xp_amount": "52",
+        "source": "study",
+        "description": "Earned 52 XP from study session",
+        "created_at": "2026-08-01 10:00:03"
+      },
+      {
+        "id": "44",
+        "user_id": "1",
+        "session_id": "44",
+        "xp_amount": "100",
+        "source": "study",
+        "description": "Earned 100 XP from study session",
+        "created_at": "2026-08-01 12:11:20"
+      },
+      {
+        "id": "45",
+        "user_id": "1",
+        "session_id": "45",
+        "xp_amount": "100",
+        "source": "study",
+        "description": "Earned 100 XP from study session",
+        "created_at": "2026-08-01 19:05:55"
+      },
+      {
+        "id": "46",
+        "user_id": "1",
+        "session_id": "46",
+        "xp_amount": "473",
+        "source": "study",
+        "description": "Earned 473 XP from study session",
+        "created_at": "2026-08-02 18:25:49"
+      },
+      {
+        "id": "47",
+        "user_id": "1",
+        "session_id": "47",
+        "xp_amount": "52",
+        "source": "study",
+        "description": "Earned 52 XP from study session",
+        "created_at": "2026-08-02 19:00:32"
+      },
+      {
+        "id": "48",
+        "user_id": "1",
+        "session_id": "48",
+        "xp_amount": "170",
+        "source": "study",
+        "description": "Earned 170 XP from study session",
+        "created_at": "2026-08-03 17:00:48"
+      },
+      {
+        "id": "49",
+        "user_id": "1",
+        "session_id": "49",
+        "xp_amount": "395",
+        "source": "study",
+        "description": "Earned 395 XP from study session",
+        "created_at": "2026-08-04 17:23:07"
+      },
+      {
+        "id": "50",
+        "user_id": "1",
+        "session_id": "50",
+        "xp_amount": "25",
+        "source": "study",
+        "description": "Earned 25 XP from study session",
+        "created_at": "2026-08-04 17:59:53"
+      },
+      {
+        "id": "51",
+        "user_id": "1",
+        "session_id": "51",
+        "xp_amount": "220",
+        "source": "study",
+        "description": "Earned 220 XP from study session",
+        "created_at": "2026-08-05 18:19:31"
+      },
+      {
+        "id": "52",
+        "user_id": "1",
+        "session_id": "52",
+        "xp_amount": "20",
+        "source": "study",
+        "description": "Earned 20 XP from study session",
+        "created_at": "2026-08-08 16:44:36"
+      },
+      {
+        "id": "53",
+        "user_id": "1",
+        "session_id": "53",
+        "xp_amount": "135",
+        "source": "study",
+        "description": "Earned 135 XP from study session",
+        "created_at": "2026-08-08 18:42:34"
+      },
+      {
+        "id": "54",
+        "user_id": "1",
+        "session_id": "54",
+        "xp_amount": "383",
+        "source": "study",
+        "description": "Earned 383 XP from study session",
+        "created_at": "2026-08-09 19:29:09"
+      },
+      {
+        "id": "55",
+        "user_id": "1",
+        "session_id": "55",
+        "xp_amount": "610",
+        "source": "study",
+        "description": "Earned 610 XP from study session",
+        "created_at": "2026-08-10 02:26:22"
+      },
+      {
+        "id": "56",
+        "user_id": "1",
+        "session_id": "56",
+        "xp_amount": "532",
+        "source": "study",
+        "description": "Earned 532 XP from study session",
+        "created_at": "2026-08-12 19:27:13"
+      },
+      {
+        "id": "57",
+        "user_id": "1",
+        "session_id": "57",
+        "xp_amount": "337",
+        "source": "study",
+        "description": "Earned 337 XP from study session",
+        "created_at": "2026-08-13 19:18:06"
+      }
+    ]
+  }
+}
