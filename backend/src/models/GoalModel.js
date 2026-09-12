@@ -134,7 +134,7 @@ export const StreakModel = {
 
     const streak = await Streak.findOneAndUpdate(
       { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
-      { current_streak: currentStreak, longest_streak: longestStreak, last_study_date: lastDate },
+      { user_id: String(userId), current_streak: currentStreak, longest_streak: longestStreak, last_study_date: lastDate },
       { new: true, upsert: true }
     ).lean();
 

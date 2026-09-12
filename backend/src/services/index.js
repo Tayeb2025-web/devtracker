@@ -75,7 +75,12 @@ export const DashboardService = {
     ]);
 
     const goal = await GoalModel.get(userId);
-    const streak = await StreakModel.recalculate(userId);
+    let streak;
+    try {
+      streak = await StreakModel.recalculate(userId);
+    } catch {
+      streak = await StreakModel.get(userId);
+    }
     const level = await LevelModel.get(userId);
     const recentSessions = await SessionModel.findAll({ limit: 5 }, userId);
     const todayDate = formatLocalDate();
