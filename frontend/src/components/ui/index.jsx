@@ -1,12 +1,21 @@
 import {
   AFGHAN_MONTHS,
+  IRANIAN_MONTHS,
+  GREGORIAN_MONTHS,
   afghanToGregorianDate,
+  formatDate,
   formatAfghanDate,
   formatLocalDate,
   getAfghanDateParts,
+  getGregorianDateParts,
+  getDateParts,
   getAfghanMonthLength,
+  getMonthLength,
+  getMonthNames,
+  getCurrentYear,
   getCurrentAfghanYear,
 } from '../../constants';
+import { useCalendar } from '../../contexts/CalendarContextStore';
 
 export function Card({ children, className = '', hover = false, glass = true }) {
   return (
@@ -206,19 +215,36 @@ export function Badge({ children, color = 'primary' }) {
 }
 
 export function AfghanDateInput({ label, value, onChange, max = null, minYear, maxYear, allowEmpty = false }) {
-  const currentYear = getCurrentAfghanYear();
-  const selected = getAfghanDateParts(value || formatLocalDate());
-  const maxParts = max ? getAfghanDateParts(max) : null;
+  let calendar = 'afghan';
+  try {
+    const calendarContext = useCalendar();
+    if (calendarContext?.calendar) calendar = calendarContext.calendar;
+  } catch {
+    // Fallback if rendered outside provider
+  }
+
+  const isGregorian = calendar === 'gregorian';
+  const currentYear = getCurrentYear(new Date(), calendar);
+  const selected = getDateParts(value || formatLocalDate(), calendar);
+  const maxParts = max ? getDateParts(max, calendar) : null;
   const firstYear = Math.min(minYear ?? currentYear - 10, selected.year);
   const lastYear = Math.max(maxYear ?? maxParts?.year ?? currentYear + 1, selected.year);
   const years = Array.from({ length: lastYear - firstYear + 1 }, (_, index) => firstYear + index).reverse();
-  const monthLength = getAfghanMonthLength(selected.year, selected.month);
+  const monthLength = getMonthLength(selected.year, selected.month, calendar);
   const days = Array.from({ length: monthLength }, (_, index) => index + 1);
+  const monthNames = getMonthNames(calendar);
 
   const setDate = (updates) => {
     const next = { ...selected, ...updates };
-    next.day = Math.min(next.day, getAfghanMonthLength(next.year, next.month));
-    let nextDate = afghanToGregorianDate(next.year, next.month, next.day);
+    const maxDay = getMonthLength(next.year, next.month, calendar);
+    next.day = Math.min(next.day, maxDay);
+
+    let nextDate;
+    if (isGregorian) {
+      nextDate = `${next.year}-${String(next.month).padStart(2, '0')}-${String(next.day).padStart(2, '0')}`;
+    } else {
+      nextDate = afghanToGregorianDate(next.year, next.month, next.day);
+    }
     if (max && nextDate > max) nextDate = max;
     onChange(nextDate);
   };
@@ -262,7 +288,7 @@ export function AfghanDateInput({ label, value, onChange, max = null, minYear, m
           value={selected.month}
           onChange={event => setDate({ month: Number(event.target.value) })}
         >
-          {AFGHAN_MONTHS.map((month, index) => <option key={month} value={index + 1}>{month}</option>)}
+          {monthNames.map((month, index) => <option key={month} value={index + 1}>{month}</option>)}
         </select>
         <select
           className="w-full px-3 py-2.5 rounded-xl bg-surface-lighter/80 border border-border text-text text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 transition-all"
@@ -272,7 +298,9 @@ export function AfghanDateInput({ label, value, onChange, max = null, minYear, m
           {years.map(year => <option key={year} value={year}>{year}</option>)}
         </select>
       </div>
-      <p className="text-xs text-text-muted">{formatAfghanDate(value || formatLocalDate(), { weekday: true })}</p>
+      <p className="text-xs text-text-muted">{formatDate(value || formatLocalDate(), { weekday: true, calendar })}</p>
     </div>
   );
 }
+
+export const DateInput = AfghanDateInput;

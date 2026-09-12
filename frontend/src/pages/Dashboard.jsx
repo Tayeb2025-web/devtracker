@@ -5,12 +5,14 @@ import { StatCard, Card, ProgressBar, LoadingSpinner, Badge, Modal, Button, Inpu
 import { formatAfghanDate, formatHours, formatLocalDate, formatLocalTime } from '../constants';
 import { useAuth } from '../contexts/AuthContextStore';
 import { useToast } from '../contexts/ToastContextStore';
+import { useCalendar } from '../contexts/CalendarContextStore';
 
 const GoalConfetti = lazy(() => import('../components/Charts').then(module => ({ default: module.GoalConfetti })));
 
 export default function Dashboard() {
   const { user } = useAuth();
   const toast = useToast();
+  const { calendar, setCalendar, calendarOptions, formatDate } = useCalendar();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [logModalOpen, setLogModalOpen] = useState(false);
@@ -83,7 +85,7 @@ export default function Dashboard() {
   if (!data) return <div className="text-center py-16 text-text-muted">Failed to load dashboard</div>;
 
   const { hours, goal, streak, level, todayTechnologies, todayDate, quote, recentActivities } = data;
-  const afghanToday = formatAfghanDate(todayDate?.gregorian || new Date(), { weekday: true });
+  const todayFormatted = formatDate(todayDate?.gregorian || new Date(), { weekday: true });
   const userName = user?.display_name || user?.username || 'Developer';
 
   return (
@@ -115,8 +117,22 @@ export default function Dashboard() {
               <div className="rounded-xl bg-indigo-500/15 p-2 text-indigo-400">
                 <HiOutlineCalendar size={20} />
               </div>
-              <div dir="rtl" className="text-right">
-                <p className="text-sm font-bold text-text">{afghanToday}</p>
+              <div dir={calendar === 'gregorian' ? 'ltr' : 'rtl'} className="text-right">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-text">{todayFormatted}</p>
+                  <select
+                    value={calendar}
+                    onChange={(e) => setCalendar(e.target.value)}
+                    title="Change calendar system"
+                    className="bg-indigo-500/15 border border-indigo-500/30 rounded-lg px-2 py-0.5 text-[11px] font-bold text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-400 cursor-pointer hover:bg-indigo-500/25 transition-all"
+                  >
+                    {calendarOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value} className="bg-surface text-text">
+                        {opt.shortLabel}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -234,8 +250,8 @@ export default function Dashboard() {
                 <div key={activity.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-lighter/40 border border-border/60 hover:border-primary/30 transition-all">
                   <div>
                     <p className="text-xs font-bold">{activity.project_name || activity.technology_name || 'Study session'}</p>
-                    <p dir="rtl" className="text-right text-[11px] text-text-muted mt-0.5">
-                      {formatAfghanDate(activity.session_date)} · {activity.start_time?.slice(0, 5)}
+                    <p dir={calendar === 'gregorian' ? 'ltr' : 'rtl'} className="text-right text-[11px] text-text-muted mt-0.5">
+                      {formatDate(activity.session_date)} · {activity.start_time?.slice(0, 5)}
                     </p>
                   </div>
                   <Badge color="accent">{formatHours(parseFloat(activity.duration_hours))}</Badge>

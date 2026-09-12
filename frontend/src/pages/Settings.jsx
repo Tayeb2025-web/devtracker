@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { goalApi, userApi, exportApi } from '../services/api';
 import { useToast } from '../contexts/ToastContextStore';
 import { useAuth } from '../contexts/AuthContextStore';
+import { useCalendar } from '../contexts/CalendarContextStore';
 import { Button, Card, Input, LoadingSpinner, Select, Textarea } from '../components/ui';
 import {
   HiOutlineUser, HiOutlineLockClosed, HiOutlineFlag, HiOutlineBell,
   HiOutlineSparkles, HiOutlineCheck, HiOutlineDownload, HiOutlineUpload,
-  HiOutlineCamera, HiOutlineTrash, HiOutlineCloudUpload,
+  HiOutlineCamera, HiOutlineTrash, HiOutlineCloudUpload, HiOutlineCalendar,
 } from 'react-icons/hi';
 
 const NOTIFICATION_OPTIONS = [
@@ -28,6 +29,7 @@ const DIRECT_MESSAGE_OPTIONS = [
 export default function Settings() {
   const toast = useToast();
   const { user, setUser } = useAuth();
+  const { calendar, setCalendar, calendarOptions, formatDate } = useCalendar();
   const fileInputRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -140,6 +142,7 @@ export default function Settings() {
           allow_direct_messages: form.allow_direct_messages,
           notification_enabled: form.notification_enabled,
           notification_time: form.notification_time,
+          calendar_type: calendar,
         }),
         goalApi.update(targetHours),
       ]);
@@ -306,6 +309,63 @@ export default function Settings() {
             value={form.allow_direct_messages}
             onChange={event => setForm(current => ({ ...current, allow_direct_messages: event.target.value }))}
           />
+        </div>
+      </Card>
+
+      {/* Calendar System Section */}
+      <Card className="space-y-5 p-6 border-indigo-500/20">
+        <div className="flex items-center gap-3 border-b border-border/60 pb-4">
+          <div className="p-2 rounded-xl bg-indigo-500/15 text-indigo-400">
+            <HiOutlineCalendar size={20} />
+          </div>
+          <div>
+            <h2 className="font-bold text-base">Calendar System / سیستم تقویم</h2>
+            <p className="text-xs text-text-muted">Choose how dates, charts, and activity graphs are displayed</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {calendarOptions.map((opt) => {
+            const isSelected = calendar === opt.value;
+            const previewDate = formatDate(new Date(), { weekday: true, includeYear: true, calendar: opt.value });
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setCalendar(opt.value)}
+                className={`p-4 rounded-2xl border text-left transition-all duration-200 relative overflow-hidden flex flex-col justify-between gap-3 cursor-pointer ${
+                  isSelected
+                    ? 'border-indigo-500 bg-gradient-to-br from-indigo-500/15 to-violet-500/10 shadow-lg shadow-indigo-500/10 ring-2 ring-indigo-500/30'
+                    : 'border-border/60 bg-surface-lighter/30 hover:border-border hover:bg-surface-lighter/60'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="text-xs font-extrabold text-text">
+                      {opt.value === 'afghan' && '🇦🇫 '}
+                      {opt.value === 'iranian' && '🇮🇷 '}
+                      {opt.value === 'gregorian' && '🌐 '}
+                      {opt.shortLabel}
+                    </span>
+                    {isSelected && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] font-bold">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-text-muted leading-relaxed font-medium">
+                    {opt.label}
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-border/40">
+                  <p className="text-[10px] text-text-muted uppercase tracking-wider font-semibold">Today's preview:</p>
+                  <p className="text-xs font-bold text-indigo-300 mt-0.5" dir={opt.value === 'gregorian' ? 'ltr' : 'rtl'}>
+                    {previewDate}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </Card>
 

@@ -301,7 +301,13 @@ export const SessionModel = {
       const weeks = new Map();
       rows.forEach(row => {
         const range = getLocalWeekRange(row.session_date);
-        const current = weeks.get(range.startDate) || { label: `هفته ${formatAfghanDate(range.startDate)}`, hours: 0 };
+        const current = weeks.get(range.startDate) || {
+          startDate: range.startDate,
+          endDate: range.endDate,
+          date: range.startDate,
+          label: `هفته ${formatAfghanDate(range.startDate)}`,
+          hours: 0,
+        };
         current.hours += parseFloat(row.hours);
         weeks.set(range.startDate, current);
       });
@@ -314,7 +320,14 @@ export const SessionModel = {
       rows.forEach(row => {
         const parts = getAfghanDateParts(row.session_date);
         const key = `${parts.year}-${String(parts.month).padStart(2, '0')}`;
-        const current = months.get(key) || { label: formatAfghanMonth(parts.year, parts.month), hours: 0 };
+        const current = months.get(key) || {
+          key,
+          date: row.session_date,
+          year: parts.year,
+          month: parts.month,
+          label: formatAfghanMonth(parts.year, parts.month),
+          hours: 0,
+        };
         current.hours += parseFloat(row.hours);
         months.set(key, current);
       });
@@ -328,7 +341,12 @@ export const SessionModel = {
     const years = new Map();
     rows.forEach(row => {
       const { year } = getAfghanDateParts(row.session_date);
-      const current = years.get(year) || { label: String(year), hours: 0 };
+      const current = years.get(year) || {
+        year,
+        date: row.session_date,
+        label: String(year),
+        hours: 0,
+      };
       current.hours += parseFloat(row.duration_hours || 0);
       years.set(year, current);
     });

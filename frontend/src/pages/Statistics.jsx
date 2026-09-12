@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { statsApi } from '../services/api';
 import { Card, LoadingSpinner, StatCard } from '../components/ui';
 import { LineChart, BarChartComponent, PieChartComponent } from '../components/Charts';
-import { AFGHAN_MONTHS, formatAfghanDate, formatHours } from '../constants';
+import { formatHours, formatDate, formatMonth, getGregorianDateParts, shiftGregorianDate } from '../constants';
+import { useCalendar } from '../contexts/CalendarContextStore';
 import { HiOutlineChartBar, HiOutlineTrendingUp, HiOutlineTrendingDown, HiOutlineCode, HiOutlineSparkles } from 'react-icons/hi';
 
 const PERIODS = [
@@ -12,36 +13,62 @@ const PERIODS = [
   { key: 'yearly', label: 'Yearly' },
 ];
 
-function ensureContinuousDailyData(data) {
+function formatChartItemLabel(item, period, calendar) {
+  if (period === 'daily') {
+    if (item.date) return formatDate(item.date, { calendar });
+    return item.label;
+  }
+  if (period === 'weekly') {
+    const d = item.startDate || item.date;
+    if (d) {
+      if (calendar === 'gregorian') return `Week of ${formatDate(d, { calendar })}`;
+      return `هفته ${formatDate(d, { calendar })}`;
+    }
+    return item.label;
+  }
+  if (period === 'monthly') {
+    if (calendar === 'gregorian') {
+      if (item.date) {
+        const { year, month } = getGregorianDateParts(item.date);
+        return formatMonth(year, month, { calendar: 'gregorian' });
+      }
+      return item.label;
+    }
+    if (item.year && item.month) {
+      return formatMonth(item.year, item.month, { calendar });
+    }
+    return item.label;
+  }
+  if (period === 'yearly') {
+    if (calendar === 'gregorian' && item.date) {
+      return String(getGregorianDateParts(item.date).year);
+    }
+    return item.year ? String(item.year) : item.label;
+  }
+  return item.label;
+}
+
+function ensureContinuousDailyData(data, calendar) {
   if (!data || data.length < 2) return data || [];
 
   const result = [];
-  const parseItem = (item) => {
-    const match = String(item.label || '').trim().match(/^(\d+)\s+(.+)$/);
-    if (!match) return null;
-    const day = parseInt(match[1], 10);
-    const monthName = match[2].trim();
-    const monthIndex = AFGHAN_MONTHS.indexOf(monthName);
-    return { day, monthName, monthIndex };
-  };
-
   for (let i = 0; i < data.length; i++) {
     const currItem = data[i];
-    const curr = parseItem(currItem);
-    result.push(currItem);
+    result.push({
+      ...currItem,
+      label: currItem.date ? formatDate(currItem.date, { calendar }) : currItem.label,
+    });
 
-    if (i < data.length - 1) {
-      const nextItem = data[i + 1];
-      const next = parseItem(nextItem);
-      if (curr && next && curr.monthName === next.monthName && curr.monthIndex !== -1) {
-        let missingDay = curr.day + 1;
-        while (missingDay < next.day) {
-          result.push({
-            label: `${missingDay} ${curr.monthName}`,
-            hours: 0,
-          });
-          missingDay++;
-        }
+    if (i < data.length - 1 && currItem.date && data[i + 1].date) {
+      let nextDate = shiftGregorianDate(currItem.date, 1);
+      const targetDate = data[i + 1].date;
+      while (nextDate < targetDate) {
+        result.push({
+          date: nextDate,
+          label: formatDate(nextDate, { calendar }),
+          hours: 0,
+        });
+        nextDate = shiftGregorianDate(nextDate, 1);
       }
     }
   }
@@ -50,6 +77,7 @@ function ensureContinuousDailyData(data) {
 }
 
 export default function Statistics() {
+  const { calendar, setCalendar, calendarOptions, formatDate: formatUserDate } = useCalendar();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('daily');
@@ -63,10 +91,13 @@ export default function Statistics() {
 
   const chartData = useMemo(() => {
     if (period === 'daily') {
-      return ensureContinuousDailyData(rawChartData);
+      return ensureContinuousDailyData(rawChartData, calendar);
     }
-    return rawChartData;
-  }, [rawChartData, period]);
+    return rawChartData.map(item => ({
+      ...item,
+      label: formatChartItemLabel(item, period, calendar),
+    }));
+  }, [rawChartData, period, calendar]);
 
   if (loading) return <LoadingSpinner />;
   if (!stats) return <div className="text-center py-16 text-text-muted">Failed to load statistics</div>;
@@ -75,19 +106,35 @@ export default function Statistics() {
 
   return (
     <div className="space-y-7">
-      <div className="animate-fade-in">
-        <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
-          <HiOutlineSparkles size={16} />
-          <span>Analytics</span>
+      <div className="animate-fade-in flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
+            <HiOutlineSparkles size={16} />
+            <span>Analytics</span>
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Study Statistics</h1>
+          <p className="text-text-muted text-xs sm:text-sm mt-1">Deep dive into your programming study patterns & trends</p>
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Study Statistics</h1>
-        <p className="text-text-muted text-xs sm:text-sm mt-1">Deep dive into your programming study patterns & trends</p>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <select
+            value={calendar}
+            onChange={(e) => setCalendar(e.target.value)}
+            title="Change calendar system"
+            className="bg-surface-lighter/80 border border-border rounded-xl px-3 py-2 text-xs font-bold text-text focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer hover:bg-surface-lighter transition-all"
+          >
+            {calendarOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.shortLabel}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Average Hours/Day" value={formatHours(stats.averageHours)} icon={HiOutlineChartBar} color="primary" />
         <StatCard title="Focus Score" value={`${stats.focusScore}%`} icon={HiOutlineTrendingUp} color="accent" />
-        <StatCard title="Best Day" value={stats.bestDay ? formatHours(parseFloat(stats.bestDay.hours)) : '—'} subtitle={stats.bestDay ? formatAfghanDate(stats.bestDay.session_date) : ''} icon={HiOutlineTrendingUp} color="accent" />
+        <StatCard title="Best Day" value={stats.bestDay ? formatHours(parseFloat(stats.bestDay.hours)) : '—'} subtitle={stats.bestDay ? formatUserDate(stats.bestDay.session_date) : ''} icon={HiOutlineTrendingUp} color="accent" />
         <StatCard title="Most Studied" value={stats.mostStudied?.name || '—'} subtitle={stats.mostStudied ? formatHours(parseFloat(stats.mostStudied.hours)) : ''} icon={HiOutlineCode} color="purple" />
       </div>
 
@@ -148,7 +195,7 @@ export default function Statistics() {
               <HiOutlineTrendingDown size={20} />
             </div>
             <span className="text-xs font-medium">
-              Lowest study day: <strong dir="rtl" className="inline-block text-right font-bold text-text">{formatAfghanDate(stats.worstDay.session_date)}</strong> — {formatHours(parseFloat(stats.worstDay.hours))}
+              Lowest study day: <strong dir={calendar === 'gregorian' ? 'ltr' : 'rtl'} className="inline-block text-right font-bold text-text">{formatUserDate(stats.worstDay.session_date)}</strong> — {formatHours(parseFloat(stats.worstDay.hours))}
             </span>
           </div>
         </Card>

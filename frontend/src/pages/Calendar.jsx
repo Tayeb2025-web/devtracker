@@ -3,11 +3,13 @@ import { sessionApi } from '../services/api';
 import { Card, LoadingSpinner, StatCard, Modal, Badge } from '../components/ui';
 import ContributionCalendar from '../components/ContributionCalendar';
 import { HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineSparkles, HiOutlineCalendar, HiOutlineClock, HiOutlineFire } from 'react-icons/hi';
-import { afghanToGregorianDate, getCurrentAfghanYear, shiftGregorianDate, formatAfghanDate, formatHours } from '../constants';
+import { afghanToGregorianDate, shiftGregorianDate, formatHours } from '../constants';
+import { useCalendar } from '../contexts/CalendarContextStore';
 
 export default function CalendarPage() {
-  const currentAfghanYear = getCurrentAfghanYear();
-  const [year, setYear] = useState(currentAfghanYear);
+  const { calendar, setCalendar, calendarOptions, getCurrentYear } = useCalendar();
+  const currentYear = getCurrentYear(new Date());
+  const [year, setYear] = useState(currentYear);
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,13 +18,22 @@ export default function CalendarPage() {
   const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
+    setYear(getCurrentYear(new Date()));
+  }, [calendar, getCurrentYear]);
+
+  useEffect(() => {
     let active = true;
     const loadCalendar = async () => {
       setLoading(true);
       setError('');
       try {
-        const startDate = afghanToGregorianDate(year, 1, 1);
-        const endDate = shiftGregorianDate(afghanToGregorianDate(year + 1, 1, 1), -1);
+        const isGregorian = calendar === 'gregorian';
+        const startDate = isGregorian
+          ? `${year}-01-01`
+          : afghanToGregorianDate(year, 1, 1);
+        const endDate = isGregorian
+          ? `${year}-12-31`
+          : shiftGregorianDate(afghanToGregorianDate(year + 1, 1, 1), -1);
         const response = await sessionApi.getAll({ startDate, endDate });
         const calendarData = (response.data || []).reduce((days, session) => {
           const date = session.session_date;
@@ -44,7 +55,7 @@ export default function CalendarPage() {
     };
     void loadCalendar();
     return () => { active = false; };
-  }, [year]);
+  }, [year, calendar]);
 
   const handleSelectDay = async (day) => {
     setSelectedDay(day);
@@ -73,18 +84,33 @@ export default function CalendarPage() {
           <h1 className="text-3xl font-extrabold tracking-tight">Contribution Calendar</h1>
           <p className="text-text-muted text-xs sm:text-sm mt-1">GitHub-style activity graph for your study sessions (click any cell to view sessions)</p>
         </div>
-        <div className="flex items-center gap-3 self-start sm:self-auto rounded-2xl bg-surface-lighter/60 border border-border p-1.5 backdrop-blur-md">
-          <button onClick={() => setYear(y => y - 1)} className="p-2 rounded-xl text-text-muted hover:text-text hover:bg-surface-lighter transition-all">
-            <HiOutlineChevronLeft size={20} />
-          </button>
-          <span className="font-extrabold text-sm min-w-[60px] text-center font-mono">{year}</span>
-          <button
-            onClick={() => setYear(y => y + 1)}
-            disabled={year >= currentAfghanYear}
-            className="p-2 rounded-xl text-text-muted hover:text-text hover:bg-surface-lighter transition-all disabled:opacity-30"
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <select
+            value={calendar}
+            onChange={(e) => setCalendar(e.target.value)}
+            title="Change calendar system"
+            className="bg-surface-lighter/80 border border-border rounded-xl px-3 py-2 text-xs font-bold text-text focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer hover:bg-surface-lighter transition-all"
           >
-            <HiOutlineChevronRight size={20} />
-          </button>
+            {calendarOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.shortLabel}
+              </option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-1.5 rounded-2xl bg-surface-lighter/60 border border-border p-1.5 backdrop-blur-md">
+            <button onClick={() => setYear(y => y - 1)} className="p-2 rounded-xl text-text-muted hover:text-text hover:bg-surface-lighter transition-all">
+              <HiOutlineChevronLeft size={18} />
+            </button>
+            <span className="font-extrabold text-sm min-w-[55px] text-center font-mono">{year}</span>
+            <button
+              onClick={() => setYear(y => y + 1)}
+              disabled={year >= currentYear}
+              className="p-2 rounded-xl text-text-muted hover:text-text hover:bg-surface-lighter transition-all disabled:opacity-30"
+            >
+              <HiOutlineChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
 

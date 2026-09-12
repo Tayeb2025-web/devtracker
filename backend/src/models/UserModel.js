@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema({
   is_profile_public: { type: Boolean, default: true },
   allow_direct_messages: { type: String, enum: ['everyone', 'followers', 'none'], default: 'followers' },
   theme: { type: String, default: 'dark' },
+  calendar_type: { type: String, enum: ['afghan', 'iranian', 'gregorian'], default: 'afghan' },
   notification_enabled: { type: Boolean, default: true },
   notification_time: { type: String, default: '09:00:00' },
   legacy_id: { type: Number, index: true },
@@ -106,7 +107,7 @@ export const UserModel = {
 
   async update(id, data) {
     const allowedFields = [
-      'display_name', 'email', 'theme', 'notification_enabled', 'notification_time', 'avatar_url',
+      'display_name', 'email', 'theme', 'calendar_type', 'notification_enabled', 'notification_time', 'avatar_url',
       'bio', 'is_profile_public', 'allow_direct_messages',
     ];
     const updateData = {};

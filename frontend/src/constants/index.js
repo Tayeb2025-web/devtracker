@@ -83,6 +83,19 @@ export function formatDuration(seconds) {
 }
 
 export const APP_TIME_ZONE = 'Asia/Kabul';
+
+export const CALENDAR_TYPES = {
+  AFGHAN: 'afghan',
+  IRANIAN: 'iranian',
+  GREGORIAN: 'gregorian',
+};
+
+export const CALENDAR_OPTIONS = [
+  { value: 'afghan', label: 'هجری شمسی افغانستان (حمل، ثور...)', shortLabel: 'افغانی' },
+  { value: 'iranian', label: 'هجری شمسی ایران (فروردین، اردیبهشت...)', shortLabel: 'ایرانی' },
+  { value: 'gregorian', label: 'تقویم میلادی (January, February...)', shortLabel: 'میلادی' },
+];
+
 export const AFGHAN_MONTHS = [
   'حمل',
   'ثور',
@@ -98,6 +111,51 @@ export const AFGHAN_MONTHS = [
   'حوت',
 ];
 
+export const IRANIAN_MONTHS = [
+  'فروردین',
+  'اردیبهشت',
+  'خرداد',
+  'تیر',
+  'مرداد',
+  'شهریور',
+  'مهر',
+  'آبان',
+  'آذر',
+  'دی',
+  'بهمن',
+  'اسفند',
+];
+
+export const GREGORIAN_MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+export const GREGORIAN_MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
 export const AFGHAN_WEEKDAYS = [
   'شنبه',
   'یکشنبه',
@@ -107,6 +165,46 @@ export const AFGHAN_WEEKDAYS = [
   'پنجشنبه',
   'جمعه',
 ];
+
+export const IRANIAN_WEEKDAYS = AFGHAN_WEEKDAYS;
+
+export const GREGORIAN_WEEKDAYS = [
+  'Saturday',
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+];
+
+export const GREGORIAN_WEEKDAYS_SHORT = [
+  'Sat',
+  'Sun',
+  'Mon',
+  'Tue',
+  'Wed',
+  'Thu',
+  'Fri',
+];
+
+let currentCalendarType = typeof window !== 'undefined'
+  ? (localStorage.getItem('devtracker-calendar-type') || 'afghan')
+  : 'afghan';
+
+export function getGlobalCalendarType() {
+  return currentCalendarType;
+}
+
+export function setGlobalCalendarType(type) {
+  if (['afghan', 'iranian', 'gregorian'].includes(type)) {
+    currentCalendarType = type;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('devtracker-calendar-type', type);
+      window.dispatchEvent(new CustomEvent('devtracker-calendar-changed', { detail: type }));
+    }
+  }
+}
 
 function toAfghanistanMidnight(dateString) {
   return new Date(`${dateString}T00:00:00+04:30`);
@@ -148,6 +246,49 @@ export function getAfghanDateParts(value = new Date()) {
     month: Number(values.month),
     day: Number(values.day),
   };
+}
+
+export function getGregorianDateParts(value = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: APP_TIME_ZONE,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(normalizeDateValue(value));
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+  };
+}
+
+export function getDateParts(value = new Date(), calendar = currentCalendarType) {
+  if (calendar === 'gregorian') {
+    return getGregorianDateParts(value);
+  }
+  return getAfghanDateParts(value);
+}
+
+export function getMonthNames(calendar = currentCalendarType) {
+  if (calendar === 'iranian') return IRANIAN_MONTHS;
+  if (calendar === 'gregorian') return GREGORIAN_MONTHS;
+  return AFGHAN_MONTHS;
+}
+
+export function getShortMonthNames(calendar = currentCalendarType) {
+  if (calendar === 'gregorian') return GREGORIAN_MONTHS_SHORT;
+  return getMonthNames(calendar);
+}
+
+export function getWeekdayNames(calendar = currentCalendarType) {
+  if (calendar === 'gregorian') return GREGORIAN_WEEKDAYS;
+  return AFGHAN_WEEKDAYS;
+}
+
+export function getShortWeekdayNames(calendar = currentCalendarType) {
+  if (calendar === 'gregorian') return GREGORIAN_WEEKDAYS_SHORT;
+  return ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
 }
 
 export function afghanToGregorianDate(year, month, day) {
@@ -205,24 +346,57 @@ export function formatAfghanNumericDate(value = new Date()) {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-export function formatAfghanDate(value = new Date(), { weekday = false, includeYear = false } = {}) {
+export function formatDate(value = new Date(), { weekday = false, includeYear = false, calendar = currentCalendarType } = {}) {
+  const targetCal = calendar || currentCalendarType;
+
+  if (targetCal === 'gregorian') {
+    const { year, month, day } = getGregorianDateParts(value);
+    const date = `${day} ${GREGORIAN_MONTHS[month - 1]}${includeYear ? ` ${year}` : ''}`;
+    if (!weekday) return date;
+    const weekdayName = new Intl.DateTimeFormat('en-US', {
+      timeZone: APP_TIME_ZONE,
+      weekday: 'long',
+    }).format(normalizeDateValue(value));
+    return `${weekdayName}, ${date}`;
+  }
+
   const { year, month, day } = getAfghanDateParts(value);
-  const date = `${day} ${AFGHAN_MONTHS[month - 1]}${includeYear ? ` ${year}` : ''}`;
+  const months = targetCal === 'iranian' ? IRANIAN_MONTHS : AFGHAN_MONTHS;
+  const locale = targetCal === 'iranian' ? 'fa-IR' : 'fa-AF';
+  const date = `${day} ${months[month - 1]}${includeYear ? ` ${year}` : ''}`;
   if (!weekday) return date;
 
-  const weekdayName = new Intl.DateTimeFormat('fa-AF', {
+  const weekdayName = new Intl.DateTimeFormat(locale, {
     timeZone: APP_TIME_ZONE,
     weekday: 'long',
   }).format(normalizeDateValue(value));
   return `${weekdayName}، ${date}`;
 }
 
-export function formatAfghanMonth(year, month, { includeYear = false } = {}) {
-  return `${AFGHAN_MONTHS[Number(month) - 1]}${includeYear ? ` ${year}` : ''}`;
+export function formatAfghanDate(value = new Date(), options = {}) {
+  return formatDate(value, { calendar: currentCalendarType, ...options });
+}
+
+export function formatMonth(year, month, { includeYear = false, calendar = currentCalendarType } = {}) {
+  const targetCal = calendar || currentCalendarType;
+  const months = getMonthNames(targetCal);
+  return `${months[Number(month) - 1]}${includeYear ? ` ${year}` : ''}`;
+}
+
+export function formatAfghanMonth(year, month, options = {}) {
+  return formatMonth(year, month, { calendar: currentCalendarType, ...options });
+}
+
+export function getCurrentYear(value = new Date(), calendar = currentCalendarType) {
+  const targetCal = calendar || currentCalendarType;
+  if (targetCal === 'gregorian') {
+    return getGregorianDateParts(value).year;
+  }
+  return getAfghanDateParts(value).year;
 }
 
 export function getCurrentAfghanYear(value = new Date()) {
-  return getAfghanDateParts(value).year;
+  return getCurrentYear(value, currentCalendarType);
 }
 
 export function getAfghanMonthLength(year, month) {
@@ -231,6 +405,14 @@ export function getAfghanMonthLength(year, month) {
     ? afghanToGregorianDate(Number(year) + 1, 1, 1)
     : afghanToGregorianDate(year, Number(month) + 1, 1);
   return Math.round((new Date(`${nextMonthDate}T00:00:00Z`) - new Date(`${startDate}T00:00:00Z`)) / 86400000);
+}
+
+export function getMonthLength(year, month, calendar = currentCalendarType) {
+  const targetCal = calendar || currentCalendarType;
+  if (targetCal === 'gregorian') {
+    return new Date(Date.UTC(Number(year), Number(month), 0)).getUTCDate();
+  }
+  return getAfghanMonthLength(year, month);
 }
 
 export function getSaturdayFirstDayIndex(gregorianDate) {

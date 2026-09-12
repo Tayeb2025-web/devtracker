@@ -1,25 +1,35 @@
 import { useState, useMemo } from 'react';
 import {
-  AFGHAN_MONTHS,
-  AFGHAN_WEEKDAYS,
   CALENDAR_COLORS,
   afghanToGregorianDate,
-  formatAfghanDate,
+  formatDate,
   getAfghanMonthLength,
   getCalendarLevel,
   getSaturdayFirstDayIndex,
+  getMonthNames,
+  getShortMonthNames,
+  getWeekdayNames,
+  getShortWeekdayNames,
 } from '../constants';
-
-const DAY_LABELS = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+import { useCalendar } from '../contexts/CalendarContextStore';
 
 export default function ContributionCalendar({ data, year, onSelectDay }) {
+  const { calendar } = useCalendar();
   const [tooltip, setTooltip] = useState(null);
+
+  const dayLabels = useMemo(() => getShortWeekdayNames(calendar), [calendar]);
+  const weekdayFullNames = useMemo(() => getWeekdayNames(calendar), [calendar]);
+  const monthNames = useMemo(() => getShortMonthNames(calendar), [calendar]);
 
   const weeks = useMemo(() => {
     const result = [];
     let currentWeek = [];
 
-    const firstDate = afghanToGregorianDate(year, 1, 1);
+    const isGregorian = calendar === 'gregorian';
+    const firstDate = isGregorian
+      ? `${year}-01-01`
+      : afghanToGregorianDate(year, 1, 1);
+
     const startDay = getSaturdayFirstDayIndex(firstDate);
     for (let i = 0; i < startDay; i++) {
       currentWeek.push(null);
@@ -27,15 +37,18 @@ export default function ContributionCalendar({ data, year, onSelectDay }) {
 
     let gregorianDate = firstDate;
     for (let month = 1; month <= 12; month += 1) {
-      const monthLength = month <= 6 ? 31 : month <= 11 ? 30 : getAfghanMonthLength(year, month);
+      const monthLength = isGregorian
+        ? new Date(Date.UTC(Number(year), Number(month), 0)).getUTCDate()
+        : (month <= 6 ? 31 : month <= 11 ? 30 : getAfghanMonthLength(year, month));
+
       for (let day = 1; day <= monthLength; day += 1) {
         const dateStr = gregorianDate;
         const dayData = data[dateStr];
         currentWeek.push({
           date: dateStr,
-          displayDate: formatAfghanDate(dateStr, { includeYear: true }),
-          afghanMonth: month,
-          afghanDay: day,
+          displayDate: formatDate(dateStr, { includeYear: true, calendar }),
+          calMonth: month,
+          calDay: day,
           hours: dayData?.hours || 0,
           technologies: dayData?.technologies || '',
           level: getCalendarLevel(dayData?.hours || 0),
@@ -57,7 +70,7 @@ export default function ContributionCalendar({ data, year, onSelectDay }) {
     }
 
     return result;
-  }, [data, year]);
+  }, [data, year, calendar]);
 
   const getColor = (level) => {
     return CALENDAR_COLORS[level] || CALENDAR_COLORS.none;
@@ -69,8 +82,8 @@ export default function ContributionCalendar({ data, year, onSelectDay }) {
         {/* Month labels */}
         <div className="flex flex-col mr-1">
           <div className="h-4" />
-          {DAY_LABELS.map((d, i) => (
-            <div key={d} title={AFGHAN_WEEKDAYS[i]} className="h-[11px] text-[10px] text-text-muted leading-[11px] my-[1px]">
+          {dayLabels.map((d, i) => (
+            <div key={d + i} title={weekdayFullNames[i]} className="h-[11px] text-[10px] text-text-muted leading-[11px] my-[1px]">
               {d}
             </div>
           ))}
@@ -79,10 +92,10 @@ export default function ContributionCalendar({ data, year, onSelectDay }) {
         <div>
           <div className="flex gap-[3px] mb-1 h-4">
             {weeks.map((week, wi) => {
-              const monthStart = week.find(d => d?.afghanDay === 1) || (wi === 0 ? week.find(d => d) : null);
+              const monthStart = week.find(d => d?.calDay === 1) || (wi === 0 ? week.find(d => d) : null);
               return (
                 <div key={wi} className="w-[11px] text-[10px] text-text-muted">
-                  {monthStart ? AFGHAN_MONTHS[monthStart.afghanMonth - 1] : ''}
+                  {monthStart ? monthNames[monthStart.calMonth - 1] : ''}
                 </div>
               );
             })}
