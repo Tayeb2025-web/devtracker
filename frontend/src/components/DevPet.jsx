@@ -58,12 +58,21 @@ export default function DevPet() {
   const [pos, setPos] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('devtracker-pet-pos') || 'null');
-      if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') return saved;
+      if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+        const maxX = Math.max(5, window.innerWidth - (window.innerWidth < 640 ? 130 : 160));
+        const maxY = Math.max(5, window.innerHeight - (window.innerWidth < 640 ? 150 : 180));
+        return {
+          x: Math.max(5, Math.min(maxX, saved.x)),
+          y: Math.max(5, Math.min(maxY, saved.y)),
+        };
+      }
     } catch {}
-    return { x: window.innerWidth - 250, y: window.innerHeight - 280 };
+    const defaultX = Math.max(5, window.innerWidth - (window.innerWidth < 640 ? 140 : 250));
+    const defaultY = Math.max(5, window.innerHeight - (window.innerWidth < 640 ? 180 : 280));
+    return { x: defaultX, y: defaultY };
   });
   const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
+  const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0, hasMoved: false });
 
   // Animations & Micro-Interactions state
   const [isHovered, setIsHovered] = useState(false);
@@ -224,44 +233,119 @@ export default function DevPet() {
     return () => clearInterval(timerInterval);
   }, [isPetActive]);
 
-  // Drag Handlers
-  const handleMouseDown = (e) => {
+  // Unified Drag Handlers for Mouse & Touch (Mobile)
+  const handleDragStart = useCallback((clientX, clientY) => {
     setIsDragging(true);
     dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
+      startX: clientX,
+      startY: clientY,
       initialX: pos.x,
       initialY: pos.y,
+      hasMoved: false,
     };
+  }, [pos.x, pos.y]);
+
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return;
+    handleDragStart(e.clientX, e.clientY);
   };
 
-  const handleMouseMove = useCallback((e) => {
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      const touch = e.touches[0];
+      handleDragStart(touch.clientX, touch.clientY);
+    }
+  };
+
+  const handleDragMove = useCallback((clientX, clientY) => {
     if (!isDragging) return;
-    const dx = e.clientX - dragRef.current.startX;
-    const dy = e.clientY - dragRef.current.startY;
-    const newX = Math.max(10, Math.min(window.innerWidth - 200, dragRef.current.initialX + dx));
-    const newY = Math.max(10, Math.min(window.innerHeight - 220, dragRef.current.initialY + dy));
+    const dx = clientX - dragRef.current.startX;
+    const dy = clientY - dragRef.current.startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      dragRef.current.hasMoved = true;
+    }
+    const petWidth = window.innerWidth < 640 ? 130 : 160;
+    const petHeight = window.innerWidth < 640 ? 150 : 180;
+    const maxX = Math.max(5, window.innerWidth - petWidth);
+    const maxY = Math.max(5, window.innerHeight - petHeight);
+    const newX = Math.max(5, Math.min(maxX, dragRef.current.initialX + dx));
+    const newY = Math.max(5, Math.min(maxY, dragRef.current.initialY + dy));
     setPos({ x: newX, y: newY });
   }, [isDragging]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleDragEnd = useCallback(() => {
     setIsDragging(false);
   }, []);
 
   useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+    if (!isDragging) return;
+
+    const onMouseMove = (e) => {
+      handleDragMove(e.clientX, e.clientY);
+    };
+
+    const onMouseUp = () => {
+      handleDragEnd();
+    };
+
+    const onTouchMove = (e) => {
+      if (e.touches && e.touches.length > 0) {
+        if (e.cancelable) e.preventDefault();
+        const touch = e.touches[0];
+        handleDragMove(touch.clientX, touch.clientY);
+      }
+    };
+
+    const onTouchEnd = () => {
+      handleDragEnd();
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('touchcancel', onTouchEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [isDragging, handleDragMove, handleDragEnd]);
+
+  // Keep pet inside viewport when window is resized or orientation changes
+  useEffect(() => {
+    const handleResize = () => {
+      setPos(prev => {
+        const petWidth = window.innerWidth < 640 ? 130 : 160;
+        const petHeight = window.innerWidth < 640 ? 150 : 180;
+        const maxX = Math.max(5, window.innerWidth - petWidth);
+        const maxY = Math.max(5, window.innerHeight - petHeight);
+        const clampedX = Math.max(5, Math.min(maxX, prev.x));
+        const clampedY = Math.max(5, Math.min(maxY, prev.y));
+        if (clampedX !== prev.x || clampedY !== prev.y) {
+          return { x: clampedX, y: clampedY };
+        }
+        return prev;
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
 
   // Click Interaction: Spawn hearts & trigger bounce/laugh animation & rotate quote
   const handleClick = (e) => {
     e.stopPropagation();
+    if (dragRef.current.hasMoved) {
+      dragRef.current.hasMoved = false;
+      return;
+    }
     setActionState('laugh');
     setTimeout(() => setActionState(isPetActive ? 'typing' : 'sleep'), 1600);
 
@@ -285,7 +369,7 @@ export default function DevPet() {
 
   return (
     <div
-      style={{ left: `${pos.x}px`, top: `${pos.y}px` }}
+      style={{ left: `${pos.x}px`, top: `${pos.y}px`, touchAction: 'none' }}
       className="fixed z-50 select-none"
     >
       <style>{`
@@ -361,8 +445,17 @@ export default function DevPet() {
 
       {minimized ? (
         <button
-          onClick={() => setMinimized(false)}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl glass border shadow-2xl transition-all hover:scale-105 ${isPetActive ? 'border-cyan-500/50 shadow-cyan-500/30' : 'border-indigo-500/30'}`}
+          onClick={() => {
+            if (dragRef.current.hasMoved) {
+              dragRef.current.hasMoved = false;
+              return;
+            }
+            setMinimized(false);
+          }}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          style={{ touchAction: 'none' }}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl glass border shadow-2xl transition-all hover:scale-105 cursor-grab active:cursor-grabbing ${isPetActive ? 'border-cyan-500/50 shadow-cyan-500/30' : 'border-indigo-500/30'}`}
         >
           <div className="w-8 h-8 relative flex items-center justify-center">
             <img src={isPetActive ? activeSrc : sleepingSrc} alt="Pet Icon" className="w-full h-full object-contain" />
@@ -372,21 +465,23 @@ export default function DevPet() {
       ) : (
         <div
           onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={handleClick}
-          className={`relative cursor-grab active:cursor-grabbing flex flex-col items-center group transition-transform duration-200 ${isDragging ? 'scale-105 opacity-90' : ''}`}
+          style={{ touchAction: 'none' }}
+          className={`relative cursor-grab active:cursor-grabbing flex flex-col items-center group transition-transform duration-200 select-none ${isDragging ? 'scale-105 opacity-90' : ''}`}
         >
           {/* Transparent Speech Bubble (8+ seconds duration, cute styling) */}
           <div
             key={currentQuote}
-            className="mb-1 max-w-[240px] px-3.5 py-2.5 rounded-2xl glass border border-amber-500/30 text-xs font-bold text-amber-200 shadow-2xl backdrop-blur-md pointer-events-none transition-all duration-300 pet-bubble-transition text-center leading-relaxed"
+            className="mb-1 max-w-[200px] sm:max-w-[240px] px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl glass border border-amber-500/30 text-xs font-bold text-amber-200 shadow-2xl backdrop-blur-md pointer-events-none transition-all duration-300 pet-bubble-transition text-center leading-relaxed"
           >
             <p dir="rtl" className="leading-snug">{currentQuote}</p>
           </div>
 
           {/* 3D Cat Standalone Cutout Container */}
-          <div className="w-36 h-36 relative flex items-center justify-center">
+          <div className="w-32 h-32 sm:w-36 sm:h-36 relative flex items-center justify-center">
             {/* Ground Shadow under the desk/chair */}
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-28 h-6 bg-black/60 rounded-full blur-md anim-pet-shadow pointer-events-none" />
 
