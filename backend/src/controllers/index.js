@@ -138,6 +138,25 @@ export const getChallenges = asyncHandler(async (req, res) => {
   res.json({ success: true, data });
 });
 
+export const createChallenge = asyncHandler(async (req, res) => {
+  const { challenge_name, challenge_description, target_value, unit } = req.body;
+  if (!challenge_name || !target_value) {
+    return res.status(400).json({ success: false, message: 'نام چالش و مقدار هدف الزامی است.' });
+  }
+  const data = await ChallengeService.create(req.user.id, {
+    challenge_name,
+    challenge_description,
+    target_value: Number(target_value),
+    unit: unit || 'hours',
+  });
+  res.status(201).json({ success: true, data });
+});
+
+export const deleteChallenge = asyncHandler(async (req, res) => {
+  await ChallengeService.delete(req.user.id, req.params.id);
+  res.json({ success: true, message: 'Challenge deleted successfully' });
+});
+
 export const getNote = asyncHandler(async (req, res) => {
   const date = req.params.date;
   const data = await NoteService.getByDate(date, req.user.id);

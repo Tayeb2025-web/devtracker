@@ -394,8 +394,15 @@ export const NoteService = {
 
 export const ChallengeService = {
   async getAll(userId = DEFAULT_USER_ID) {
+    await ChallengeModel.ensureDefaults(userId);
     await ChallengeModel.updateProgress(userId);
     return ChallengeModel.findAll(userId);
+  },
+  async create(userId = DEFAULT_USER_ID, data) {
+    return ChallengeModel.create(userId, data);
+  },
+  async delete(userId = DEFAULT_USER_ID, id) {
+    return ChallengeModel.delete(userId, id);
   },
 };
 

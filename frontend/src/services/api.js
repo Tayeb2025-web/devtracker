@@ -75,6 +75,8 @@ export const achievementApi = {
 
 export const challengeApi = {
   getAll: () => api.get('/challenges'),
+  create: (data) => api.post('/challenges', data),
+  delete: (id) => api.delete(`/challenges/${id}`),
 };
 
 export const noteApi = {

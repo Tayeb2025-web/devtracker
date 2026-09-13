@@ -258,12 +258,114 @@ export const AchievementModel = {
   },
 };
 
+export const DEFAULT_CHALLENGES = [
+  {
+    challenge_key: '7_days',
+    challenge_name: '7 Days Streak',
+    challenge_description: 'Study consistently for 7 consecutive days',
+    target_value: 7,
+    unit: 'days',
+  },
+  {
+    challenge_key: '30_days',
+    challenge_name: '30 Days Challenge',
+    challenge_description: 'Study every day for 30 consecutive days',
+    target_value: 30,
+    unit: 'days',
+  },
+  {
+    challenge_key: '50_hours',
+    challenge_name: '50 Hours Milestone',
+    challenge_description: 'Reach 50 hours of total study time',
+    target_value: 50,
+    unit: 'hours',
+  },
+  {
+    challenge_key: '100_hours',
+    challenge_name: '100 Hours Challenge',
+    challenge_description: 'Complete 100 hours of focused study',
+    target_value: 100,
+    unit: 'hours',
+  },
+  {
+    challenge_key: '250_hours',
+    challenge_name: '250 Hours Deep Diver',
+    challenge_description: 'Reach 250 hours of total study time',
+    target_value: 250,
+    unit: 'hours',
+  },
+  {
+    challenge_key: '365_days',
+    challenge_name: '365 Days Challenge',
+    challenge_description: 'Study every day for a full year',
+    target_value: 365,
+    unit: 'days',
+  },
+];
+
 export const ChallengeModel = {
+  async ensureDefaults(userId = DEFAULT_USER_ID) {
+    for (const def of DEFAULT_CHALLENGES) {
+      try {
+        await Challenge.updateOne(
+          {
+            challenge_key: def.challenge_key,
+            $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+          },
+          {
+            $setOnInsert: {
+              user_id: String(userId),
+              challenge_key: def.challenge_key,
+              challenge_name: def.challenge_name,
+              challenge_description: def.challenge_description,
+              target_value: def.target_value,
+              current_value: 0,
+              unit: def.unit,
+              status: 'active',
+              started_at: new Date(),
+              completed_at: null,
+            }
+          },
+          { upsert: true }
+        );
+      } catch (e) {
+        // Ignore duplicate key conflict
+      }
+    }
+  },
+
   async findAll(userId = DEFAULT_USER_ID) {
+    await this.ensureDefaults(userId);
+    await this.updateProgress(userId);
     const list = await Challenge.find({
       $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
-    }).sort({ started_at: 1 }).lean();
+    }).sort({ status: 1, target_value: 1 }).lean();
     return list.map(c => ({ ...c, id: c._id.toString() }));
+  },
+
+  async create(userId = DEFAULT_USER_ID, data) {
+    const key = `custom_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const challenge = await Challenge.create({
+      user_id: String(userId),
+      challenge_key: key,
+      challenge_name: data.challenge_name || 'Custom Challenge',
+      challenge_description: data.challenge_description || null,
+      target_value: Number(data.target_value) || 10,
+      current_value: 0,
+      unit: data.unit || 'hours',
+      status: 'active',
+      started_at: new Date(),
+      completed_at: null,
+    });
+    await this.updateProgress(userId);
+    return { ...challenge.toObject(), id: challenge._id.toString() };
+  },
+
+  async delete(userId = DEFAULT_USER_ID, id) {
+    return Challenge.findOneAndDelete({
+      _id: id,
+      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+    });
   },
 
   async updateProgress(userId = DEFAULT_USER_ID) {
@@ -272,31 +374,32 @@ export const ChallengeModel = {
       { $match: { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] } },
       { $group: { _id: null, total: { $sum: '$duration_hours' } } }
     ]);
-    const hours = Math.floor(agg[0]?.total || 0);
+    const totalHours = Math.floor(agg[0]?.total || 0);
 
     const streak = await StreakModel.get(userId);
+    const streakValue = Math.max(streak.current_streak || 0, streak.longest_streak || 0);
 
-    const updates = [
-      { key: '100_hours', value: hours },
-      { key: '30_days', value: streak.current_streak || 0 },
-      { key: '365_days', value: streak.current_streak || 0 },
-    ];
+    const allChallenges = await Challenge.find({
+      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+    });
 
-    for (const u of updates) {
+    for (const challenge of allChallenges) {
       try {
-        const challenge = await Challenge.findOne({
-          challenge_key: u.key,
-          $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
-        });
-        if (challenge) {
-          const isCompleted = u.value >= challenge.target_value;
-          const updateFields = { current_value: u.value };
-          if (isCompleted && challenge.status !== 'completed') {
-            updateFields.status = 'completed';
-            updateFields.completed_at = new Date();
-          }
-          await Challenge.updateOne({ _id: challenge._id }, { $set: updateFields });
+        let currentValue = challenge.current_value || 0;
+        if (challenge.unit === 'hours') {
+          currentValue = totalHours;
+        } else if (challenge.unit === 'days') {
+          currentValue = streakValue;
         }
+
+        const isCompleted = currentValue >= challenge.target_value;
+        const updateFields = { current_value: currentValue };
+        if (isCompleted && challenge.status !== 'completed') {
+          updateFields.status = 'completed';
+          updateFields.completed_at = new Date();
+        }
+
+        await Challenge.updateOne({ _id: challenge._id }, { $set: updateFields });
       } catch (e) {
         // Continue if single challenge update fails
       }

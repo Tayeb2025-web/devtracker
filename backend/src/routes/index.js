@@ -55,6 +55,8 @@ router.get('/calendar', calendarValidation, ctrl.getCalendar);
 // Achievements & Challenges
 router.get('/achievements', ctrl.getAchievements);
 router.get('/challenges', ctrl.getChallenges);
+router.post('/challenges', ctrl.createChallenge);
+router.delete('/challenges/:id', ctrl.deleteChallenge);
 
 // Notes
 router.get('/notes', ctrl.getNotes);
