@@ -3,9 +3,20 @@ import './App.css';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import { useAuth } from './contexts/AuthContextStore';
-import Calendar from './pages/Calendar';
-
-const Dashboard = lazy(() => import('./pages/Dashboard')); const Timer = lazy(() => import('./pages/Timer')); const Statistics = lazy(() => import('./pages/Statistics')); const Technologies = lazy(() => import('./pages/Technologies')); const Projects = lazy(() => import('./pages/Projects')); const History = lazy(() => import('./pages/History')); const Achievements = lazy(() => import('./pages/Achievements')); const Challenges = lazy(() => import('./pages/Challenges')); const Notes = lazy(() => import('./pages/Notes')); const Music = lazy(() => import('./pages/Music')); const Community = lazy(() => import('./pages/Community')); const Settings = lazy(() => import('./pages/Settings')); const Auth = lazy(() => import('./pages/Auth'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Timer = lazy(() => import('./pages/Timer'));
+const Statistics = lazy(() => import('./pages/Statistics'));
+const Calendar = lazy(() => import('./pages/Calendar'));
+const Technologies = lazy(() => import('./pages/Technologies'));
+const Projects = lazy(() => import('./pages/Projects'));
+const History = lazy(() => import('./pages/History'));
+const Achievements = lazy(() => import('./pages/Achievements'));
+const Challenges = lazy(() => import('./pages/Challenges'));
+const Notes = lazy(() => import('./pages/Notes'));
+const Music = lazy(() => import('./pages/Music'));
+const Community = lazy(() => import('./pages/Community'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Auth = lazy(() => import('./pages/Auth'));
 
 function ProtectedApp() {
   const { user, loading } = useAuth();

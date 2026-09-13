@@ -4,36 +4,45 @@ import dns from 'dns';
 
 dotenv.config();
 
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
-} catch (e) {
-  // Ignore DNS override errors in restricted environments
+// Only override DNS servers in local development environments, never on Vercel / serverless
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+  } catch (e) {
+    // Ignore DNS override errors in restricted environments
+  }
 }
 
 const MONGODB_URI = process.env.MONGODB_URI || 
   'mongodb+srv://devtracker_user:HQz9dZ2yv7bcVsZl@cluster0.9xfi3bk.mongodb.net/devtracker?retryWrites=true&w=majority&appName=Cluster0';
 
-let cachedPromise = null;
+let cached = global._mongooseConn;
+if (!cached) {
+  cached = global._mongooseConn = { conn: null, promise: null };
+}
 
 export async function connectDatabase() {
   if (mongoose.connection.readyState === 1) return true;
-  if (cachedPromise) return cachedPromise;
+  if (cached.conn) return true;
 
-  cachedPromise = mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 15000,
-    connectTimeoutMS: 15000,
-    socketTimeoutMS: 45000,
-  }).then(() => {
-    console.log('✅ Connected to MongoDB Atlas successfully.');
-    cachedPromise = null;
-    return true;
-  }).catch((error) => {
-    cachedPromise = null;
-    console.warn(`⚠️ MongoDB connection warning: ${error.message}`);
-    return false;
-  });
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+    }).then((m) => {
+      console.log('✅ Connected to MongoDB Atlas successfully.');
+      cached.conn = m;
+      return true;
+    }).catch((error) => {
+      cached.promise = null;
+      console.warn(`⚠️ MongoDB connection warning: ${error.message}`);
+      return false;
+    });
+  }
 
-  return cachedPromise;
+  return cached.promise;
 }
 
 export async function checkDatabaseConnection() {

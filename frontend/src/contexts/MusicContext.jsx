@@ -28,7 +28,7 @@ export function MusicProvider({ children }) {
 
   useEffect(() => {
     audioRef.current = new Audio();
-    audioRef.current.preload = 'auto';
+    audioRef.current.preload = 'none';
 
     return () => {
       audioRef.current?.pause();
@@ -51,13 +51,18 @@ export function MusicProvider({ children }) {
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.src = FOCUS_TRACKS[currentIndex].src;
-    audio.load();
+    if (hasStarted) {
+      const targetSrc = FOCUS_TRACKS[currentIndex].src;
+      if (!audio.src || !audio.src.endsWith(targetSrc)) {
+        audio.src = targetSrc;
+        audio.load();
+      }
 
-    if (isPlaying) {
-      audio.play().catch(() => setIsPlaying(false));
+      if (isPlaying) {
+        audio.play().catch(() => setIsPlaying(false));
+      }
     }
-  }, [currentIndex, isPlaying]);
+  }, [currentIndex, hasStarted, isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -77,13 +82,15 @@ export function MusicProvider({ children }) {
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (!audio.src) {
-      audio.src = FOCUS_TRACKS[currentIndex].src;
+    const targetSrc = FOCUS_TRACKS[currentIndex].src;
+    if (!audio.src || !audio.src.endsWith(targetSrc)) {
+      audio.src = targetSrc;
+      audio.load();
     }
 
+    setHasStarted(true);
     await audio.play();
     setIsPlaying(true);
-    setHasStarted(true);
   }, [currentIndex]);
 
   const pause = useCallback(() => {

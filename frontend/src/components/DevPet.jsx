@@ -458,7 +458,15 @@ export default function DevPet() {
           className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl glass border shadow-2xl transition-all hover:scale-105 cursor-grab active:cursor-grabbing ${isPetActive ? 'border-cyan-500/50 shadow-cyan-500/30' : 'border-indigo-500/30'}`}
         >
           <div className="w-8 h-8 relative flex items-center justify-center">
-            <img src={isPetActive ? activeSrc : sleepingSrc} alt="Pet Icon" className="w-full h-full object-contain" />
+            <img
+              src={isPetActive ? activeSrc : sleepingSrc}
+              alt="Pet Icon"
+              loading="lazy"
+              decoding="async"
+              width="32"
+              height="32"
+              className="w-full h-full object-contain"
+            />
           </div>
           <span className="text-xs font-bold text-text">Coder Cat 🐱</span>
         </button>
@@ -489,6 +497,10 @@ export default function DevPet() {
             <img
               src={isPetActive ? activeSrc : sleepingSrc}
               alt="Coder Cat Companion"
+              loading="lazy"
+              decoding="async"
+              width="144"
+              height="144"
               className={`w-full h-full object-contain pointer-events-none filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] transition-all duration-300 ${
                 !isPetActive
                   ? 'anim-pet-sleep'
