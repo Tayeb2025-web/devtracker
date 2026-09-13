@@ -34,7 +34,7 @@ export default function MainLayout({ children }) {
         <button
           type="button"
           aria-label="Close sidebar"
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-transparent md:hidden"
           onClick={() => setSidebarCollapsed(true)}
         />
       )}
