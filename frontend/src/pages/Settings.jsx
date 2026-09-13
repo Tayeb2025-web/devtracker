@@ -345,7 +345,7 @@ export default function Settings() {
                       {opt.value === 'afghan' && '🇦🇫 '}
                       {opt.value === 'iranian' && '🇮🇷 '}
                       {opt.value === 'gregorian' && '🌐 '}
-                      {opt.shortLabel}
+                      {opt.label}
                     </span>
                     {isSelected && (
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] font-bold">
@@ -353,9 +353,6 @@ export default function Settings() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-text-muted leading-relaxed font-medium">
-                    {opt.label}
-                  </p>
                 </div>
                 <div className="pt-2 border-t border-border/40">
                   <p className="text-[10px] text-text-muted uppercase tracking-wider font-semibold">Today's preview:</p>

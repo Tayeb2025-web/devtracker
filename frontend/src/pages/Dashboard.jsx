@@ -1,5 +1,5 @@
-import { lazy, Suspense, useState, useEffect } from 'react';
-import { HiOutlineCalendar, HiOutlineClock, HiOutlineFire, HiOutlineTrendingUp, HiOutlineStar, HiOutlinePlus, HiOutlineSparkles, HiOutlineLightningBolt, HiOutlineBookOpen } from 'react-icons/hi';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
+import { HiOutlineCalendar, HiOutlineClock, HiOutlineFire, HiOutlineTrendingUp, HiOutlineStar, HiOutlinePlus, HiOutlineSparkles, HiOutlineLightningBolt, HiOutlineBookOpen, HiOutlineChevronDown } from 'react-icons/hi';
 import { dashboardApi, technologyApi, projectApi, sessionApi } from '../services/api';
 import { StatCard, Card, ProgressBar, LoadingSpinner, Badge, Modal, Button, Input, Select, Textarea } from '../components/ui';
 import { formatAfghanDate, formatHours, formatLocalDate, formatLocalTime } from '../constants';
@@ -23,6 +23,19 @@ export default function Dashboard() {
   const [logProjectId, setLogProjectId] = useState('');
   const [logNote, setLogNote] = useState('');
   const [logSaving, setLogSaving] = useState(false);
+  const [calendarMenuOpen, setCalendarMenuOpen] = useState(false);
+  const calendarMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!calendarMenuOpen) return;
+    const handleClickOutside = (e) => {
+      if (calendarMenuRef.current && !calendarMenuRef.current.contains(e.target)) {
+        setCalendarMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [calendarMenuOpen]);
 
   useEffect(() => {
     loadDashboard();
@@ -108,33 +121,77 @@ export default function Dashboard() {
           </h1>
           <p className="text-text-muted text-xs sm:text-sm mt-1">Track your daily programming progress and stay on target.</p>
         </div>
+
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={() => setLogModalOpen(true)} className="shadow-lg shadow-indigo-500/20">
             <HiOutlinePlus size={18} /> Quick Log
           </Button>
-          <div className="self-start rounded-2xl border border-indigo-500/20 bg-gradient-to-r from-indigo-500/10 to-violet-500/10 px-4 py-3 shadow-lg shadow-indigo-500/5 sm:self-auto backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-indigo-500/15 p-2 text-indigo-400">
+          <div ref={calendarMenuRef} className="relative self-start sm:self-auto">
+            <div
+              onClick={() => setCalendarMenuOpen(prev => !prev)}
+              className="group flex items-center gap-3 rounded-2xl border border-indigo-500/20 bg-gradient-to-r from-indigo-500/10 to-violet-500/10 px-4 py-2.5 shadow-lg shadow-indigo-500/5 backdrop-blur-md cursor-pointer hover:border-indigo-500/40 hover:bg-surface-lighter/50 transition-all select-none"
+              title="برای تغییر نوع تقویم کلیک کنید"
+            >
+              <div className="relative rounded-xl bg-indigo-500/15 p-2 text-indigo-400 transition-transform group-hover:scale-105">
                 <HiOutlineCalendar size={20} />
+                <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-indigo-600 text-[8px] font-bold text-white shadow ring-1 ring-surface">
+                  {calendar === 'afghan' && '🇦🇫'}
+                  {calendar === 'iranian' && '🇮🇷'}
+                  {calendar === 'gregorian' && '🌐'}
+                </span>
               </div>
+
               <div dir={calendar === 'gregorian' ? 'ltr' : 'rtl'} className="text-right">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-text">{todayFormatted}</p>
-                  <select
-                    value={calendar}
-                    onChange={(e) => setCalendar(e.target.value)}
-                    title="Change calendar system"
-                    className="bg-indigo-500/15 border border-indigo-500/30 rounded-lg px-2 py-0.5 text-[11px] font-bold text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-400 cursor-pointer hover:bg-indigo-500/25 transition-all"
-                  >
-                    {calendarOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value} className="bg-surface text-text">
-                        {opt.shortLabel}
-                      </option>
-                    ))}
-                  </select>
+                <p className="text-sm font-bold text-text group-hover:text-indigo-300 transition-colors">
+                  {todayFormatted}
+                </p>
+                <div className="flex items-center gap-1 text-[11px] text-indigo-400/80 font-medium">
+                  <span>
+                    {calendar === 'afghan' && 'تقویم افغانستان'}
+                    {calendar === 'iranian' && 'تقویم ایران'}
+                    {calendar === 'gregorian' && 'تقویم میلادی'}
+                  </span>
+                  <HiOutlineChevronDown size={12} className={`transition-transform duration-200 ${calendarMenuOpen ? 'rotate-180 text-indigo-400' : ''}`} />
                 </div>
               </div>
             </div>
+
+            {/* Custom Dropdown Menu */}
+            {calendarMenuOpen && (
+              <div dir="rtl" className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 z-50 w-56 rounded-2xl border border-indigo-500/30 bg-surface-light/95 backdrop-blur-2xl p-2 shadow-2xl shadow-indigo-500/10 animate-fade-in space-y-1">
+                <div className="px-3 py-1.5 border-b border-border/60 text-[11px] font-bold text-text-muted">
+                  انتخاب تقویم
+                </div>
+                {calendarOptions.map((opt) => {
+                  const isSelected = calendar === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setCalendar(opt.value);
+                        setCalendarMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-indigo-500/25 to-violet-500/20 text-indigo-300 border border-indigo-500/40 font-bold shadow-sm'
+                          : 'text-text-muted hover:bg-surface-lighter hover:text-text'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <span className="text-sm">
+                          {opt.value === 'afghan' && '🇦🇫'}
+                          {opt.value === 'iranian' && '🇮🇷'}
+                          {opt.value === 'gregorian' && '🌐'}
+                        </span>
+                        <span>{opt.label}</span>
+                      </span>
+                      {isSelected && <span className="text-indigo-400 font-bold text-sm">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

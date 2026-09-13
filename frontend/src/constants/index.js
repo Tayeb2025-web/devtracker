@@ -91,9 +91,9 @@ export const CALENDAR_TYPES = {
 };
 
 export const CALENDAR_OPTIONS = [
-  { value: 'afghan', label: 'هجری شمسی افغانستان (حمل، ثور...)', shortLabel: 'افغانی' },
-  { value: 'iranian', label: 'هجری شمسی ایران (فروردین، اردیبهشت...)', shortLabel: 'ایرانی' },
-  { value: 'gregorian', label: 'تقویم میلادی (January, February...)', shortLabel: 'میلادی' },
+  { value: 'afghan', label: 'تقویم افغانستان', shortLabel: 'تقویم افغانستان', flag: '🇦🇫' },
+  { value: 'iranian', label: 'تقویم ایران', shortLabel: 'تقویم ایران', flag: '🇮🇷' },
+  { value: 'gregorian', label: 'تقویم میلادی', shortLabel: 'تقویم میلادی', flag: '🌐' },
 ];
 
 export const AFGHAN_MONTHS = [
