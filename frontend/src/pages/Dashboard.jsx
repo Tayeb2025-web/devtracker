@@ -110,7 +110,7 @@ export default function Dashboard() {
       )}
 
       {/* Header Banner */}
-      <div className="animate-fade-in flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="animate-fade-in relative z-30 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
             <HiOutlineSparkles size={16} />
@@ -126,7 +126,7 @@ export default function Dashboard() {
           <Button onClick={() => setLogModalOpen(true)} className="shadow-lg shadow-indigo-500/20">
             <HiOutlinePlus size={18} /> Quick Log
           </Button>
-          <div ref={calendarMenuRef} className="relative self-start sm:self-auto">
+          <div ref={calendarMenuRef} className="relative z-40 self-start sm:self-auto">
             <div
               onClick={() => setCalendarMenuOpen(prev => !prev)}
               className="group flex items-center gap-3 rounded-2xl border border-indigo-500/20 bg-gradient-to-r from-indigo-500/10 to-violet-500/10 px-4 py-2.5 shadow-lg shadow-indigo-500/5 backdrop-blur-md cursor-pointer hover:border-indigo-500/40 hover:bg-surface-lighter/50 transition-all select-none"
@@ -158,9 +158,14 @@ export default function Dashboard() {
 
             {/* Custom Dropdown Menu */}
             {calendarMenuOpen && (
-              <div dir="rtl" className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 z-50 w-56 rounded-2xl border border-indigo-500/30 bg-surface-light/95 backdrop-blur-2xl p-2 shadow-2xl shadow-indigo-500/10 animate-fade-in space-y-1">
-                <div className="px-3 py-1.5 border-b border-border/60 text-[11px] font-bold text-text-muted">
-                  انتخاب تقویم
+              <div
+                dir="rtl"
+                style={{ backgroundColor: 'var(--color-surface-light, #0f1219)', opacity: 1 }}
+                className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2.5 z-50 w-64 rounded-2xl border border-indigo-500/40 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.85)] animate-scale-in space-y-1"
+              >
+                <div className="px-3 py-2 border-b border-border/70 flex items-center justify-between text-xs font-bold text-text-muted">
+                  <span>سیستم تقویم</span>
+                  <span className="text-[10px] text-indigo-400 font-normal">انتخاب کنید</span>
                 </div>
                 {calendarOptions.map((opt) => {
                   const isSelected = calendar === opt.value;
@@ -168,25 +173,36 @@ export default function Dashboard() {
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => {
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setCalendar(opt.value);
                         setCalendarMenuOpen(false);
                       }}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCalendar(opt.value);
+                        setCalendarMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-gradient-to-r from-indigo-500/25 to-violet-500/20 text-indigo-300 border border-indigo-500/40 font-bold shadow-sm'
-                          : 'text-text-muted hover:bg-surface-lighter hover:text-text'
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                          : 'text-text hover:bg-surface-lighter hover:text-white'
                       }`}
                     >
-                      <span className="flex items-center gap-2.5">
-                        <span className="text-sm">
+                      <span className="flex items-center gap-3">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-surface-lighter text-sm border border-border/80">
                           {opt.value === 'afghan' && '🇦🇫'}
                           {opt.value === 'iranian' && '🇮🇷'}
                           {opt.value === 'gregorian' && '🌐'}
                         </span>
-                        <span>{opt.label}</span>
+                        <span className="text-sm font-bold">{opt.label}</span>
                       </span>
-                      {isSelected && <span className="text-indigo-400 font-bold text-sm">✓</span>}
+                      {isSelected && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-indigo-600 text-xs font-black">
+                          ✓
+                        </span>
+                      )}
                     </button>
                   );
                 })}
