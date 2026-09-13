@@ -22,8 +22,93 @@ TechnologySchema.virtual('id').get(function () {
 
 export const Technology = mongoose.models.Technology || mongoose.model('Technology', TechnologySchema);
 
+export const DEFAULT_TECH_FOLDERS = [
+  {
+    name: 'Frontend',
+    color: '#6366F1',
+    sort_order: 0,
+    technologies: [
+      { name: 'HTML', color: '#E34F26', icon: 'html' },
+      { name: 'CSS', color: '#1572B6', icon: 'css' },
+      { name: 'JS', color: '#F7DF1E', icon: 'javascript' },
+      { name: 'REACT', color: '#61DAFB', icon: 'react' },
+      { name: 'NEXT JS', color: '#818CF8', icon: 'nextjs' },
+      { name: 'TAILWIND', color: '#06B6D4', icon: 'tailwind' },
+    ],
+  },
+  {
+    name: 'Backend',
+    color: '#10B981',
+    sort_order: 1,
+    technologies: [
+      { name: 'NODE JS', color: '#339933', icon: 'nodejs' },
+      { name: 'LARAVEL', color: '#FF2D20', icon: 'laravel' },
+      { name: 'DOCKER', color: '#2496ED', icon: 'docker' },
+    ],
+  },
+];
+
 export const TechnologyModel = {
+  async ensureDefaults(userId = DEFAULT_USER_ID) {
+    if (!userId) return;
+    const { TechnologyCategory } = await import('./CategoryModel.js');
+
+    const userFilter = {
+      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+    };
+
+    const [techCount, catCount] = await Promise.all([
+      Technology.countDocuments(userFilter),
+      TechnologyCategory.countDocuments(userFilter),
+    ]);
+
+    if (techCount > 0 || catCount > 0) {
+      return;
+    }
+
+    for (const folderDef of DEFAULT_TECH_FOLDERS) {
+      try {
+        let category = await TechnologyCategory.findOne({
+          name: folderDef.name,
+          ...userFilter,
+        });
+
+        if (!category) {
+          category = await TechnologyCategory.create({
+            user_id: String(userId),
+            name: folderDef.name,
+            color: folderDef.color,
+            sort_order: folderDef.sort_order,
+          });
+        }
+
+        const categoryId = category._id.toString();
+
+        for (const techDef of folderDef.technologies) {
+          const existingTech = await Technology.findOne({
+            name: techDef.name,
+            ...userFilter,
+          });
+
+          if (!existingTech) {
+            await Technology.create({
+              user_id: String(userId),
+              name: techDef.name,
+              color: techDef.color,
+              icon: techDef.icon,
+              category_id: categoryId,
+              total_hours: 0,
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to seed default technology folder:', err);
+      }
+    }
+  },
+
   async findAll(userId = DEFAULT_USER_ID) {
+    await this.ensureDefaults(userId);
     const list = await Technology.find({
       $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
     }).sort({ name: 1 }).lean();

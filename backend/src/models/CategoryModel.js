@@ -21,6 +21,8 @@ export const TechnologyCategory = mongoose.models.TechnologyCategory || mongoose
 
 export const CategoryModel = {
   async findAll(userId = DEFAULT_USER_ID) {
+    const { TechnologyModel } = await import('./TechnologyModel.js');
+    await TechnologyModel.ensureDefaults(userId);
     const list = await TechnologyCategory.find({
       $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
     }).sort({ sort_order: 1, created_at: 1 }).lean();

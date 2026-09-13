@@ -25,6 +25,7 @@ const iconMap = {
   tailwindcss: SiTailwindcss,
   typescript: SiTypescript,
   javascript: SiJavascript,
+  js: SiJavascript,
   python: SiPython,
   html: SiHtml5,
   css: SiCss,

@@ -39,6 +39,19 @@ export const AuthService = {
     // Claim legacy account if present, otherwise create new
     const user = await UserModel.claimLegacyUser({ displayName: displayName.trim(), email: normalizedEmail, passwordHash })
       || await UserModel.create({ displayName: displayName.trim(), email: normalizedEmail, passwordHash });
+
+    try {
+      const { TechnologyModel } = await import('../models/TechnologyModel.js');
+      const { ChallengeModel } = await import('../models/GoalModel.js');
+      const userId = user.id || user._id;
+      await Promise.all([
+        TechnologyModel.ensureDefaults(userId),
+        ChallengeModel.ensureDefaults(userId),
+      ]);
+    } catch (err) {
+      console.error('Failed to seed defaults on user registration:', err);
+    }
+
     return createSession(user);
   },
 
