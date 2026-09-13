@@ -95,8 +95,8 @@ export const TechnologyModel = {
     return result.deletedCount > 0;
   },
 
-  async updateTotalHours(id, hours) {
-    const tech = await this.findById(id);
+  async updateTotalHours(id, hours, userId = DEFAULT_USER_ID) {
+    const tech = await this.findById(id, userId);
     if (!tech) return;
     await Technology.updateOne(
       { _id: tech._id },

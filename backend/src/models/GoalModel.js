@@ -88,7 +88,7 @@ export const GoalModel = {
   async update(targetHours, userId = DEFAULT_USER_ID) {
     const updated = await DailyGoal.findOneAndUpdate(
       { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
-      { target_hours: Number(targetHours) },
+      { user_id: String(userId), target_hours: Number(targetHours) },
       { new: true, upsert: true }
     ).lean();
     return updated;
@@ -169,7 +169,13 @@ export const LevelModel = {
 
     const updated = await Level.findOneAndUpdate(
       { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
-      { current_level: currentLevel, current_xp: remaining, total_xp: totalXp, xp_to_next_level: xpToNext },
+      {
+        user_id: String(userId),
+        current_level: currentLevel,
+        current_xp: remaining,
+        total_xp: totalXp,
+        xp_to_next_level: xpToNext,
+      },
       { new: true, upsert: true }
     ).lean();
 
@@ -205,7 +211,13 @@ export const LevelModel = {
 
     const updated = await Level.findOneAndUpdate(
       { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
-      { current_level: currentLevel, current_xp: currentXp, total_xp: totalXp, xp_to_next_level: xpToNext },
+      {
+        user_id: String(userId),
+        current_level: currentLevel,
+        current_xp: currentXp,
+        total_xp: totalXp,
+        xp_to_next_level: xpToNext,
+      },
       { new: true, upsert: true }
     ).lean();
 
@@ -271,18 +283,22 @@ export const ChallengeModel = {
     ];
 
     for (const u of updates) {
-      const challenge = await Challenge.findOne({
-        challenge_key: u.key,
-        $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
-      });
-      if (challenge) {
-        const isCompleted = u.value >= challenge.target_value;
-        challenge.current_value = u.value;
-        if (isCompleted && challenge.status !== 'completed') {
-          challenge.status = 'completed';
-          challenge.completed_at = new Date();
+      try {
+        const challenge = await Challenge.findOne({
+          challenge_key: u.key,
+          $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+        });
+        if (challenge) {
+          const isCompleted = u.value >= challenge.target_value;
+          const updateFields = { current_value: u.value };
+          if (isCompleted && challenge.status !== 'completed') {
+            updateFields.status = 'completed';
+            updateFields.completed_at = new Date();
+          }
+          await Challenge.updateOne({ _id: challenge._id }, { $set: updateFields });
         }
-        await challenge.save();
+      } catch (e) {
+        // Continue if single challenge update fails
       }
     }
   },
@@ -304,6 +320,8 @@ export const NoteModel = {
         $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
       },
       {
+        user_id: String(userId),
+        note_date: date,
         content: content ?? null,
         productivity_score: productivityScore ? Number(productivityScore) : null,
       },

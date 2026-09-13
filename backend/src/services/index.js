@@ -31,18 +31,46 @@ export const SessionService = {
     }
 
     const session = await SessionModel.create(normalizedData, userId);
+
     if (normalizedData.technology_id) {
-      await TechnologyModel.updateTotalHours(normalizedData.technology_id, normalizedData.duration_hours);
+      try {
+        await TechnologyModel.updateTotalHours(normalizedData.technology_id, normalizedData.duration_hours, userId);
+      } catch (err) {
+        console.error('Failed to update technology total hours:', err);
+      }
     }
     if (normalizedData.project_id) {
-      await ProjectModel.updateTotalHours(normalizedData.project_id, normalizedData.duration_hours);
+      try {
+        await ProjectModel.updateTotalHours(normalizedData.project_id, normalizedData.duration_hours, userId);
+      } catch (err) {
+        console.error('Failed to update project total hours:', err);
+      }
     }
-    await StreakModel.recalculate(userId);
+
+    try {
+      await StreakModel.recalculate(userId);
+    } catch (err) {
+      console.error('Failed to recalculate streak:', err);
+    }
 
     const xpAmount = Math.round(normalizedData.duration_hours * XP_PER_HOUR);
-    const level = await LevelModel.addXp(xpAmount, session.id, userId);
+    let level = null;
+    try {
+      level = await LevelModel.addXp(xpAmount, session.id, userId);
+    } catch (err) {
+      console.error('Failed to add XP:', err);
+      try {
+        level = await LevelModel.get(userId);
+      } catch {
+        level = { current_level: 1, current_xp: 0, total_xp: 0, xp_to_next_level: 1000 };
+      }
+    }
 
-    await AchievementService.checkAll(userId);
+    try {
+      await AchievementService.checkAll(userId);
+    } catch (err) {
+      console.error('Failed to check achievements:', err);
+    }
 
     return { session, level, xpEarned: xpAmount };
   },

@@ -138,8 +138,25 @@ export const SessionModel = {
     }
     if (!session) return null;
 
-    const tech = session.technology_id ? await Technology.findById(session.technology_id).lean() : null;
-    const project = session.project_id ? await Project.findById(session.project_id).lean() : null;
+    let tech = null;
+    if (session.technology_id) {
+      if (mongoose.Types.ObjectId.isValid(String(session.technology_id))) {
+        tech = await Technology.findById(session.technology_id).lean();
+      }
+      if (!tech) {
+        tech = await Technology.findOne({ legacy_id: Number(session.technology_id) || -1 }).lean();
+      }
+    }
+
+    let project = null;
+    if (session.project_id) {
+      if (mongoose.Types.ObjectId.isValid(String(session.project_id))) {
+        project = await Project.findById(session.project_id).lean();
+      }
+      if (!project) {
+        project = await Project.findOne({ legacy_id: Number(session.project_id) || -1 }).lean();
+      }
+    }
 
     return {
       ...session,

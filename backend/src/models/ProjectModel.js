@@ -91,8 +91,8 @@ export const ProjectModel = {
     return result.deletedCount > 0;
   },
 
-  async updateTotalHours(id, hours) {
-    const project = await this.findById(id);
+  async updateTotalHours(id, hours, userId = DEFAULT_USER_ID) {
+    const project = await this.findById(id, userId);
     if (!project) return;
     await Project.updateOne(
       { _id: project._id },

@@ -318,7 +318,8 @@ export function TimerProvider({ children }) {
         savedStartTime: startTime,
         savedSessionDate: sessionDate,
       });
-      toast.success(`Session saved! +${result.xpEarned} XP earned`);
+      const xpText = result?.xpEarned ? ` +${result.xpEarned} XP earned` : '';
+      toast.success(`Session saved!${xpText}`);
       reset();
       return result;
     } catch (error) {
@@ -363,7 +364,8 @@ export function TimerProvider({ children }) {
         savedStartTime: countdownStartTime,
         savedSessionDate: countdownSessionDate,
       });
-      toast.success(`Timer complete! ${Math.floor(countdownTotalSeconds / 60)} minutes saved (+${result.xpEarned} XP)`);
+      const xpText = result?.xpEarned ? ` (+${result.xpEarned} XP)` : '';
+      toast.success(`Timer complete! ${Math.floor(countdownTotalSeconds / 60)} minutes saved${xpText}`);
       clearCompletedCountdown();
     } catch (error) {
       toast.error(`Timer finished, but could not save: ${error.message}`);
@@ -465,7 +467,8 @@ export function TimerProvider({ children }) {
         savedStartTime: countdownStartTime,
         savedSessionDate: countdownSessionDate,
       });
-      toast.success(`Timer session saved! +${result.xpEarned} XP earned`);
+      const xpText = result?.xpEarned ? ` +${result.xpEarned} XP earned` : '';
+      toast.success(`Timer session saved!${xpText}`);
       clearCompletedCountdown();
       return result;
     } catch (error) {
