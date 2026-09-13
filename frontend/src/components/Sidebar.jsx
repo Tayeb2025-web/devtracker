@@ -34,7 +34,7 @@ export default function Sidebar({ isCollapsed, onToggle }) {
   const { user, logout } = useAuth();
 
   return (
-    <aside className={`fixed left-0 top-0 z-40 flex h-[100dvh] w-[min(18rem,calc(100vw-3rem))] flex-col border-r border-border glass transition-transform duration-300 ease-in-out md:w-64 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
+    <aside className={`fixed left-0 top-0 z-50 flex h-[100dvh] w-[min(18rem,calc(100vw-3rem))] flex-col border-r border-border bg-surface-light shadow-2xl transition-transform duration-300 ease-in-out md:w-64 md:shadow-none ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
       {/* Brand Header */}
       <div className="relative p-5 border-b border-border/80 flex items-center justify-between">
         <div className="flex items-center gap-3">

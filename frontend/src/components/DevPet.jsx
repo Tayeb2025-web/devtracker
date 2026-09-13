@@ -370,7 +370,7 @@ export default function DevPet() {
   return (
     <div
       style={{ left: `${pos.x}px`, top: `${pos.y}px`, touchAction: 'none' }}
-      className="fixed z-50 select-none"
+      className="fixed z-30 select-none"
     >
       <style>{`
         @keyframes petTyping {
