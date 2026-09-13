@@ -1,13 +1,32 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
-import { HiOutlineCalendar, HiOutlineClock, HiOutlineFire, HiOutlineTrendingUp, HiOutlineStar, HiOutlinePlus, HiOutlineSparkles, HiOutlineLightningBolt, HiOutlineBookOpen, HiOutlineChevronDown } from 'react-icons/hi';
+import { Link } from 'react-router-dom';
+import {
+  HiOutlineCalendar, HiOutlineClock, HiOutlineFire, HiOutlineTrendingUp,
+  HiOutlineStar, HiOutlinePlus, HiOutlineSparkles, HiOutlineLightningBolt,
+  HiOutlineBookOpen, HiOutlineChevronDown, HiOutlineLogin, HiOutlineUserAdd,
+} from 'react-icons/hi';
 import { dashboardApi, technologyApi, projectApi, sessionApi } from '../services/api';
 import { StatCard, Card, ProgressBar, LoadingSpinner, Badge, Modal, Button, Input, Select, Textarea } from '../components/ui';
-import { formatAfghanDate, formatHours, formatLocalDate, formatLocalTime } from '../constants';
+import { formatAfghanDate, formatHours, formatLocalDate, formatLocalTime, DEFAULT_TECH_LIST } from '../constants';
 import { useAuth } from '../contexts/AuthContextStore';
 import { useToast } from '../contexts/ToastContextStore';
 import { useCalendar } from '../contexts/CalendarContextStore';
 
 const GoalConfetti = lazy(() => import('../components/Charts').then(module => ({ default: module.GoalConfetti })));
+
+const DEFAULT_GUEST_DATA = {
+  hours: { today: 0, week: 0, month: 0, year: 0, total: 0 },
+  goal: { target: 2, completed: false },
+  streak: { current: 0, longest: 0 },
+  level: { current: 1, title: 'Junior Dev', xp: 0, nextLevelXp: 100 },
+  todayTechnologies: [],
+  todayDate: { gregorian: new Date().toISOString() },
+  quote: {
+    text: "The secret of getting ahead is getting started.",
+    author: "Mark Twain",
+  },
+  recentActivities: [],
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -16,7 +35,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [logModalOpen, setLogModalOpen] = useState(false);
-  const [technologies, setTechnologies] = useState([]);
+  const [technologies, setTechnologies] = useState(DEFAULT_TECH_LIST);
   const [projects, setProjects] = useState([]);
   const [logMinutes, setLogMinutes] = useState('60');
   const [logTechId, setLogTechId] = useState('');
@@ -37,19 +56,43 @@ export default function Dashboard() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [calendarMenuOpen]);
 
+  const loadDashboard = async () => {
+    if (!user) {
+      setData(DEFAULT_GUEST_DATA);
+      setTechnologies(DEFAULT_TECH_LIST);
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await dashboardApi.get();
+      setData(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadDashboard();
-    Promise.all([technologyApi.getAll(), projectApi.getAll()]).then(([t, p]) => {
-      setTechnologies(t.data || []);
-      setProjects(p.data || []);
-    }).catch(() => {});
+    if (user) {
+      Promise.all([technologyApi.getAll(), projectApi.getAll()]).then(([t, p]) => {
+        setTechnologies(t.data && t.data.length ? t.data : DEFAULT_TECH_LIST);
+        setProjects(p.data || []);
+      }).catch(() => {});
+    }
 
     window.addEventListener('devtracker-session-saved', loadDashboard);
     return () => window.removeEventListener('devtracker-session-saved', loadDashboard);
-  }, []);
+  }, [user]);
 
   const handleQuickLog = async (e) => {
     e.preventDefault();
+    if (!user) {
+      toast.info('برای ثبت دستی زمان مطالعه و دریافت امتیاز، لطفاً وارد حساب خود شوید.');
+      setLogModalOpen(false);
+      return;
+    }
     const mins = parseInt(logMinutes, 10);
     if (!mins || mins < 1) {
       toast.warning('Session duration must be at least 1 minute');
@@ -83,17 +126,6 @@ export default function Dashboard() {
     }
   };
 
-  const loadDashboard = async () => {
-    try {
-      const res = await dashboardApi.get();
-      setData(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (loading) return <LoadingSpinner />;
   if (!data) return <div className="text-center py-16 text-text-muted">Failed to load dashboard</div>;
 
@@ -117,12 +149,25 @@ export default function Dashboard() {
             <span>Overview</span>
           </div>
           <h1 className="text-2xl font-extrabold sm:text-3xl tracking-tight">
-            Welcome back, <span className="gradient-text">{userName}</span>
+            {user ? (
+              <>Welcome back, <span className="gradient-text">{userName}</span></>
+            ) : (
+              <>Welcome to <span className="gradient-text">Codelume</span></>
+            )}
           </h1>
           <p className="text-text-muted text-xs sm:text-sm mt-1">Track your daily programming progress and stay on target.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {!user && (
+            <Link
+              to="/login"
+              className="flex items-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-indigo-600/25 transition-all active:scale-95 cursor-pointer"
+            >
+              <HiOutlineLogin size={17} />
+              <span>Sign in / Login</span>
+            </Link>
+          )}
           <Button onClick={() => setLogModalOpen(true)} className="shadow-lg shadow-indigo-500/20">
             <HiOutlinePlus size={18} /> Quick Log
           </Button>
@@ -211,6 +256,48 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Guest Mode Welcome Banner */}
+      {!user && (
+        <div className="relative overflow-hidden rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/15 via-violet-500/10 to-purple-500/15 p-5 sm:p-6 shadow-xl backdrop-blur-md animate-fade-in">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-600/20 text-indigo-400 ring-1 ring-indigo-500/30 shadow-lg">
+                <HiOutlineSparkles size={28} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-base sm:text-lg font-black text-text">
+                    شما در حالت مهمان وارد شده‌اید
+                  </h2>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">
+                    Guest Mode
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
+                  می‌توانید تایمر یا استاپ‌واچ را اجرا کرده و آزادانه در برنامه فعالیت کنید. برای ذخیره دائمی آمار، دریافت امتیاز (XP)، استریک روزانه و لول‌آپ، وارد حساب کاربری خود شوید.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 shrink-0 self-start md:self-auto">
+              <Link
+                to="/login"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-indigo-600/25 transition-all active:scale-95 cursor-pointer"
+              >
+                <HiOutlineLogin size={16} />
+                <span>ورود به حساب</span>
+              </Link>
+              <Link
+                to="/signup"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-lighter hover:bg-surface-light border border-border text-text text-xs sm:text-sm font-bold transition-all active:scale-95 cursor-pointer"
+              >
+                <HiOutlineUserAdd size={16} className="text-indigo-400" />
+                <span>ثبت‌نام رایگان</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hours Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

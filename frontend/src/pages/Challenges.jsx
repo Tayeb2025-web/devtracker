@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { challengeApi } from '../services/api';
 import { Card, ProgressBar, LoadingSpinner, Badge, Modal, Button, Input, Select, Textarea } from '../components/ui';
 import { DEFAULT_CHALLENGES } from '../constants';
 import { useCalendar } from '../contexts/CalendarContextStore';
+import { useAuth } from '../contexts/AuthContextStore';
+import { useToast } from '../contexts/ToastContextStore';
 import {
   HiOutlineSparkles,
   HiOutlineFlag,
@@ -23,6 +26,8 @@ function getChallengeIcon(challenge) {
 }
 
 export default function Challenges() {
+  const { user } = useAuth();
+  const toast = useToast();
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -39,6 +44,11 @@ export default function Challenges() {
 
   const fetchChallenges = () => {
     setLoading(true);
+    if (!user) {
+      setChallenges(DEFAULT_CHALLENGES);
+      setLoading(false);
+      return;
+    }
     challengeApi
       .getAll()
       .then(res => {
@@ -53,7 +63,7 @@ export default function Challenges() {
 
   useEffect(() => {
     fetchChallenges();
-  }, []);
+  }, [user]);
 
   const stats = useMemo(() => {
     const total = challenges.length;
@@ -133,7 +143,13 @@ export default function Challenges() {
           </Button>
           <Button
             variant="primary"
-            onClick={() => setModalOpen(true)}
+            onClick={() => {
+              if (!user) {
+                toast.info('برای ساخت چالش سفارشی، لطفاً وارد حساب کاربری خود شوید.');
+                return;
+              }
+              setModalOpen(true);
+            }}
             className="flex items-center gap-2 font-bold shadow-lg shadow-indigo-500/20"
           >
             <HiOutlinePlus size={18} />
@@ -141,6 +157,22 @@ export default function Challenges() {
           </Button>
         </div>
       </div>
+
+      {/* Guest Banner */}
+      {!user && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 p-4 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
+            <span>چالش‌های پیش‌فرض را مشاهده می‌کنید. برای محاسبه پیشرفت واقعی و ساخت چالش‌های شخصی وارد شوید.</span>
+          </div>
+          <Link
+            to="/login"
+            className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
+          >
+            ورود / ثبت‌نام
+          </Link>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 animate-fade-in">

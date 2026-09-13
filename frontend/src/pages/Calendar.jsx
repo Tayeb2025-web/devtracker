@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { sessionApi } from '../services/api';
 import { Card, LoadingSpinner, StatCard, Modal, Badge } from '../components/ui';
 import ContributionCalendar from '../components/ContributionCalendar';
 import { HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineSparkles, HiOutlineCalendar, HiOutlineClock, HiOutlineFire } from 'react-icons/hi';
 import { afghanToGregorianDate, shiftGregorianDate, formatHours } from '../constants';
 import { useCalendar } from '../contexts/CalendarContextStore';
+import { useAuth } from '../contexts/AuthContextStore';
 
 export default function CalendarPage() {
+  const { user } = useAuth();
   const { calendar, setCalendar, calendarOptions, getCurrentYear } = useCalendar();
   const currentYear = getCurrentYear(new Date());
   const [year, setYear] = useState(currentYear);
@@ -26,6 +29,13 @@ export default function CalendarPage() {
     const loadCalendar = async () => {
       setLoading(true);
       setError('');
+      if (!user) {
+        if (active) {
+          setData({});
+          setLoading(false);
+        }
+        return;
+      }
       try {
         const isGregorian = calendar === 'gregorian';
         const startDate = isGregorian
@@ -55,7 +65,7 @@ export default function CalendarPage() {
     };
     void loadCalendar();
     return () => { active = false; };
-  }, [year, calendar]);
+  }, [year, calendar, user]);
 
   const handleSelectDay = async (day) => {
     setSelectedDay(day);
@@ -113,6 +123,22 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+
+      {/* Guest Banner */}
+      {!user && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 p-4 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
+            <span>تقویم در حالت مهمان. برای پر رنگ شدن روزهای مطالعه در تقویم گیت‌هابی، وارد حساب خود شوید.</span>
+          </div>
+          <Link
+            to="/login"
+            className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
+          >
+            ورود / ثبت‌نام
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Total Hours" value={`${totalHours.toFixed(1)}h`} icon={HiOutlineClock} color="primary" />

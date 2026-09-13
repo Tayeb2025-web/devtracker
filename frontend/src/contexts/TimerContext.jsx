@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { sessionApi } from '../services/api';
 import { useToast } from './ToastContextStore';
-import { formatLocalDate, formatLocalTime } from '../constants';
+import { formatLocalDate, formatLocalTime, DEFAULT_TECH_LIST } from '../constants';
 import { TimerContext } from './TimerContextStore';
 import { playCompletionChime } from '../utils/audioUtils';
+import { useAuth } from './AuthContextStore';
 
 const STORAGE_KEY = 'devtracker-time-tools';
 const LEGACY_STORAGE_KEY = 'devtracker-timer';
@@ -15,7 +16,10 @@ const elapsedSince = (baseSeconds, startedAt) => (
 
 export function TimerProvider({ children }) {
   const toast = useToast();
+  const { user } = useAuth();
   const [restored, setRestored] = useState(false);
+  const [guestAuthModalOpen, setGuestAuthModalOpen] = useState(false);
+  const [pendingGuestSession, setPendingGuestSession] = useState(null);
 
   // Stopwatch state. The timestamp is the source of truth while it is running,
   // so throttled browser timers cannot make the displayed time drift.
@@ -222,6 +226,16 @@ export function TimerProvider({ children }) {
 
   useEffect(() => () => dismissAlarm(), [dismissAlarm]);
 
+  const getTechName = useCallback((id) => {
+    if (!id) return null;
+    const found = DEFAULT_TECH_LIST.find((t) => String(t.id) === String(id));
+    return found ? found.name : null;
+  }, []);
+
+  const closeGuestAuthModal = useCallback(() => {
+    setGuestAuthModalOpen(false);
+  }, []);
+
   const saveSession = useCallback(async ({
     durationSeconds,
     sessionTechnologyId,
@@ -309,6 +323,23 @@ export function TimerProvider({ children }) {
     setStartedAt(null);
     setStatus('paused');
 
+    if (!user) {
+      stopwatchSavingRef.current = false;
+      const techName = getTechName(technologyId);
+      setPendingGuestSession({
+        durationSeconds: elapsed,
+        sessionTechnologyId: technologyId,
+        sessionProjectId: projectId,
+        sessionNote: note,
+        savedStartTime: startTime,
+        savedSessionDate: sessionDate,
+        technologyName: techName,
+        source: 'stopwatch',
+      });
+      setGuestAuthModalOpen(true);
+      return null;
+    }
+
     try {
       const result = await saveSession({
         durationSeconds: elapsed,
@@ -328,7 +359,7 @@ export function TimerProvider({ children }) {
     } finally {
       stopwatchSavingRef.current = false;
     }
-  }, [getStopwatchSeconds, technologyId, projectId, note, startTime, sessionDate, saveSession, toast, reset]);
+  }, [getStopwatchSeconds, technologyId, projectId, note, startTime, sessionDate, saveSession, toast, reset, user, getTechName]);
 
   const countdownLeft = useCallback(() => {
     if (countdownStatus !== 'running' || !countdownDeadline) return countdownRemainingSeconds;
@@ -344,6 +375,14 @@ export function TimerProvider({ children }) {
     setCountdownNote('');
   }, [countdownTotalSeconds]);
 
+  const resetGuestSession = useCallback(() => {
+    setGuestAuthModalOpen(false);
+    setPendingGuestSession(null);
+    reset();
+    clearCompletedCountdown();
+    toast.info('تایمر بازنشانی شد.');
+  }, [reset, clearCompletedCountdown, toast]);
+
   const finishCountdown = useCallback(async () => {
     if (countdownCompletingRef.current) return;
     countdownCompletingRef.current = true;
@@ -353,6 +392,24 @@ export function TimerProvider({ children }) {
     setCountdownRemainingSeconds(0);
     playCompletionChime();
     startAlarm();
+
+    if (!user) {
+      const techName = getTechName(countdownTechnologyId);
+      setPendingGuestSession({
+        durationSeconds: countdownTotalSeconds,
+        sessionTechnologyId: countdownTechnologyId,
+        sessionProjectId: countdownProjectId,
+        sessionNote: countdownNote,
+        savedStartTime: countdownStartTime,
+        savedSessionDate: countdownSessionDate,
+        technologyName: techName,
+        source: 'countdown',
+      });
+      setGuestAuthModalOpen(true);
+      countdownCompletingRef.current = false;
+      return;
+    }
+
     toast.info('Timer complete — saving your study time…');
 
     try {
@@ -374,7 +431,7 @@ export function TimerProvider({ children }) {
     }
   }, [
     countdownTotalSeconds, countdownTechnologyId, countdownProjectId, countdownNote, countdownStartTime,
-    countdownSessionDate, startAlarm, toast, saveSession, clearCompletedCountdown,
+    countdownSessionDate, startAlarm, toast, saveSession, clearCompletedCountdown, user, getTechName,
   ]);
 
   useEffect(() => {
@@ -458,6 +515,22 @@ export function TimerProvider({ children }) {
     setCountdownDeadline(null);
     setCountdownStatus('paused');
 
+    if (!user) {
+      const techName = getTechName(countdownTechnologyId);
+      setPendingGuestSession({
+        durationSeconds: elapsed,
+        sessionTechnologyId: countdownTechnologyId,
+        sessionProjectId: countdownProjectId,
+        sessionNote: countdownNote,
+        savedStartTime: countdownStartTime,
+        savedSessionDate: countdownSessionDate,
+        technologyName: techName,
+        source: 'countdown',
+      });
+      setGuestAuthModalOpen(true);
+      return null;
+    }
+
     try {
       const result = await saveSession({
         durationSeconds: elapsed,
@@ -477,7 +550,7 @@ export function TimerProvider({ children }) {
     }
   }, [
     countdownLeft, countdownTotalSeconds, countdownTechnologyId, countdownProjectId, countdownNote,
-    countdownStartTime, countdownSessionDate, toast, saveSession, clearCompletedCountdown,
+    countdownStartTime, countdownSessionDate, toast, saveSession, clearCompletedCountdown, user, getTechName,
   ]);
 
   const resetCountdown = useCallback(() => {
@@ -511,6 +584,12 @@ export function TimerProvider({ children }) {
       isIdle: status === 'idle',
       isAlarmActive,
       dismissAlarm,
+      guestAuthModalOpen,
+      setGuestAuthModalOpen,
+      pendingGuestSession,
+      setPendingGuestSession,
+      closeGuestAuthModal,
+      resetGuestSession,
       countdown: {
         remainingSeconds: countdownRemainingSeconds,
         totalSeconds: countdownTotalSeconds,

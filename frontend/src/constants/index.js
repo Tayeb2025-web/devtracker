@@ -470,3 +470,34 @@ export function getSaturdayFirstDayIndex(gregorianDate) {
   const day = new Date(`${gregorianDate}T00:00:00Z`).getUTCDay();
   return (day + 1) % 7;
 }
+
+export const DEFAULT_TECH_FOLDERS = [
+  {
+    id: 'folder-frontend',
+    name: 'Frontend',
+    color: '#6366F1',
+    sort_order: 0,
+    technologies: [
+      { id: 'tech-html', name: 'HTML', color: '#E34F26', icon: 'html', category_id: 'folder-frontend' },
+      { id: 'tech-css', name: 'CSS', color: '#1572B6', icon: 'css', category_id: 'folder-frontend' },
+      { id: 'tech-js', name: 'JS', color: '#F7DF1E', icon: 'javascript', category_id: 'folder-frontend' },
+      { id: 'tech-react', name: 'REACT', color: '#61DAFB', icon: 'react', category_id: 'folder-frontend' },
+      { id: 'tech-nextjs', name: 'NEXT JS', color: '#818CF8', icon: 'nextjs', category_id: 'folder-frontend' },
+      { id: 'tech-tailwind', name: 'TAILWIND', color: '#06B6D4', icon: 'tailwind', category_id: 'folder-frontend' },
+    ],
+  },
+  {
+    id: 'folder-backend',
+    name: 'Backend',
+    color: '#10B981',
+    sort_order: 1,
+    technologies: [
+      { id: 'tech-nodejs', name: 'NODE JS', color: '#339933', icon: 'nodejs', category_id: 'folder-backend' },
+      { id: 'tech-laravel', name: 'LARAVEL', color: '#FF2D20', icon: 'laravel', category_id: 'folder-backend' },
+      { id: 'tech-docker', name: 'DOCKER', color: '#2496ED', icon: 'docker', category_id: 'folder-backend' },
+    ],
+  },
+];
+
+export const DEFAULT_TECH_LIST = DEFAULT_TECH_FOLDERS.flatMap(f => f.technologies);
+

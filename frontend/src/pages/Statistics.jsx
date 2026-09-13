@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { statsApi } from '../services/api';
 import { Card, LoadingSpinner, StatCard } from '../components/ui';
 import { LineChart, BarChartComponent, PieChartComponent } from '../components/Charts';
 import { formatHours, formatDate, formatMonth, getGregorianDateParts, shiftGregorianDate } from '../constants';
 import { useCalendar } from '../contexts/CalendarContextStore';
+import { useAuth } from '../contexts/AuthContextStore';
 import { HiOutlineChartBar, HiOutlineTrendingUp, HiOutlineTrendingDown, HiOutlineCode, HiOutlineSparkles } from 'react-icons/hi';
 
 const PERIODS = [
@@ -77,15 +79,33 @@ function ensureContinuousDailyData(data, calendar) {
 }
 
 export default function Statistics() {
+  const { user } = useAuth();
   const { calendar, setCalendar, calendarOptions, formatDate: formatUserDate } = useCalendar();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('daily');
   const [chartType, setChartType] = useState('line');
 
+  const DEFAULT_GUEST_STATS = {
+    averageHours: 0,
+    focusScore: 0,
+    bestDay: null,
+    mostStudied: null,
+    techDistribution: [],
+    charts: { daily: [], weekly: [], monthly: [], yearly: [] },
+  };
+
   useEffect(() => {
-    statsApi.get().then(res => setStats(res.data)).finally(() => setLoading(false));
-  }, []);
+    if (!user) {
+      setStats(DEFAULT_GUEST_STATS);
+      setLoading(false);
+      return;
+    }
+    statsApi.get()
+      .then(res => setStats(res.data))
+      .catch(() => setStats(DEFAULT_GUEST_STATS))
+      .finally(() => setLoading(false));
+  }, [user]);
 
   const rawChartData = stats?.charts?.[period] || [];
 
@@ -102,7 +122,7 @@ export default function Statistics() {
   if (loading) return <LoadingSpinner />;
   if (!stats) return <div className="text-center py-16 text-text-muted">Failed to load statistics</div>;
 
-  const techData = stats.techDistribution.filter(t => parseFloat(t.hours) > 0);
+  const techData = (stats?.techDistribution || []).filter(t => parseFloat(t.hours) > 0);
 
   return (
     <div className="space-y-7">
@@ -130,6 +150,22 @@ export default function Statistics() {
           </select>
         </div>
       </div>
+
+      {/* Guest Banner */}
+      {!user && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 p-4 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
+            <span>نمایش آمار در حالت مهمان. برای ذخیره جلسات مطالعه و تحلیل شخصی نمودارها وارد حساب شوید.</span>
+          </div>
+          <Link
+            to="/login"
+            className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
+          >
+            ورود / ثبت‌نام
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Average Hours/Day" value={formatHours(stats.averageHours)} icon={HiOutlineChartBar} color="primary" />
