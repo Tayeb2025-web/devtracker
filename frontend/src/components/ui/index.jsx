@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react';
 import {
   AFGHAN_MONTHS,
   IRANIAN_MONTHS,
@@ -304,3 +305,158 @@ export function AfghanDateInput({ label, value, onChange, max = null, minYear, m
 }
 
 export const DateInput = AfghanDateInput;
+
+export const PRESET_COLORS = [
+  '#6366F1', // Indigo
+  '#10B981', // Emerald
+  '#EF4444', // Red
+  '#F59E0B', // Amber
+  '#8B5CF6', // Purple
+  '#EC4899', // Pink
+  '#06B6D4', // Cyan
+  '#61DAFB', // React Cyan
+  '#3178C6', // TypeScript Blue
+  '#3776AB', // Python Blue
+  '#14B8A6', // Teal
+  '#F97316', // Orange
+];
+
+export function ColorPicker({ value = '#6366F1', onChange, colors = PRESET_COLORS }) {
+  const colorInputRef = useRef(null);
+  const normalizedValue = (value || '#6366F1').toUpperCase();
+  const isPreset = colors.some(c => c.toUpperCase() === normalizedValue);
+
+  const [hexInput, setHexInput] = useState(value || '#6366F1');
+
+  useEffect(() => {
+    setHexInput(value || '#6366F1');
+  }, [value]);
+
+  const handleNativeColorChange = (e) => {
+    const newColor = e.target.value.toUpperCase();
+    setHexInput(newColor);
+    onChange(newColor);
+  };
+
+  const handleHexInputChange = (e) => {
+    let raw = e.target.value.trim();
+    setHexInput(raw);
+
+    let clean = raw.startsWith('#') ? raw : `#${raw}`;
+    if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+      onChange(clean.toUpperCase());
+    } else if (/^#[0-9A-Fa-f]{3}$/.test(clean)) {
+      const expanded = `#${clean[1]}${clean[1]}${clean[2]}${clean[2]}${clean[3]}${clean[3]}`.toUpperCase();
+      onChange(expanded);
+    }
+  };
+
+  const handleHexInputBlur = () => {
+    let clean = hexInput.trim();
+    if (!clean.startsWith('#')) clean = `#${clean}`;
+    if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+      setHexInput(clean.toUpperCase());
+      onChange(clean.toUpperCase());
+    } else if (/^#[0-9A-Fa-f]{3}$/.test(clean)) {
+      const expanded = `#${clean[1]}${clean[1]}${clean[2]}${clean[2]}${clean[3]}${clean[3]}`.toUpperCase();
+      setHexInput(expanded);
+      onChange(expanded);
+    } else {
+      setHexInput(value || '#6366F1');
+    }
+  };
+
+  const isValidHex = /^#[0-9A-Fa-f]{6}$/i.test(value);
+  const activeColor = isValidHex ? value : '#6366F1';
+
+  return (
+    <div className="mt-2.5 space-y-3">
+      {/* Preset Swatches and Custom Add Button */}
+      <div className="flex flex-wrap items-center gap-2">
+        {colors.map(color => {
+          const isSelected = normalizedValue === color.toUpperCase();
+          return (
+            <button
+              key={color}
+              type="button"
+              onClick={() => {
+                setHexInput(color);
+                onChange(color);
+              }}
+              aria-label={`Use ${color}`}
+              className={`h-8 w-8 rounded-xl transition-all duration-200 cursor-pointer ${
+                isSelected
+                  ? 'ring-2 ring-white ring-offset-2 ring-offset-surface scale-110 shadow-lg'
+                  : 'hover:scale-105 opacity-85 hover:opacity-100'
+              }`}
+              style={{ backgroundColor: color }}
+            />
+          );
+        })}
+
+        {/* Custom Color Wheel Button */}
+        <div className="relative">
+          <input
+            ref={colorInputRef}
+            type="color"
+            value={activeColor}
+            onChange={handleNativeColorChange}
+            className="absolute inset-0 opacity-0 pointer-events-none w-px h-px"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+          <button
+            type="button"
+            onClick={() => colorInputRef.current?.click()}
+            title="انتخاب رنگ دلخواه از پالت / Custom Color"
+            aria-label="Pick custom color"
+            className={`relative h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer overflow-hidden border border-white/20 shadow-md ${
+              !isPreset
+                ? 'ring-2 ring-white ring-offset-2 ring-offset-surface scale-110'
+                : 'hover:scale-105 hover:ring-1 hover:ring-white/40'
+            }`}
+            style={{
+              background: !isPreset && value
+                ? value
+                : 'conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)',
+            }}
+          >
+            <span className="text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] text-sm font-black select-none">
+              +
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Hex input & live preview bar */}
+      <div className="flex items-center gap-2.5 p-2 rounded-xl bg-surface-lighter/50 border border-border/70 max-w-xs">
+        <button
+          type="button"
+          onClick={() => colorInputRef.current?.click()}
+          className="h-7 w-7 rounded-lg border border-white/20 shrink-0 shadow-inner cursor-pointer transition-transform hover:scale-105"
+          style={{ backgroundColor: activeColor }}
+          title="کلیک برای باز کردن پالت انتخاب رنگ"
+        />
+        <div className="flex items-center gap-1.5 flex-1 min-w-0 font-mono text-xs">
+          <span className="text-text-muted select-none font-semibold">HEX:</span>
+          <input
+            type="text"
+            value={hexInput}
+            onChange={handleHexInputChange}
+            onBlur={handleHexInputBlur}
+            placeholder="#6366F1"
+            maxLength={7}
+            className="w-full bg-transparent text-text font-bold uppercase tracking-wider outline-none focus:text-indigo-400 font-mono"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => colorInputRef.current?.click()}
+          className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 transition-all cursor-pointer shrink-0"
+        >
+          انتخاب رنگ
+        </button>
+      </div>
+    </div>
+  );
+}

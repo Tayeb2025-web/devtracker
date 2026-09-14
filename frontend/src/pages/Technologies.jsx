@@ -2,23 +2,14 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineCode, HiOutlineFolder, HiOutlinePhotograph, HiOutlineX, HiOutlineViewGrid, HiOutlineSparkles } from 'react-icons/hi';
 import { technologyApi, categoryApi } from '../services/api';
 import { useToast } from '../contexts/ToastContextStore';
-import { Button, Input, Select, Modal, ConfirmDialog, LoadingSpinner, EmptyState } from '../components/ui';
+import { Button, Input, Select, Modal, ConfirmDialog, LoadingSpinner, EmptyState, ColorPicker } from '../components/ui';
 import { formatHours } from '../constants';
 import TechnologyIcon, { FolderContentIcon } from '../components/TechnologyIcon';
 
-const COLORS = ['#6366F1', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#61DAFB', '#3178C6', '#3776AB'];
 const EMPTY_TECH_FORM = { name: '', color: '#6366F1', category_id: '', custom_icon: null };
 const EMPTY_FOLDER_FORM = { name: '', color: '#6366F1' };
 const FOLDER_ORDER_KEY = 'devtracker:folder-order';
 const techOrderKey = categoryId => `devtracker:technology-order:${categoryId || 'unfiled'}`;
-
-function ColorPicker({ value, onChange }) {
-  return <div className="flex gap-2.5 mt-2.5 flex-wrap">{COLORS.map(color => (
-    <button key={color} type="button" onClick={() => onChange(color)} aria-label={`Use ${color}`}
-      className={`w-8 h-8 rounded-xl transition-all duration-200 ${value === color ? 'ring-2 ring-white ring-offset-2 ring-offset-surface scale-110' : 'hover:scale-105'}`}
-      style={{ backgroundColor: color }} />
-  ))}</div>;
-}
 
 function ordered(items, key) {
   try {

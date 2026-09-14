@@ -12,28 +12,10 @@ import {
 import { projectApi } from '../services/api';
 import { useTimer } from '../contexts/TimerContextStore';
 import { useToast } from '../contexts/ToastContextStore';
-import { Button, Card, ConfirmDialog, EmptyState, Input, LoadingSpinner, Modal, Textarea } from '../components/ui';
+import { Button, Card, ConfirmDialog, EmptyState, Input, LoadingSpinner, Modal, Textarea, ColorPicker } from '../components/ui';
 import { formatHours } from '../constants';
 
-const COLORS = ['#8B5CF6', '#3B82F6', '#22C55E', '#EF4444', '#F59E0B', '#EC4899', '#06B6D4'];
 const EMPTY_PROJECT = { name: '', color: '#8B5CF6', description: '' };
-
-function ColorPicker({ value, onChange }) {
-  return (
-    <div className="mt-2.5 flex flex-wrap gap-2.5">
-      {COLORS.map(color => (
-        <button
-          key={color}
-          type="button"
-          aria-label={`Use ${color}`}
-          onClick={() => onChange(color)}
-          className={`h-8 w-8 rounded-xl transition-all duration-200 ${value === color ? 'ring-2 ring-white ring-offset-2 ring-offset-surface scale-110' : 'hover:scale-105'}`}
-          style={{ backgroundColor: color }}
-        />
-      ))}
-    </div>
-  );
-}
 
 export default function Projects() {
   const navigate = useNavigate();
