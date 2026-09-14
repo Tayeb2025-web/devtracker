@@ -17,13 +17,14 @@ const Music = lazy(() => import('./pages/Music'));
 const Community = lazy(() => import('./pages/Community'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Auth = lazy(() => import('./pages/Auth'));
+const About = lazy(() => import('./pages/About'));
 
 function ProtectedApp() {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center text-text-muted">Loading…</div>;
   if (!user) return <Navigate to="/login" replace />;
   return <MainLayout><Suspense fallback={<div className="flex justify-center py-12 text-text-muted">Loading…</div>}><Routes>
-    <Route path="/" element={<Dashboard />} /><Route path="/timer" element={<Timer />} /><Route path="/statistics" element={<Statistics />} /><Route path="/calendar" element={<Calendar />} /><Route path="/technologies" element={<Technologies />} /><Route path="/projects" element={<Projects />} /><Route path="/history" element={<History />} /><Route path="/achievements" element={<Achievements />} /><Route path="/challenges" element={<Challenges />} /><Route path="/notes" element={<Notes />} /><Route path="/music" element={<Music />} /><Route path="/community" element={<Community />} /><Route path="/settings" element={<Settings />} /><Route path="*" element={<Navigate to="/" replace />} />
+    <Route path="/" element={<Dashboard />} /><Route path="/timer" element={<Timer />} /><Route path="/statistics" element={<Statistics />} /><Route path="/calendar" element={<Calendar />} /><Route path="/technologies" element={<Technologies />} /><Route path="/projects" element={<Projects />} /><Route path="/history" element={<History />} /><Route path="/achievements" element={<Achievements />} /><Route path="/challenges" element={<Challenges />} /><Route path="/notes" element={<Notes />} /><Route path="/music" element={<Music />} /><Route path="/community" element={<Community />} /><Route path="/settings" element={<Settings />} /><Route path="/about" element={<About />} /><Route path="*" element={<Navigate to="/" replace />} />
   </Routes></Suspense></MainLayout>;
 }
 

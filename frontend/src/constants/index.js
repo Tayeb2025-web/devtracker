@@ -15,6 +15,7 @@ export const ROUTES = {
   MUSIC: '/music',
   COMMUNITY: '/community',
   SETTINGS: '/settings',
+  ABOUT: '/about',
 };
 
 export const CALENDAR_COLORS = {

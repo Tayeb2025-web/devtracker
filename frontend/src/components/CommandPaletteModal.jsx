@@ -5,7 +5,7 @@ import {
   HiOutlineCalendar, HiOutlineCode, HiOutlineDocumentText,
   HiOutlineBadgeCheck, HiOutlineFlag, HiOutlinePencil,
   HiOutlineCog, HiOutlineSearch, HiOutlineFolder, HiOutlineMusicNote,
-  HiOutlineUsers, HiX,
+  HiOutlineUsers, HiX, HiOutlineInformationCircle,
 } from 'react-icons/hi';
 import { ROUTES } from '../constants';
 
@@ -23,6 +23,7 @@ const navCommands = [
   { label: 'Focus Music & Lofi Player', icon: HiOutlineMusicNote, path: ROUTES.MUSIC },
   { label: 'Community & League Leaderboard', icon: HiOutlineUsers, path: ROUTES.COMMUNITY },
   { label: 'User & System Settings', icon: HiOutlineCog, path: ROUTES.SETTINGS },
+  { label: 'About & Contact Developer', icon: HiOutlineInformationCircle, path: ROUTES.ABOUT },
 ];
 
 export default function CommandPaletteModal({ isOpen, onClose }) {

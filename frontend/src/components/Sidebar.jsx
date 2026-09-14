@@ -8,6 +8,7 @@ import {
   HiOutlineFolder,
   HiOutlineLogout,
   HiOutlineUsers,
+  HiOutlineInformationCircle,
 } from 'react-icons/hi';
 import { ROUTES } from '../constants';
 import { useTheme } from '../contexts/ThemeContextStore';
@@ -27,6 +28,7 @@ const navItems = [
   { to: ROUTES.MUSIC, icon: HiOutlineMusicNote, label: 'Music' },
   { to: ROUTES.COMMUNITY, icon: HiOutlineUsers, label: 'Community' },
   { to: ROUTES.SETTINGS, icon: HiOutlineCog, label: 'Settings' },
+  { to: ROUTES.ABOUT, icon: HiOutlineInformationCircle, label: 'About' },
 ];
 
 export default function Sidebar({ isCollapsed, onToggle }) {
