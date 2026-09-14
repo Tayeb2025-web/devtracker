@@ -1,28 +1,18 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
-import { HiOutlineCalendar, HiOutlineClock, HiOutlineFire, HiOutlineTrendingUp, HiOutlineStar, HiOutlinePlus, HiOutlineSparkles, HiOutlineLightningBolt, HiOutlineBookOpen, HiOutlineChevronDown } from 'react-icons/hi';
-import { dashboardApi, technologyApi, projectApi, sessionApi } from '../services/api';
-import { StatCard, Card, ProgressBar, LoadingSpinner, Badge, Modal, Button, Input, Select, Textarea } from '../components/ui';
-import { formatAfghanDate, formatHours, formatLocalDate, formatLocalTime } from '../constants';
+import { HiOutlineCalendar, HiOutlineClock, HiOutlineFire, HiOutlineTrendingUp, HiOutlineStar, HiOutlineSparkles, HiOutlineLightningBolt, HiOutlineBookOpen, HiOutlineChevronDown } from 'react-icons/hi';
+import { dashboardApi } from '../services/api';
+import { StatCard, Card, ProgressBar, LoadingSpinner, Badge } from '../components/ui';
+import { formatAfghanDate, formatHours } from '../constants';
 import { useAuth } from '../contexts/AuthContextStore';
-import { useToast } from '../contexts/ToastContextStore';
 import { useCalendar } from '../contexts/CalendarContextStore';
 
 const GoalConfetti = lazy(() => import('../components/Charts').then(module => ({ default: module.GoalConfetti })));
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const toast = useToast();
   const { calendar, setCalendar, calendarOptions, formatDate } = useCalendar();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [logModalOpen, setLogModalOpen] = useState(false);
-  const [technologies, setTechnologies] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [logMinutes, setLogMinutes] = useState('60');
-  const [logTechId, setLogTechId] = useState('');
-  const [logProjectId, setLogProjectId] = useState('');
-  const [logNote, setLogNote] = useState('');
-  const [logSaving, setLogSaving] = useState(false);
   const [calendarMenuOpen, setCalendarMenuOpen] = useState(false);
   const calendarMenuRef = useRef(null);
 
@@ -39,49 +29,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadDashboard();
-    Promise.all([technologyApi.getAll(), projectApi.getAll()]).then(([t, p]) => {
-      setTechnologies(t.data || []);
-      setProjects(p.data || []);
-    }).catch(() => {});
-
     window.addEventListener('devtracker-session-saved', loadDashboard);
     return () => window.removeEventListener('devtracker-session-saved', loadDashboard);
   }, []);
-
-  const handleQuickLog = async (e) => {
-    e.preventDefault();
-    const mins = parseInt(logMinutes, 10);
-    if (!mins || mins < 1) {
-      toast.warning('Session duration must be at least 1 minute');
-      return;
-    }
-    if (!logTechId && !logProjectId) {
-      toast.warning('Select a technology or project');
-      return;
-    }
-    setLogSaving(true);
-    try {
-      const now = new Date();
-      const res = await sessionApi.create({
-        technology_id: logTechId || null,
-        project_id: logProjectId || null,
-        session_date: formatLocalDate(now),
-        start_time: formatLocalTime(now),
-        end_time: formatLocalTime(now),
-        duration_minutes: mins,
-        duration_hours: Number((mins / 60).toFixed(4)),
-        note: logNote.trim() || null,
-      });
-      toast.success(`Logged ${mins}m session! +${res.data?.xpEarned || 0} XP earned`);
-      setLogModalOpen(false);
-      setLogNote('');
-      loadDashboard();
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setLogSaving(false);
-    }
-  };
 
   const loadDashboard = async () => {
     try {
@@ -122,10 +72,7 @@ export default function Dashboard() {
           <p className="text-text-muted text-xs sm:text-sm mt-1">Track your daily programming progress and stay on target.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={() => setLogModalOpen(true)} className="shadow-lg shadow-indigo-500/20">
-            <HiOutlinePlus size={18} /> Quick Log
-          </Button>
+        <div className="flex items-center gap-3">
           <div ref={calendarMenuRef} className="relative z-40 self-start sm:self-auto">
             <div
               onClick={() => setCalendarMenuOpen(prev => !prev)}
@@ -334,42 +281,6 @@ export default function Dashboard() {
           )}
         </Card>
       </div>
-
-      <Modal isOpen={logModalOpen} onClose={() => setLogModalOpen(false)} title="Quick Log Study Session" size="sm">
-        <form onSubmit={handleQuickLog} className="space-y-4">
-          <Input
-            label="Duration (minutes)"
-            type="number"
-            min="1"
-            max="1440"
-            value={logMinutes}
-            onChange={e => setLogMinutes(e.target.value)}
-          />
-          <Select
-            label="Technology"
-            options={[{ value: '', label: 'Select technology...' }, ...technologies.map(t => ({ value: t.id, label: t.name }))]}
-            value={logTechId}
-            onChange={e => setLogTechId(e.target.value)}
-          />
-          <Select
-            label="Project"
-            options={[{ value: '', label: 'Select project...' }, ...projects.map(p => ({ value: p.id, label: p.name }))]}
-            value={logProjectId}
-            onChange={e => setLogProjectId(e.target.value)}
-          />
-          <Textarea
-            label="Focus Note (optional)"
-            rows={2}
-            placeholder="What did you study or accomplish?"
-            value={logNote}
-            onChange={e => setLogNote(e.target.value)}
-          />
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setLogModalOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={logSaving}>{logSaving ? 'Logging…' : 'Save Session'}</Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 }

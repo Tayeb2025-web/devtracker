@@ -6,9 +6,9 @@ import {
 } from 'react-icons/hi';
 import { useTimer } from '../contexts/TimerContextStore';
 import { useToast } from '../contexts/ToastContextStore';
-import { projectApi, technologyApi } from '../services/api';
-import { Card, Button, Input, Select, Textarea, LoadingSpinner } from '../components/ui';
-import { formatDuration } from '../constants';
+import { projectApi, technologyApi, sessionApi } from '../services/api';
+import { Card, Button, Input, Select, Textarea, LoadingSpinner, Modal } from '../components/ui';
+import { formatDuration, formatLocalDate, formatLocalTime } from '../constants';
 import { ambientSound } from '../utils/audioUtils';
 
 const CUSTOM_TIMERS_KEY = 'devtracker-custom-timers';
@@ -52,6 +52,49 @@ export default function TimerPage() {
   const [customProjectId, setCustomProjectId] = useState('');
   const [ambientType, setAmbientType] = useState('off');
   const [ambientVolume, setAmbientVolume] = useState(0.3);
+
+  // Quick Log modal state
+  const [logModalOpen, setLogModalOpen] = useState(false);
+  const [logMinutes, setLogMinutes] = useState('60');
+  const [logTechId, setLogTechId] = useState('');
+  const [logProjectId, setLogProjectId] = useState('');
+  const [logNote, setLogNote] = useState('');
+  const [logSaving, setLogSaving] = useState(false);
+
+  const handleQuickLog = async (e) => {
+    e.preventDefault();
+    const mins = parseInt(logMinutes, 10);
+    if (!mins || mins < 1) {
+      toast.warning('Session duration must be at least 1 minute');
+      return;
+    }
+    if (!logTechId && !logProjectId) {
+      toast.warning('Select a technology or project');
+      return;
+    }
+    setLogSaving(true);
+    try {
+      const now = new Date();
+      const res = await sessionApi.create({
+        technology_id: logTechId || null,
+        project_id: logProjectId || null,
+        session_date: formatLocalDate(now),
+        start_time: formatLocalTime(now),
+        end_time: formatLocalTime(now),
+        duration_minutes: mins,
+        duration_hours: Number((mins / 60).toFixed(4)),
+        note: logNote.trim() || null,
+      });
+      toast.success(`Logged ${mins}m session! +${res.data?.xpEarned || 0} XP earned`);
+      setLogModalOpen(false);
+      setLogNote('');
+      window.dispatchEvent(new Event('devtracker-session-saved'));
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLogSaving(false);
+    }
+  };
 
   const handleAmbientChange = (type) => {
     setAmbientType(type);
@@ -173,13 +216,19 @@ export default function TimerPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-7">
-      <div className="animate-fade-in text-center">
-        <div className="inline-flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
-          <HiOutlineSparkles size={16} />
-          <span>Focus Zone</span>
+      <div className="animate-fade-in flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
+            <HiOutlineSparkles size={16} />
+            <span>Focus Zone</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Focus Clock</h1>
+          <p className="text-text-muted text-xs sm:text-sm mt-1">Set a study timer, track an open-ended session, or quick log time</p>
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Focus Clock</h1>
-        <p className="text-text-muted text-xs sm:text-sm mt-1">Set a study timer or track an open-ended coding session</p>
+
+        <Button onClick={() => setLogModalOpen(true)} className="shadow-lg shadow-indigo-500/20 self-start sm:self-auto shrink-0">
+          <HiOutlinePlus size={18} /> Quick Log
+        </Button>
       </div>
 
 
@@ -544,6 +593,43 @@ export default function TimerPage() {
         <h3 className="font-bold mb-1 text-xs text-indigo-400 uppercase tracking-wider">Reliable background timing</h3>
         <p className="text-xs leading-relaxed text-text-muted">Both tools use real timestamps instead of relying on browser ticks, so their time stays 100% precise when you switch tabs, minimize Chrome, or open another page in Codelume.</p>
       </Card>
+
+      {/* Quick Log Modal */}
+      <Modal isOpen={logModalOpen} onClose={() => setLogModalOpen(false)} title="Quick Log Study Session" size="sm">
+        <form onSubmit={handleQuickLog} className="space-y-4">
+          <Input
+            label="Duration (minutes)"
+            type="number"
+            min="1"
+            max="1440"
+            value={logMinutes}
+            onChange={e => setLogMinutes(e.target.value)}
+          />
+          <Select
+            label="Technology"
+            options={[{ value: '', label: 'Select technology...' }, ...techOptions]}
+            value={logTechId}
+            onChange={e => setLogTechId(e.target.value)}
+          />
+          <Select
+            label="Project"
+            options={[{ value: '', label: 'Select project...' }, ...projectOptions]}
+            value={logProjectId}
+            onChange={e => setLogProjectId(e.target.value)}
+          />
+          <Textarea
+            label="Focus Note (optional)"
+            rows={2}
+            placeholder="What did you study or accomplish?"
+            value={logNote}
+            onChange={e => setLogNote(e.target.value)}
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setLogModalOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={logSaving}>{logSaving ? 'Logging…' : 'Save Session'}</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
