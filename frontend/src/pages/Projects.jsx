@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   HiOutlineClock,
   HiOutlineFolder,
@@ -12,7 +12,6 @@ import {
 import { projectApi } from '../services/api';
 import { useTimer } from '../contexts/TimerContextStore';
 import { useToast } from '../contexts/ToastContextStore';
-import { useAuth } from '../contexts/AuthContextStore';
 import { Button, Card, ConfirmDialog, EmptyState, Input, LoadingSpinner, Modal, Textarea } from '../components/ui';
 import { formatHours } from '../constants';
 
@@ -37,7 +36,6 @@ function ColorPicker({ value, onChange }) {
 }
 
 export default function Projects() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
   const stopwatch = useTimer();
@@ -49,38 +47,25 @@ export default function Projects() {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const load = useCallback(async () => {
-    if (!user) {
-      setProjects([]);
-      setLoading(false);
-      return;
-    }
     try {
       const response = await projectApi.getAll();
       setProjects(response.data || []);
     } catch (error) {
-      setProjects([]);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [toast]);
 
   useEffect(() => { void load(); }, [load]);
 
   const openCreate = () => {
-    if (!user) {
-      toast.info('برای ایجاد پروژه جدید، لطفاً وارد حساب خود شوید.');
-      return;
-    }
     setEditingProject(null);
     setProjectForm(EMPTY_PROJECT);
     setModalOpen(true);
   };
 
   const openEdit = (project) => {
-    if (!user) {
-      toast.info('برای ویرایش پروژه، لطفاً وارد حساب خود شوید.');
-      return;
-    }
     setEditingProject(project);
     setProjectForm({
       name: project.name,
@@ -169,22 +154,6 @@ export default function Projects() {
           <Button onClick={openCreate} className="py-3 px-6"><HiOutlinePlus size={18} /> Add Project</Button>
         </div>
       </section>
-
-      {/* Guest Banner */}
-      {!user && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 p-4 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
-            <span>پروژه‌ها در حالت مهمان. برای ایجاد پروژه‌های واقعی و تفکیک ساعات مطالعه هر پروژه وارد حساب شوید.</span>
-          </div>
-          <Link
-            to="/login"
-            className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
-          >
-            ورود / ثبت‌نام
-          </Link>
-        </div>
-      )}
 
       {projects.length === 0 ? (
         <EmptyState

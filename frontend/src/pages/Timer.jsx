@@ -1,17 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   HiOutlinePlay, HiOutlinePause, HiOutlineStop, HiOutlineRefresh,
   HiOutlineClock, HiOutlineBell, HiOutlinePlus, HiOutlineTrash,
   HiOutlineBookmark, HiOutlineSparkles, HiOutlineVolumeUp, HiOutlineVolumeOff,
-  HiOutlineLogin,
 } from 'react-icons/hi';
 import { useTimer } from '../contexts/TimerContextStore';
 import { useToast } from '../contexts/ToastContextStore';
-import { useAuth } from '../contexts/AuthContextStore';
 import { projectApi, technologyApi } from '../services/api';
 import { Card, Button, Input, Select, Textarea, LoadingSpinner } from '../components/ui';
-import { formatDuration, DEFAULT_TECH_LIST } from '../constants';
+import { formatDuration } from '../constants';
 import { ambientSound } from '../utils/audioUtils';
 
 const CUSTOM_TIMERS_KEY = 'devtracker-custom-timers';
@@ -37,12 +34,11 @@ const loadCustomTimers = () => {
 };
 
 export default function TimerPage() {
-  const { user } = useAuth();
   const toast = useToast();
   const stopwatch = useTimer();
   const countdown = stopwatch.countdown;
   const [mode, setMode] = useState('timer');
-  const [technologies, setTechnologies] = useState(DEFAULT_TECH_LIST);
+  const [technologies, setTechnologies] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const initialDuration = getDurationParts(countdown.totalSeconds);
@@ -77,30 +73,18 @@ export default function TimerPage() {
   useEffect(() => {
     let active = true;
 
-    if (!user) {
-      setTechnologies(DEFAULT_TECH_LIST);
-      setProjects([]);
-      setLoading(false);
-      return;
-    }
-
     Promise.all([technologyApi.getAll(), projectApi.getAll()])
       .then(([techResponse, projectResponse]) => {
         if (!active) return;
-        const techs = techResponse.data && techResponse.data.length > 0 ? techResponse.data : DEFAULT_TECH_LIST;
-        setTechnologies(techs);
+        setTechnologies(techResponse.data || []);
         setProjects(projectResponse.data || []);
-      })
-      .catch(() => {
-        if (!active) return;
-        setTechnologies(DEFAULT_TECH_LIST);
       })
       .finally(() => {
         if (active) setLoading(false);
       });
 
     return () => { active = false; };
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (!countdown.isIdle) return;
@@ -216,22 +200,6 @@ export default function TimerPage() {
           <HiOutlineClock size={18} /> Stopwatch
         </button>
       </div>
-
-      {/* Guest Mode Notice */}
-      {!user && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 px-4 py-3 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
-            <span>حالت مهمان: می‌توانید زمان مطالعه خود را ثبت کنید؛ هنگام پایان تایمر، امکان ورود و ذخیره دائمی به شما نمایش داده می‌شود.</span>
-          </div>
-          <Link
-            to="/login"
-            className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
-          >
-            ورود به حساب
-          </Link>
-        </div>
-      )}
 
       {mode === 'timer' ? (
         <Card className="animate-fade-in text-center py-10 sm:py-12 border-indigo-500/20">

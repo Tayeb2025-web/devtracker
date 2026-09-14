@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { HiOutlineTrash, HiOutlineDocumentText, HiOutlineSearch, HiOutlineSparkles, HiOutlineFilter } from 'react-icons/hi';
 import { projectApi, sessionApi, technologyApi } from '../services/api';
 import { useToast } from '../contexts/ToastContextStore';
-import { useAuth } from '../contexts/AuthContextStore';
 import { AfghanDateInput, Card, Button, Select, ConfirmDialog, LoadingSpinner, EmptyState, Badge } from '../components/ui';
-import { formatAfghanDate, formatHours, DEFAULT_TECH_LIST } from '../constants';
+import { formatAfghanDate, formatHours } from '../constants';
 
 const FILTERS = [
   { value: '', label: 'All Time' },
@@ -15,11 +14,10 @@ const FILTERS = [
 ];
 
 export default function History() {
-  const { user } = useAuth();
   const toast = useToast();
   const [searchParams] = useSearchParams();
   const [sessions, setSessions] = useState([]);
-  const [technologies, setTechnologies] = useState(DEFAULT_TECH_LIST);
+  const [technologies, setTechnologies] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -34,13 +32,6 @@ export default function History() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    if (!user) {
-      setSessions([]);
-      setTechnologies(DEFAULT_TECH_LIST);
-      setProjects([]);
-      setLoading(false);
-      return;
-    }
     try {
       const params = {};
       if (filter) params.filter = filter;
@@ -58,14 +49,14 @@ export default function History() {
         projectApi.getAll(),
       ]);
       setSessions(sessionsRes.data || []);
-      setTechnologies(techRes.data && techRes.data.length ? techRes.data : DEFAULT_TECH_LIST);
+      setTechnologies(techRes.data || []);
       setProjects(projectRes.data || []);
     } catch (err) {
-      setSessions([]);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
-  }, [user, filter, techFilter, projectFilter, submittedSearch, startDate, endDate]);
+  }, [filter, techFilter, projectFilter, submittedSearch, startDate, endDate, toast]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -111,22 +102,6 @@ export default function History() {
         <h1 className="text-3xl font-extrabold tracking-tight">Study History</h1>
         <p className="text-text-muted text-xs sm:text-sm mt-1">View and manage all recorded study and coding sessions</p>
       </div>
-
-      {/* Guest Banner */}
-      {!user && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 p-4 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
-            <span>تاریخچه در حالت مهمان. برای نگهداری سوابق تمامی جلسات مطالعه و قابلیت جستجو و فیلتر وارد شوید.</span>
-          </div>
-          <Link
-            to="/login"
-            className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
-          >
-            ورود / ثبت‌نام
-          </Link>
-        </div>
-      )}
 
       {/* Filters Container */}
       <Card className="space-y-4">

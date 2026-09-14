@@ -1,14 +1,10 @@
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContextStore';
-import { useToast } from '../contexts/ToastContextStore';
-import { sessionApi } from '../services/api';
-import { formatLocalDate, formatLocalTime } from '../constants';
 import { Button, Input } from '../components/ui';
 
 export default function Auth({ mode }) {
   const { user, login, register } = useAuth();
-  const toast = useToast();
   const navigate = useNavigate();
   const isLogin = mode === 'login';
   const [form, setForm] = useState({ displayName: '', email: '', password: '' });
@@ -24,34 +20,6 @@ export default function Auth({ mode }) {
     try {
       if (isLogin) await login({ email: form.email, password: form.password });
       else await register(form);
-
-      // Check for any pending guest session to auto-save to new account
-      try {
-        const pendingRaw = localStorage.getItem('devtracker-pending-guest-session');
-        if (pendingRaw) {
-          const pending = JSON.parse(pendingRaw);
-          localStorage.removeItem('devtracker-pending-guest-session');
-          if (pending && pending.durationSeconds >= 60) {
-            const now = new Date();
-            const mins = Math.floor(pending.durationSeconds / 60);
-            await sessionApi.create({
-              technology_id: pending.sessionTechnologyId || null,
-              project_id: pending.sessionProjectId || null,
-              session_date: pending.savedSessionDate || formatLocalDate(now),
-              start_time: pending.savedStartTime || formatLocalTime(now),
-              end_time: formatLocalTime(now),
-              duration_minutes: mins,
-              duration_hours: Number((mins / 60).toFixed(4)),
-              note: pending.sessionNote || null,
-            });
-            toast.success(`جلسه مطالعه شما (${mins} دقیقه) با موفقیت در حساب کاربری ثبت شد! 🎉`);
-            window.dispatchEvent(new Event('devtracker-session-saved'));
-          }
-        }
-      } catch (e) {
-        console.warn('Could not auto-save guest session:', e);
-      }
-
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.message);
@@ -138,17 +106,6 @@ export default function Auth({ mode }) {
             {isLogin ? 'Create free account' : 'Sign in here'}
           </Link>
         </p>
-
-        {/* Back to app as guest */}
-        <div className="mt-4 pt-4 border-t border-border/60 text-center">
-          <Link
-            to="/"
-            className="text-xs font-semibold text-text-muted hover:text-indigo-400 transition-colors inline-flex items-center gap-1.5"
-          >
-            <span>←</span>
-            <span>بازگشت به برنامه (حالت مهمان)</span>
-          </Link>
-        </div>
       </section>
     </main>
   );

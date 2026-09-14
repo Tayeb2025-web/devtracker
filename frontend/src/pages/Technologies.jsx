@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineCode, HiOutlineFolder, HiOutlinePhotograph, HiOutlineX, HiOutlineViewGrid, HiOutlineSparkles, HiOutlineLogin } from 'react-icons/hi';
+import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineCode, HiOutlineFolder, HiOutlinePhotograph, HiOutlineX, HiOutlineViewGrid, HiOutlineSparkles } from 'react-icons/hi';
 import { technologyApi, categoryApi } from '../services/api';
 import { useToast } from '../contexts/ToastContextStore';
-import { useAuth } from '../contexts/AuthContextStore';
 import { Button, Input, Select, Modal, ConfirmDialog, LoadingSpinner, EmptyState } from '../components/ui';
-import { formatHours, DEFAULT_TECH_FOLDERS, DEFAULT_TECH_LIST } from '../constants';
+import { formatHours } from '../constants';
 import TechnologyIcon, { FolderContentIcon } from '../components/TechnologyIcon';
 
 const COLORS = ['#6366F1', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#61DAFB', '#3178C6', '#3776AB'];
@@ -44,7 +42,6 @@ function swap(items, movingId, targetId) {
 }
 
 export default function Technologies() {
-  const { user } = useAuth();
   const toast = useToast();
   const fileInputRef = useRef(null);
   const [technologies, setTechnologies] = useState([]);
@@ -62,24 +59,13 @@ export default function Technologies() {
   const [folderForm, setFolderForm] = useState(EMPTY_FOLDER_FORM);
 
   const load = useCallback(async () => {
-    if (!user) {
-      setTechnologies(DEFAULT_TECH_LIST);
-      setCategories(DEFAULT_TECH_FOLDERS.map(f => ({ id: f.id, name: f.name, color: f.color })));
-      setLoading(false);
-      return;
-    }
     try {
       const [techResponse, folderResponse] = await Promise.all([technologyApi.getAll(), categoryApi.getAll()]);
-      const techs = techResponse.data && techResponse.data.length ? techResponse.data : DEFAULT_TECH_LIST;
-      setTechnologies(techs);
+      setTechnologies(techResponse.data || []);
       setCategories(ordered(folderResponse.data || [], FOLDER_ORDER_KEY));
-    } catch (error) {
-      setTechnologies(DEFAULT_TECH_LIST);
-      setCategories(DEFAULT_TECH_FOLDERS.map(f => ({ id: f.id, name: f.name, color: f.color })));
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+    } catch (error) { toast.error(error.message); }
+    finally { setLoading(false); }
+  }, [toast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -92,41 +78,17 @@ export default function Technologies() {
   const selectedFolder = folders.find(folder => String(folder.id) === String(selectedFolderId));
 
   const openCreateTech = (categoryId = '') => {
-    if (!user) {
-      toast.info('برای افزودن تکنولوژی دلخواه، لطفاً وارد حساب خود شوید.');
-      return;
-    }
     setEditingTech(null);
     setTechForm({ ...EMPTY_TECH_FORM, category_id: categoryId && categoryId !== 'unfiled' ? String(categoryId) : '' });
     setTechModalOpen(true);
   };
   const openEditTech = tech => {
-    if (!user) {
-      toast.info('برای ویرایش تکنولوژی، لطفاً وارد حساب خود شوید.');
-      return;
-    }
     setEditingTech(tech);
     setTechForm({ name: tech.name, color: tech.color, category_id: tech.category_id ? String(tech.category_id) : '', custom_icon: tech.custom_icon || null });
     setTechModalOpen(true);
   };
-  const openCreateFolder = () => {
-    if (!user) {
-      toast.info('برای ساخت پوشه جدید، لطفاً وارد حساب خود شوید.');
-      return;
-    }
-    setEditingFolder(null);
-    setFolderForm(EMPTY_FOLDER_FORM);
-    setFolderModalOpen(true);
-  };
-  const openEditFolder = folder => {
-    if (!user) {
-      toast.info('برای ویرایش پوشه، لطفاً وارد حساب خود شوید.');
-      return;
-    }
-    setEditingFolder(folder);
-    setFolderForm({ name: folder.name, color: folder.color });
-    setFolderModalOpen(true);
-  };
+  const openCreateFolder = () => { setEditingFolder(null); setFolderForm(EMPTY_FOLDER_FORM); setFolderModalOpen(true); };
+  const openEditFolder = folder => { setEditingFolder(folder); setFolderForm({ name: folder.name, color: folder.color }); setFolderModalOpen(true); };
 
   const handleIconChange = event => {
     const file = event.target.files?.[0];
@@ -204,21 +166,6 @@ export default function Technologies() {
         <Button className="flex-1 sm:flex-none" onClick={() => openCreateTech()}><HiOutlinePlus size={18} /> Add Technology</Button>
       </div>
     </div>
-
-    {!user && (
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 p-4 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
-          <span>شما در حال مشاهده پوشه‌ها و تکنولوژی‌های پیش‌فرض هستید. برای ساخت، ویرایش و دسته‌بندی اختصاصی، وارد شوید.</span>
-        </div>
-        <Link
-          to="/login"
-          className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
-        >
-          ورود / ثبت‌نام
-        </Link>
-      </div>
-    )}
 
     {!folders.length ? <EmptyState icon={HiOutlineCode} title="No folders yet" description="Create a folder, then add your technologies inside it." action={<Button onClick={openCreateFolder}><HiOutlinePlus size={18} /> Add Folder</Button>} /> : <div className="folder-grid" aria-label="Technology folders">
       {folders.map(folder => <article key={folder.id}

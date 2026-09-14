@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { goalApi, userApi, exportApi } from '../services/api';
 import { useToast } from '../contexts/ToastContextStore';
 import { useAuth } from '../contexts/AuthContextStore';
@@ -49,10 +48,6 @@ export default function Settings() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const loadSettings = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     try {
       const [profileRes, goalRes] = await Promise.all([userApi.getProfile(), goalApi.get()]);
@@ -73,18 +68,13 @@ export default function Settings() {
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [toast, user?.avatar_url]);
 
   useEffect(() => {
     void loadSettings();
   }, [loadSettings]);
 
   const handleAvatarSelect = async (e) => {
-    if (!user) {
-      toast.info('برای تغییر تصویر پروفایل لطفاً وارد حساب خود شوید.');
-      e.target.value = '';
-      return;
-    }
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -118,10 +108,6 @@ export default function Settings() {
   };
 
   const handleRemoveAvatar = async () => {
-    if (!user) {
-      toast.info('برای تغییر تصویر پروفایل لطفاً وارد حساب خود شوید.');
-      return;
-    }
     setUploadingAvatar(true);
     try {
       const res = await userApi.removeAvatar();
@@ -139,10 +125,6 @@ export default function Settings() {
   };
 
   const save = async () => {
-    if (!user) {
-      toast.success('تنظیمات تقویم با موفقیت اعمال شد ✨');
-      return;
-    }
     const targetHours = Number(dailyGoal);
     if (!Number.isFinite(targetHours) || targetHours < 0.5 || targetHours > 24) {
       toast.warning('Daily goal must be between 0.5 and 24 hours');
@@ -188,22 +170,6 @@ export default function Settings() {
         <h1 className="text-3xl font-extrabold tracking-tight">Account Settings</h1>
         <p className="text-text-muted text-xs sm:text-sm mt-1">Manage your developer profile, daily targets, and system notifications</p>
       </div>
-
-      {/* Guest Banner */}
-      {!user && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 p-4 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
-            <span>حالت مهمان فعال است. سیستم تقویم را می‌توانید تغییر دهید؛ برای تنظیمات پیشرفته پروفایل و ذخیره دائمی اطلاعات وارد شوید.</span>
-          </div>
-          <Link
-            to="/login"
-            className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
-          >
-            ورود / ثبت‌نام
-          </Link>
-        </div>
-      )}
 
       {/* Profile & Avatar Section */}
       <Card className="space-y-6 p-6">
@@ -471,10 +437,6 @@ export default function Settings() {
                 variant="outline"
                 size="sm"
                 onClick={async () => {
-                  if (!user) {
-                    toast.info('برای خروجی گرفتن از اطلاعات لطفاً ابتدا وارد حساب خود شوید.');
-                    return;
-                  }
                   try {
                     const res = await exportApi.export('json');
                     const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
@@ -505,11 +467,6 @@ export default function Settings() {
                   accept=".json"
                   className="hidden"
                   onChange={async (e) => {
-                    if (!user) {
-                      toast.info('برای بازیابی اطلاعات لطفاً ابتدا وارد حساب خود شوید.');
-                      e.target.value = '';
-                      return;
-                    }
                     const file = e.target.files?.[0];
                     if (!file) return;
                     try {

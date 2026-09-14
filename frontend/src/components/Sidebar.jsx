@@ -88,52 +88,26 @@ export default function Sidebar({ isCollapsed, onToggle }) {
 
       {/* Footer / Profile / Search */}
       <div className="p-3 border-t border-border/80 space-y-2">
-        {/* User / Guest Card */}
-        {user ? (
-          <div className="flex items-center gap-3 rounded-xl bg-surface-lighter/50 border border-border/60 p-2.5 backdrop-blur-sm">
-            <div className="relative">
-              <img src={user?.avatar_url || '/images/profile.jpg'} alt="Profile" className="h-9 w-9 rounded-full object-cover ring-2 ring-primary/30" />
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-surface" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-bold text-text">{user?.display_name || user?.username}</p>
-              <p className="truncate text-[11px] text-text-muted">{user?.email}</p>
-            </div>
-            <button
-              type="button"
-              onClick={logout}
-              title="Log out"
-              aria-label="Log out"
-              className="rounded-lg p-2 text-text-muted hover:bg-red-500/15 hover:text-red-400 transition-colors cursor-pointer"
-            >
-              <HiOutlineLogout size={17} />
-            </button>
+        {/* User Card */}
+        <div className="flex items-center gap-3 rounded-xl bg-surface-lighter/50 border border-border/60 p-2.5 backdrop-blur-sm">
+          <div className="relative">
+            <img src={user?.avatar_url || '/images/profile.jpg'} alt="Profile" className="h-9 w-9 rounded-full object-cover ring-2 ring-primary/30" />
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-surface" />
           </div>
-        ) : (
-          <div className="rounded-2xl bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-surface-lighter border border-indigo-500/30 p-3 shadow-lg shadow-indigo-500/5">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="flex h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
-              <p className="text-xs font-bold text-text">حالت مهمان</p>
-            </div>
-            <p className="text-[11px] text-text-muted mb-2.5 leading-tight">برای ذخیره پیشرفت و XP وارد شوید</p>
-            <div className="flex gap-2">
-              <NavLink
-                to="/login"
-                onClick={() => window.matchMedia('(max-width: 767px)').matches && onToggle()}
-                className="flex-1 py-1.5 px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold text-center transition-all shadow-sm shadow-indigo-600/30 active:scale-95 cursor-pointer"
-              >
-                ورود
-              </NavLink>
-              <NavLink
-                to="/signup"
-                onClick={() => window.matchMedia('(max-width: 767px)').matches && onToggle()}
-                className="flex-1 py-1.5 px-2.5 rounded-xl bg-surface-lighter hover:bg-surface-light border border-border text-text text-xs font-bold text-center transition-all active:scale-95 cursor-pointer"
-              >
-                ثبت‌نام
-              </NavLink>
-            </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-bold text-text">{user?.display_name || user?.username}</p>
+            <p className="truncate text-[11px] text-text-muted">{user?.email}</p>
           </div>
-        )}
+          <button
+            type="button"
+            onClick={logout}
+            title="Log out"
+            aria-label="Log out"
+            className="rounded-lg p-2 text-text-muted hover:bg-red-500/15 hover:text-red-400 transition-colors"
+          >
+            <HiOutlineLogout size={17} />
+          </button>
+        </div>
 
         {/* Quick Search */}
         <button

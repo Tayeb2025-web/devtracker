@@ -1,27 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { achievementApi } from '../services/api';
 import { Card, LoadingSpinner } from '../components/ui';
 import { ACHIEVEMENT_DEFS, formatAfghanDate } from '../constants';
-import { useAuth } from '../contexts/AuthContextStore';
 import { HiOutlineSparkles, HiOutlineBadgeCheck } from 'react-icons/hi';
 
 export default function Achievements() {
-  const { user } = useAuth();
   const [unlocked, setUnlocked] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      setUnlocked([]);
-      setLoading(false);
-      return;
-    }
-    achievementApi.getAll()
-      .then(res => setUnlocked(res.data || []))
-      .catch(() => setUnlocked([]))
-      .finally(() => setLoading(false));
-  }, [user]);
+    achievementApi.getAll().then(res => setUnlocked(res.data || [])).finally(() => setLoading(false));
+  }, []);
 
   const unlockedKeys = new Set(unlocked.map(a => a.badge_key));
 
@@ -39,22 +28,6 @@ export default function Achievements() {
           <span className="font-bold text-text">{unlocked.length}</span> of {ACHIEVEMENT_DEFS.length} badges unlocked
         </p>
       </div>
-
-      {/* Guest Banner */}
-      {!user && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 p-4 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
-            <span>نشان‌ها و دستاوردها در حالت مهمان قفل هستند. برای باز کردن نشان‌ها با مطالعه روزانه وارد حساب شوید.</span>
-          </div>
-          <Link
-            to="/login"
-            className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
-          >
-            ورود / ثبت‌نام
-          </Link>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {ACHIEVEMENT_DEFS.map((badge, index) => {

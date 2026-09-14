@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import {
   HiOutlineChatAlt2,
@@ -95,11 +94,6 @@ export default function Community() {
   }, [messages, activeTab]);
 
   const loadDirectory = useCallback(async (query = '') => {
-    if (!user) {
-      setDirectory([]);
-      setDirectoryLoading(false);
-      return;
-    }
     setDirectoryLoading(true);
     try {
       const result = await socialApi.discover({ search: query || undefined });
@@ -111,14 +105,9 @@ export default function Community() {
     } finally {
       setDirectoryLoading(false);
     }
-  }, [user, toast]);
+  }, [toast]);
 
   const loadLeague = useCallback(async () => {
-    if (!user) {
-      setLeague(null);
-      setLeagueLoading(false);
-      return;
-    }
     setLeagueLoading(true);
     try {
       const result = await socialApi.getLeague();
@@ -128,14 +117,9 @@ export default function Community() {
     } finally {
       setLeagueLoading(false);
     }
-  }, [user, toast]);
+  }, [toast]);
 
   const loadConversations = useCallback(async () => {
-    if (!user) {
-      setConversations([]);
-      setConversationsLoading(false);
-      return;
-    }
     setConversationsLoading(true);
     try {
       const result = await socialApi.getConversations();
@@ -145,7 +129,7 @@ export default function Community() {
     } finally {
       setConversationsLoading(false);
     }
-  }, [user, toast]);
+  }, [toast]);
 
   useEffect(() => {
     loadDirectory();
@@ -228,10 +212,6 @@ export default function Community() {
   };
 
   const toggleFollow = async (profile) => {
-    if (!user) {
-      toast.info('برای دنبال کردن سایر برنامه‌نویسان لطفاً وارد حساب خود شوید.');
-      return;
-    }
     try {
       const result = followingIds.has(profile.id)
         ? await socialApi.unfollow(profile.id)
@@ -243,10 +223,6 @@ export default function Community() {
   };
 
   const startDirectMessage = async (profile) => {
-    if (!user) {
-      toast.info('برای ارسال پیام به سایر کاربران لطفاً وارد حساب خود شوید.');
-      return;
-    }
     try {
       const result = await socialApi.createConversation(profile.id);
       const conversation = result.data;
@@ -261,10 +237,6 @@ export default function Community() {
 
   const sendMessage = async (event) => {
     event.preventDefault();
-    if (!user) {
-      toast.info('برای ارسال پیام در چت جامعه لطفاً وارد حساب خود شوید.');
-      return;
-    }
     const body = messageBody.trim();
     if (!body || sending) return;
     setSending(true);
@@ -300,22 +272,6 @@ export default function Community() {
           <div className="flex items-center gap-2 text-xs text-text-muted"><span className={`h-2 w-2 rounded-full ${connected ? 'bg-accent' : 'bg-yellow-400'}`} /> {connected ? 'Realtime connected' : 'Connecting to chat…'}</div>
         </div>
       </header>
-
-      {/* Guest Banner */}
-      {!user && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-indigo-500/10 p-4 text-xs text-indigo-300 animate-fade-in text-center sm:text-right" dir="rtl">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
-            <span>جامعه برنامه‌نویسان در حالت مهمان در دسترس نیست. برای رقابت در لیگ‌های هفتگی، چت زنده و دنبال کردن دیگران وارد شوید.</span>
-          </div>
-          <Link
-            to="/login"
-            className="shrink-0 font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 rounded-lg shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
-          >
-            ورود / ثبت‌نام
-          </Link>
-        </div>
-      )}
 
       <nav className="flex overflow-x-auto rounded-xl border border-border bg-surface-light p-1.5" aria-label="Community sections">
         {TABS.map(({ id, label, icon: Icon }) => (

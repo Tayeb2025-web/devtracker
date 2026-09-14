@@ -1,7 +1,6 @@
 import Sidebar from '../components/Sidebar';
 import MiniMusicPlayer from '../components/MiniMusicPlayer';
 import CommandPaletteModal from '../components/CommandPaletteModal';
-import GuestAuthModal from '../components/GuestAuthModal';
 import DevPet from '../components/DevPet';
 import { useEffect, useState } from 'react';
 import { HiOutlineBell, HiOutlineMenuAlt2, HiOutlineVolumeOff } from 'react-icons/hi';
@@ -76,7 +75,6 @@ export default function MainLayout({ children }) {
         </div>
       </main>
       <CommandPaletteModal isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
-      <GuestAuthModal />
       <DevPet />
       <MiniMusicPlayer />
     </div>
