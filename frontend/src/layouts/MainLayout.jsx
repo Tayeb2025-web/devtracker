@@ -2,17 +2,23 @@ import Sidebar from '../components/Sidebar';
 import MiniMusicPlayer from '../components/MiniMusicPlayer';
 import CommandPaletteModal from '../components/CommandPaletteModal';
 import DevPet from '../components/DevPet';
+import LiveActivityBubble from '../components/LiveActivityBubble';
 import { useEffect, useState } from 'react';
 import { HiOutlineBell, HiOutlineMenuAlt2, HiOutlineVolumeOff } from 'react-icons/hi';
 import { useTimer } from '../contexts/TimerContextStore';
+import { useAuth } from '../contexts/AuthContextStore';
+import { socialApi, technologyApi } from '../services/api';
 
 export default function MainLayout({ children }) {
-  const { isAlarmActive, dismissAlarm } = useTimer();
+  const timer = useTimer();
+  const { user } = useAuth();
+  const { isAlarmActive, dismissAlarm } = timer || {};
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => window.matchMedia('(max-width: 767px)').matches
       || localStorage.getItem('devtracker-sidebar-collapsed') === 'true'
   );
+  const [techMap, setTechMap] = useState({});
 
   useEffect(() => {
     const handleTogglePalette = () => setCommandPaletteOpen(prev => !prev);
@@ -23,6 +29,52 @@ export default function MainLayout({ children }) {
   useEffect(() => {
     localStorage.setItem('devtracker-sidebar-collapsed', String(sidebarCollapsed));
   }, [sidebarCollapsed]);
+
+  // Pre-fetch technologies map to identify active technology name
+  useEffect(() => {
+    if (!user) return;
+    technologyApi.getAll().then(res => {
+      const list = Array.isArray(res.data) ? res.data : (res.data?.technologies || []);
+      const map = {};
+      list.forEach(t => { map[t.id] = t.name; });
+      setTechMap(map);
+    }).catch(() => {});
+  }, [user]);
+
+  // Presence heartbeat tracking: records online state and active coding session
+  const isStopwatchRunning = Boolean(timer?.isRunning);
+  const isCountdownRunning = Boolean(timer?.countdown?.isRunning);
+  const isStudying = isStopwatchRunning || isCountdownRunning;
+  const activeTechId = isStopwatchRunning ? timer?.technologyId : timer?.countdown?.technologyId;
+
+  useEffect(() => {
+    if (!user) return;
+
+    const sendHeartbeat = () => {
+      const techName = activeTechId ? techMap[activeTechId] : undefined;
+      socialApi.presenceHeartbeat({
+        is_studying: isStudying,
+        technology_name: techName || null,
+      }).catch(() => {});
+    };
+
+    // Send immediately on mount or status change
+    sendHeartbeat();
+
+    // Periodic heartbeat every 60 seconds
+    const interval = setInterval(sendHeartbeat, 60000);
+
+    // Refresh presence when tab regains focus
+    const handleVisibility = () => {
+      if (!document.hidden) sendHeartbeat();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [user, isStudying, activeTechId, techMap]);
 
   return (
     <div className="min-h-screen bg-surface relative overflow-x-hidden">
@@ -77,6 +129,7 @@ export default function MainLayout({ children }) {
       <CommandPaletteModal isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       <DevPet />
       <MiniMusicPlayer />
+      <LiveActivityBubble />
     </div>
   );
 }

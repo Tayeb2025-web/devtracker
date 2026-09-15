@@ -8,18 +8,26 @@ const UserSchema = new mongoose.Schema({
   display_name: { type: String, default: 'Developer', trim: true },
   avatar_url: { type: String, default: '/images/profile.jpg' },
   bio: { type: String, default: null, maxlength: 280 },
-  is_profile_public: { type: Boolean, default: true },
+  is_profile_public: { type: Boolean, default: true, index: true },
   allow_direct_messages: { type: String, enum: ['everyone', 'followers', 'none'], default: 'followers' },
   theme: { type: String, default: 'dark' },
   calendar_type: { type: String, enum: ['afghan', 'iranian', 'gregorian'], default: 'afghan' },
   notification_enabled: { type: Boolean, default: true },
   notification_time: { type: String, default: '09:00:00' },
   legacy_id: { type: Number, index: true },
+  last_seen_at: { type: Date, default: null, index: true },
+  is_studying: { type: Boolean, default: false, index: true },
+  active_technology: { type: String, default: null },
+  today_study_hours: { type: Number, default: 0 },
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
   toJSON: { virtuals: true, transform: (doc, ret) => { ret.id = ret._id.toString(); delete ret.__v; return ret; } },
   toObject: { virtuals: true, transform: (doc, ret) => { ret.id = ret._id.toString(); delete ret.__v; return ret; } },
 });
+
+UserSchema.index({ is_profile_public: 1, created_at: -1 });
+UserSchema.index({ is_profile_public: 1, last_seen_at: -1 });
+UserSchema.index({ display_name: 1 });
 
 UserSchema.virtual('id').get(function () {
   return this._id.toString();

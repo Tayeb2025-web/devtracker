@@ -3,7 +3,7 @@ import { API_BASE } from '../constants';
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 12000,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -110,6 +110,8 @@ export const socialApi = {
   createConversation: (recipientId) => api.post('/social/conversations', { recipientId }),
   getDirectMessages: (id, params) => api.get(`/social/conversations/${id}/messages`, { params }),
   sendDirectMessage: (id, body) => api.post(`/social/conversations/${id}/messages`, { body }),
+  presenceHeartbeat: (data) => api.post('/social/presence/heartbeat', data),
+  getLiveActivities: () => api.get('/social/live-activities'),
 };
 
 export const exportApi = {

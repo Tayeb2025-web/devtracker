@@ -220,8 +220,12 @@ export const logout = asyncHandler(async (req, res) => {
 });
 
 export const getSocialDirectory = asyncHandler(async (req, res) => {
-  const data = await SocialModel.getDirectory(req.user.id, req.query);
-  res.json({ success: true, data });
+  const result = await SocialModel.getDirectory(req.user.id, req.query);
+  res.json({
+    success: true,
+    data: result.profiles,
+    pagination: result.pagination,
+  });
 });
 
 export const getPublicProfile = asyncHandler(async (req, res) => {
@@ -236,6 +240,20 @@ export const followUser = asyncHandler(async (req, res) => {
 
 export const unfollowUser = asyncHandler(async (req, res) => {
   const data = await SocialModel.unfollow(req.user.id, req.params.id);
+  res.json({ success: true, data });
+});
+
+export const heartbeatPresence = asyncHandler(async (req, res) => {
+  const result = await SocialModel.updatePresence(req.user.id, req.body || {});
+  const io = req.app.get('io');
+  if (io && req.body?.is_studying) {
+    io.emit('activity:presence', { userId: req.user.id, isStudying: req.body.is_studying });
+  }
+  res.json({ success: true, data: result });
+});
+
+export const getLiveActivities = asyncHandler(async (req, res) => {
+  const data = await SocialModel.getLiveActivities(req.user.id);
   res.json({ success: true, data });
 });
 

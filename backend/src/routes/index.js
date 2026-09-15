@@ -69,7 +69,9 @@ router.put('/user/settings', userSettingsValidation, ctrl.updateSettings);
 router.post('/user/avatar', avatarUpload.single('avatar'), ctrl.uploadAvatar);
 router.delete('/user/avatar', ctrl.removeAvatar);
 
-// Community
+// Community & Presence
+router.post('/social/presence/heartbeat', ctrl.heartbeatPresence);
+router.get('/social/live-activities', ctrl.getLiveActivities);
 router.get('/social/discover', socialDirectoryValidation, ctrl.getSocialDirectory);
 router.get('/social/profiles/:id', idParam, ctrl.getPublicProfile);
 router.post('/social/profiles/:id/follow', idParam, ctrl.followUser);

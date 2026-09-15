@@ -30,7 +30,7 @@ export async function connectDatabase() {
       serverSelectionTimeoutMS: 8000,
       connectTimeoutMS: 8000,
       socketTimeoutMS: 45000,
-      maxPoolSize: 10,
+      maxPoolSize: 20,
     }).then((m) => {
       console.log('✅ Connected to MongoDB Atlas successfully.');
       cached.conn = m;

@@ -2,15 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import {
   HiOutlineChatAlt2,
+  HiOutlineChevronLeft,
+  HiOutlineChevronRight,
   HiOutlineFire,
   HiOutlineGlobeAlt,
   HiOutlineLockClosed,
   HiOutlinePaperAirplane,
+  HiOutlineRefresh,
   HiOutlineSearch,
   HiOutlineStar,
   HiOutlineUserAdd,
   HiOutlineUserRemove,
   HiOutlineUsers,
+  HiOutlineX,
 } from 'react-icons/hi';
 import { Card, LoadingSpinner, Modal } from '../components/ui';
 import { API_BASE, formatAfghanDate } from '../constants';
@@ -64,6 +68,14 @@ export default function Community() {
   const [directory, setDirectory] = useState([]);
   const [directoryLoading, setDirectoryLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0,
+    totalPages: 1,
+    hasMore: false,
+  });
   const [league, setLeague] = useState(null);
   const [leagueLoading, setLeagueLoading] = useState(true);
   const [conversations, setConversations] = useState([]);
@@ -80,6 +92,8 @@ export default function Community() {
   const socketRef = useRef(null);
   const activeChatRef = useRef(activeChat);
   const messagesEndRef = useRef(null);
+  const hasLoadedLeague = useRef(false);
+  const hasLoadedConversations = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -93,12 +107,21 @@ export default function Community() {
     }
   }, [messages, activeTab]);
 
-  const loadDirectory = useCallback(async (query = '') => {
+  const loadDirectory = useCallback(async (query = '', pageNum = 1) => {
     setDirectoryLoading(true);
     try {
-      const result = await socialApi.discover({ search: query || undefined });
-      const people = result.data || [];
+      const result = await socialApi.discover({ search: query || undefined, page: pageNum, limit: 12 });
+      const people = Array.isArray(result.data) ? result.data : (result.data?.profiles || []);
+      const pageMeta = result.pagination || result.data?.pagination || {
+        page: pageNum,
+        limit: 12,
+        total: people.length,
+        totalPages: Math.ceil(people.length / 12) || 1,
+        hasMore: false,
+      };
       setDirectory(people);
+      setPagination(pageMeta);
+      setPage(pageMeta.page);
       setFollowingIds(new Set(people.filter(person => person.isFollowing).map(person => person.id)));
     } catch (error) {
       toast.error(error.message);
@@ -132,10 +155,14 @@ export default function Community() {
   }, [toast]);
 
   useEffect(() => {
-    loadDirectory();
-    loadLeague();
-    loadConversations();
-  }, [loadDirectory, loadLeague, loadConversations]);
+    if (activeTab === 'discover') {
+      loadDirectory(search, page);
+    } else if (activeTab === 'league' && !hasLoadedLeague.current) {
+      loadLeague().then(() => { hasLoadedLeague.current = true; });
+    } else if (activeTab === 'messages' && !hasLoadedConversations.current) {
+      loadConversations().then(() => { hasLoadedConversations.current = true; });
+    }
+  }, [activeTab, loadDirectory, loadLeague, loadConversations, page, search]);
 
   useEffect(() => {
     const token = localStorage.getItem('devtracker-auth-token');
@@ -185,7 +212,20 @@ export default function Community() {
 
   const handleSearch = (event) => {
     event.preventDefault();
-    loadDirectory(search);
+    setPage(1);
+    loadDirectory(search, 1);
+  };
+
+  const handleClearSearch = () => {
+    setSearch('');
+    setPage(1);
+    loadDirectory('', 1);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > pagination.totalPages || newPage === page) return;
+    setPage(newPage);
+    loadDirectory(search, newPage);
   };
 
   const openProfile = async (userId) => {
@@ -284,21 +324,175 @@ export default function Community() {
       {activeTab === 'discover' && (
         <section className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div><h2 className="text-lg font-semibold">Meet fellow learners</h2><p className="mt-1 text-sm text-text-muted">Profiles show only the progress members choose to share publicly.</p></div>
-            <form className="flex w-full gap-2 sm:w-auto" onSubmit={handleSearch}>
-              <label className="relative flex-1 sm:w-72"><HiOutlineSearch className="pointer-events-none absolute left-3 top-2.5 text-text-muted" size={18} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search name or username" className="w-full rounded-lg border border-border bg-surface-light py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-primary/60" /></label>
-              <button type="submit" className="rounded-lg bg-primary px-4 text-sm font-medium text-white hover:bg-primary-dark">Search</button>
-            </form>
-          </div>
-          {directoryLoading ? <LoadingSpinner /> : directory.length === 0 ? (
-            <Card className="py-12 text-center"><HiOutlineUsers className="mx-auto mb-3 text-text-muted" size={32} /><h3 className="font-semibold">No profiles found</h3><p className="mt-1 text-sm text-text-muted">Try a different search or invite a study partner.</p></Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {directory.map(profile => {
-                const isFollowing = followingIds.has(profile.id);
-                return <Card key={profile.id} hover className="flex flex-col gap-4"><button type="button" className="flex min-w-0 items-center gap-3 text-left" onClick={() => openProfile(profile.id)}><Avatar profile={profile} /><div className="min-w-0"><p className="truncate font-semibold text-text">{profile.displayName}</p><p className="truncate text-xs text-text-muted">@{profile.username}</p></div></button><p className="min-h-10 text-sm text-text-muted">{profile.bio || 'Building a consistent programming practice.'}</p><UserStats profile={profile} compact /><div className="mt-auto flex gap-2"><button type="button" onClick={() => openProfile(profile.id)} className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-medium text-text transition-colors hover:border-primary/50 hover:bg-surface-lighter">View profile</button><button type="button" onClick={() => toggleFollow(profile)} className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${isFollowing ? 'border border-border text-text-muted hover:border-red-400/50 hover:text-red-400' : 'bg-primary text-white hover:bg-primary-dark'}`}>{isFollowing ? <HiOutlineUserRemove size={15} /> : <HiOutlineUserAdd size={15} />}{isFollowing ? 'Following' : 'Follow'}</button></div></Card>;
-              })}
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-lg font-semibold">Meet fellow learners</h2>
+                {pagination.total > 0 && (
+                  <span className="inline-flex items-center rounded-full bg-primary/15 border border-primary/25 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                    {pagination.total} developers
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-text-muted">Profiles show only the progress members choose to share publicly.</p>
             </div>
+            <div className="flex items-center gap-2">
+              <form className="flex w-full gap-2 sm:w-auto" onSubmit={handleSearch}>
+                <label className="relative flex-1 sm:w-72">
+                  <HiOutlineSearch className="pointer-events-none absolute left-3 top-2.5 text-text-muted" size={18} />
+                  <input
+                    value={search}
+                    onChange={event => setSearch(event.target.value)}
+                    placeholder="Search name or username"
+                    className="w-full rounded-lg border border-border bg-surface-light py-2 pl-9 pr-8 text-sm outline-none transition-colors focus:border-primary/60"
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      title="Clear search"
+                      aria-label="Clear search"
+                      className="absolute right-2.5 top-2.5 text-text-muted hover:text-text"
+                    >
+                      <HiOutlineX size={16} />
+                    </button>
+                  )}
+                </label>
+                <button type="submit" className="rounded-lg bg-primary px-4 text-sm font-medium text-white hover:bg-primary-dark transition-colors">
+                  Search
+                </button>
+              </form>
+              <button
+                type="button"
+                onClick={() => loadDirectory(search, page)}
+                disabled={directoryLoading}
+                title="Refresh developers list"
+                aria-label="Refresh developers list"
+                className="p-2.5 rounded-lg border border-border bg-surface-light text-text-muted hover:text-text hover:bg-surface-lighter disabled:opacity-40 transition-colors"
+              >
+                <HiOutlineRefresh size={18} className={directoryLoading ? 'animate-spin' : ''} />
+              </button>
+            </div>
+          </div>
+
+          {directoryLoading ? (
+            <LoadingSpinner />
+          ) : directory.length === 0 ? (
+            <Card className="py-12 text-center">
+              <HiOutlineUsers className="mx-auto mb-3 text-text-muted" size={32} />
+              <h3 className="font-semibold">No profiles found</h3>
+              <p className="mt-1 text-sm text-text-muted">
+                {search ? `No profiles match "${search}".` : 'Try inviting study partners or join the conversation.'}
+              </p>
+              {search && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary/15 border border-primary/30 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/25 transition-colors"
+                >
+                  <HiOutlineX size={14} /> Clear search
+                </button>
+              )}
+            </Card>
+          ) : (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {directory.map(profile => {
+                  const isFollowing = followingIds.has(profile.id);
+                  return (
+                    <Card key={profile.id} hover className="flex flex-col gap-4">
+                      <button type="button" className="flex min-w-0 items-center gap-3 text-left" onClick={() => openProfile(profile.id)}>
+                        <Avatar profile={profile} />
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-text">{profile.displayName}</p>
+                          <p className="truncate text-xs text-text-muted">@{profile.username}</p>
+                        </div>
+                      </button>
+                      <p className="min-h-10 text-sm text-text-muted line-clamp-2">{profile.bio || 'Building a consistent programming practice.'}</p>
+                      <UserStats profile={profile} compact />
+                      <div className="mt-auto flex gap-2">
+                        <button type="button" onClick={() => openProfile(profile.id)} className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-medium text-text transition-colors hover:border-primary/50 hover:bg-surface-lighter">
+                          View profile
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleFollow(profile)}
+                          className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                            isFollowing ? 'border border-border text-text-muted hover:border-red-400/50 hover:text-red-400' : 'bg-primary text-white hover:bg-primary-dark'
+                          }`}
+                        >
+                          {isFollowing ? <HiOutlineUserRemove size={15} /> : <HiOutlineUserAdd size={15} />}
+                          {isFollowing ? 'Following' : 'Follow'}
+                        </button>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              {pagination.totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/60">
+                  <p className="text-xs text-text-muted">
+                    Showing <span className="font-semibold text-text">{((page - 1) * pagination.limit) + 1}</span> to{' '}
+                    <span className="font-semibold text-text">{Math.min(page * pagination.limit, pagination.total)}</span> of{' '}
+                    <span className="font-semibold text-text">{pagination.total}</span> developers
+                  </p>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handlePageChange(page - 1)}
+                      disabled={page <= 1 || directoryLoading}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-surface-light text-xs font-medium text-text-muted hover:text-text hover:bg-surface-lighter disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <HiOutlineChevronLeft size={14} /> Prev
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                        .filter(p => p === 1 || p === pagination.totalPages || Math.abs(p - page) <= 1)
+                        .reduce((acc, p, index, arr) => {
+                          if (index > 0 && p - arr[index - 1] > 1) {
+                            acc.push({ type: 'ellipsis', key: `ellipsis-${p}` });
+                          }
+                          acc.push({ type: 'page', number: p, key: `page-${p}` });
+                          return acc;
+                        }, [])
+                        .map(item => {
+                          if (item.type === 'ellipsis') {
+                            return <span key={item.key} className="px-1 text-xs text-text-muted">…</span>;
+                          }
+                          const isCurrent = item.number === page;
+                          return (
+                            <button
+                              key={item.key}
+                              type="button"
+                              onClick={() => handlePageChange(item.number)}
+                              disabled={directoryLoading}
+                              className={`h-7 w-7 rounded-lg text-xs font-semibold transition-all ${
+                                isCurrent
+                                  ? 'bg-primary text-white shadow-sm shadow-primary/30'
+                                  : 'text-text-muted hover:text-text hover:bg-surface-lighter'
+                              }`}
+                            >
+                              {item.number}
+                            </button>
+                          );
+                        })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handlePageChange(page + 1)}
+                      disabled={page >= pagination.totalPages || directoryLoading}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-surface-light text-xs font-medium text-text-muted hover:text-text hover:bg-surface-lighter disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next <HiOutlineChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
       )}

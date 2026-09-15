@@ -37,6 +37,7 @@ const XpHistorySchema = new mongoose.Schema({
   source: { type: String, default: 'study' },
   description: { type: String, default: null },
 }, { timestamps: { createdAt: 'created_at', updatedAt: false } });
+XpHistorySchema.index({ user_id: 1, created_at: 1 });
 export const XpHistory = mongoose.models.XpHistory || mongoose.model('XpHistory', XpHistorySchema);
 
 // Achievement Schema
