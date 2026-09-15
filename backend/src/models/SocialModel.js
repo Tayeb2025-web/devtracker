@@ -286,163 +286,156 @@ export const SocialModel = {
 
   async getLiveActivities(viewerId) {
     const viewer = await User.findById(viewerId).lean();
-    const viewerHours = Number(viewer?.today_study_hours || 0);
+    if (!viewer) return [];
 
-    // 1. Fetch public users active in last 30 minutes, or recently active users
-    const recentThreshold = new Date(Date.now() - 30 * 60 * 1000);
-    let users = await User.find({
-      _id: { $ne: viewerId },
-      is_profile_public: true,
-      last_seen_at: { $gte: recentThreshold },
-    })
-      .sort({ last_seen_at: -1 })
-      .limit(15)
-      .lean();
-
-    // If few active in last 30 mins, supplement with public users who studied recently or joined recently
-    if (users.length < 6) {
-      const existingIds = users.map(u => u._id.toString());
-      const fallbackUsers = await User.find({
-        _id: { $ne: viewerId, $nin: existingIds },
-        is_profile_public: true,
-      })
-        .sort({ last_seen_at: -1, created_at: -1 })
-        .limit(12 - users.length)
-        .lean();
-
-      users = [...users, ...fallbackUsers];
-    }
-
-    if (!users.length) return [];
-
-    const userIds = users.map(u => u._id.toString());
-
-    // Batch query viewer relationships, streaks, and levels in parallel
-    const [viewerFollowing, viewerFollowers, streaks, levels] = await Promise.all([
-      UserFollow.find({ follower_id: String(viewerId), following_id: { $in: userIds } }).select('following_id').lean(),
-      UserFollow.find({ follower_id: { $in: userIds }, following_id: String(viewerId) }).select('follower_id').lean(),
-      Streak.find({ user_id: { $in: userIds } }).lean(),
-      Level.find({ user_id: { $in: userIds } }).lean(),
+    // 1. Fetch viewer relationships
+    const [viewerFollowing, viewerFollowers] = await Promise.all([
+      UserFollow.find({ follower_id: String(viewerId) }).select('following_id').lean(),
+      UserFollow.find({ following_id: String(viewerId) }).select('follower_id').lean(),
     ]);
 
-    const followingSet = new Set(viewerFollowing.map(f => String(f.following_id)));
-    const followersSet = new Set(viewerFollowers.map(f => String(f.follower_id)));
+    const followingIds = new Set(viewerFollowing.map(f => String(f.following_id)));
+    const followerIds = new Set(viewerFollowers.map(f => String(f.follower_id)));
+
+    const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+    const now = Date.now();
+
+    // 2. Query public candidates
+    const candidates = await User.find({
+      _id: { $ne: viewerId },
+      is_profile_public: true,
+    })
+      .select('_id username display_name avatar_url last_seen_at is_studying active_technology today_study_hours created_at')
+      .lean();
+
+    if (!candidates || candidates.length === 0) return [];
+
+    const candidateIds = candidates.map(c => c._id.toString());
+    const [streaks, levels] = await Promise.all([
+      Streak.find({ user_id: { $in: candidateIds } }).lean(),
+      Level.find({ user_id: { $in: candidateIds } }).lean(),
+    ]);
+
     const streakMap = new Map(streaks.map(s => [String(s.user_id), s]));
     const levelMap = new Map(levels.map(l => [String(l.user_id), l]));
 
-    const activities = [];
+    // Format relative time helper for Persian
+    const formatTimeFa = (date) => {
+      if (!date) return 'مدتی پیش';
+      const diffMs = now - new Date(date).getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      if (diffMins < 1) return 'هم‌اکنون';
+      if (diffMins < 60) return `${diffMins} دقیقه پیش`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours} ساعت پیش`;
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays === 1) return 'دیروز';
+      if (diffDays < 7) return `${diffDays} روز پیش`;
+      return `${Math.floor(diffDays / 7)} هفته پیش`;
+    };
 
-    for (const u of users) {
+    // 3. Score candidates and compose strictly truthful messages
+    const processed = candidates.map(u => {
       const uid = u._id.toString();
-      const isFollowing = followingSet.has(uid);
-      const isFollower = followersSet.has(uid);
+      const isFollowing = followingIds.has(uid);
+      const isFollower = followerIds.has(uid);
       const isMutual = isFollowing && isFollower;
+
+      const lastSeenMs = u.last_seen_at ? new Date(u.last_seen_at).getTime() : 0;
+      const isOnline = Boolean(lastSeenMs && (now - lastSeenMs) <= ONLINE_THRESHOLD_MS);
+      const isStudying = Boolean(isOnline && u.is_studying);
+
       const streak = Number(streakMap.get(uid)?.current_streak || 0);
       const level = Number(levelMap.get(uid)?.current_level || 1);
-      const userHours = Number(u.today_study_hours || 0);
+      const todayHours = Number(u.today_study_hours || 0);
       const name = u.display_name || u.username;
       const tech = u.active_technology;
-      const isStudying = Boolean(u.is_studying);
 
-      // Determine dynamic event type, tag, and messages
-      let type = 'online_now';
-      let tag = 'هم‌مسیر شما';
-      let tagIcon = '🚀';
-      let color = 'cyan';
-      let messages = [];
+      // Calculate priority score:
+      // - Mutual follows: +2000
+      // - User follows them: +1200
+      // - They follow user: +600
+      // - Currently studying: +800
+      // - Currently online: +400
+      // - Studied today: +200
+      let score = 0;
+      if (isMutual) score += 2000;
+      else if (isFollowing) score += 1200;
+      else if (isFollower) score += 600;
 
-      if (isStudying) {
-        type = 'coding_now';
-        tag = 'در حال کدنویسی';
-        tagIcon = '🔥';
-        color = 'emerald';
-        messages = [
-          `${name} هم الان داره ${tech ? `با ${tech} ` : ''}کد می‌زنه 💻🔥`,
-          `${name} تایمر تمرکزش رو روشن کرد؛ تو تنها نیستی! ⚡`,
-          `جلسه عمیق کدنویسی ${name} شروع شد 🚀`,
-        ];
-      } else if (isMutual || isFollowing) {
-        type = 'friend_online';
-        tag = isMutual ? 'دوست صمیمی شما' : 'دنبال‌شده توسط شما';
-        tagIcon = '👥';
-        color = 'indigo';
-        messages = [
-          `چه باحال! دوست صمیمیت ${name} هم اینجاست 👥✨`,
-          `${name} آنلاین شد و به پلتفرم برگشت 👋`,
-          `${name} هم امروز داره روی یادگیری تمرکز می‌کنه 🎯`,
-        ];
-      } else if (userHours > 0 && userHours > viewerHours) {
-        type = 'surpassed_hours';
-        tag = 'رقابت امروز';
-        tagIcon = '⚡';
-        color = 'amber';
-        messages = [
-          `الان ${name} با ${userHours} ساعت مطالعه ازت جلو زد! وقتشه جبران کنی 😉🚀`,
-          `رقابت داغه! ${name} امروز ${userHours} ساعت مطالعه ثبت کرده 🎯`,
-          `${name} امروز رکورد ${userHours} ساعت مطالعه داره 💪`,
-        ];
-      } else if (streak >= 3) {
-        type = 'streak_milestone';
-        tag = 'استریک فعال';
-        tagIcon = '🏆';
-        color = 'violet';
-        messages = [
-          `${name} به رکورد استریک ${streak} روزه رسید! بهش تبریک بگو 🏆`,
-          `آفرین به ثبات! ${name} برای ${streak} روز متوالی مطالعه داشته 🔥`,
-        ];
-      } else if (level >= 3) {
-        type = 'high_level';
-        tag = `سطح ${level}`;
-        tagIcon = '⭐';
-        color = 'yellow';
-        messages = [
-          `${name} به سطح ${level} رسید؛ با قدرت پیش می‌ره 🌟`,
-          `توسعه‌دهنده فعال: ${name} در سطح ${level} فعالیت می‌کنه 🚀`,
-        ];
-      } else {
-        type = 'online_now';
-        tag = 'آنلاین در پلتفرم';
-        tagIcon = '✨';
-        color = 'cyan';
-        messages = [
-          `${name} هم اینجاست و داره روی مهارت‌هاش کار می‌کنه ✨`,
-          `${name} وارد اپلیکیشن شد؛ خوش‌آمد بگو 👋`,
-        ];
+      if (isStudying) score += 800;
+      else if (isOnline) score += 400;
+
+      if (todayHours > 0) score += 200 + Math.min(todayHours * 10, 100);
+      if (streak >= 3) score += 100;
+
+      // Recency bonus: active in past 24 hours gets a slight boost
+      if (lastSeenMs) {
+        const hoursAgo = (now - lastSeenMs) / (3600 * 1000);
+        if (hoursAgo < 24) {
+          score += Math.max(0, Math.round((24 - hoursAgo) * 5));
+        }
       }
 
-      const messageText = messages[Math.floor(Math.random() * messages.length)];
+      // Generate 100% TRUTHFUL Persian message
+      let message = '';
+      let statusType = 'offline';
 
-      activities.push({
-        id: `${uid}-${type}`,
+      if (isStudying) {
+        statusType = 'studying';
+        if (tech) {
+          message = `در حال کدنویسی با ${tech} است 💻🔥`;
+        } else {
+          message = `در حال کدنویسی و تمرکز است 💻🔥`;
+        }
+      } else if (isOnline) {
+        statusType = 'online';
+        message = `هم‌اکنون آنلاین در پلتفرم است ✨`;
+      } else {
+        // Strictly offline: state actual historical achievements or last seen time, NEVER claim online
+        statusType = 'offline';
+        if (todayHours >= 1) {
+          const displayHours = todayHours % 1 === 0 ? todayHours : todayHours.toFixed(1);
+          message = `امروز ${displayHours} ساعت مطالعه داشته 📚`;
+        } else if (todayHours > 0) {
+          const mins = Math.round(todayHours * 60);
+          message = `امروز ${mins} دقیقه مطالعه داشته 📚`;
+        } else if (streak >= 2) {
+          message = `رکورد استریک ${streak} روزه دارد 🔥`;
+        } else if (level >= 2) {
+          message = `به سطح ${level} رسیده است 🌟`;
+        } else {
+          message = `آخرین فعالیت: ${formatTimeFa(u.last_seen_at || u.created_at)} 🕒`;
+        }
+      }
+
+      return {
+        id: uid,
         userId: uid,
         username: u.username,
         displayName: name,
         avatarUrl: resolveUserAvatar(u.avatar_url, u.username || uid),
-        isFollowing,
-        isMutual,
+        isOnline,
         isStudying,
         technology: tech,
-        todayHours: userHours,
+        isMutual,
+        isFollowing,
+        followsYou: isFollower,
+        statusType,
+        message,
         streak,
         level,
-        type,
-        tag,
-        tagIcon,
-        color,
-        message: messageText,
-        timestamp: u.last_seen_at || u.updated_at || new Date(),
-      });
-    }
-
-    // Sort: mutual friends first, then active coders, then competitors, then others
-    activities.sort((a, b) => {
-      const priority = { friend_online: 3, coding_now: 2.5, surpassed_hours: 2, streak_milestone: 1.5 };
-      const prioA = priority[a.type] || 0;
-      const prioB = priority[b.type] || 0;
-      return prioB - prioA;
+        todayHours,
+        lastSeenAt: u.last_seen_at || u.created_at,
+        score,
+      };
     });
 
-    return activities;
+    // Sort by score descending (highest priority first)
+    processed.sort((a, b) => b.score - a.score);
+
+    // Return the top 3 candidates
+    return processed.slice(0, 3);
   },
 };
 

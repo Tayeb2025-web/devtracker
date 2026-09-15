@@ -196,7 +196,7 @@ export default function About() {
             <div className="h-6 w-px bg-border/60" />
             <div>
               <p className="text-[10px] uppercase tracking-wider font-semibold text-text-muted/70">Released</p>
-              <p className="font-bold text-text">2026</p>
+              <p className="font-bold text-text">2026/9/1</p>
             </div>
             <div className="h-6 w-px bg-border/60" />
             <div className="flex items-center gap-1">

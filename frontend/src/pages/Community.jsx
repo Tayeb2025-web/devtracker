@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import {
   HiOutlineCalendar,
@@ -56,6 +57,7 @@ function UserStats({ profile, compact = false }) {
 export default function Community() {
   const { user } = useAuth();
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('discover');
   const [directory, setDirectory] = useState([]);
   const [directoryLoading, setDirectoryLoading] = useState(true);
@@ -243,7 +245,8 @@ export default function Community() {
     loadDirectory(search, newPage);
   };
 
-  const openProfile = async (userId) => {
+  const openProfile = useCallback(async (userId) => {
+    if (!userId) return;
     setProfileLoading(true);
     setSelectedProfile(null);
     try {
@@ -254,7 +257,14 @@ export default function Community() {
     } finally {
       setProfileLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    const targetUserId = searchParams.get('user');
+    if (targetUserId) {
+      openProfile(targetUserId);
+    }
+  }, [searchParams, openProfile]);
 
   const updateFollowState = (profile) => {
     setFollowingIds(current => {
@@ -348,9 +358,6 @@ export default function Community() {
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm text-text-muted">
-                پروفایل برنامه‌نویسان • مرتب‌شده بر اساس آخرین زمان فعالیت (کاربران آنلاین در اولویت اول).
-              </p>
             </div>
             <div className="flex items-center gap-2">
               <form className="flex w-full gap-2 sm:w-auto" onSubmit={handleSearch}>
@@ -420,7 +427,7 @@ export default function Community() {
                       <button type="button" className="flex min-w-0 items-center gap-3 text-left" onClick={() => openProfile(profile.id)}>
                         <Avatar profile={profile} />
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center justify-center">
                             <p className="truncate font-semibold text-text">{profile.displayName}</p>
                             {profile.isOnline ? (
                               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
@@ -434,14 +441,7 @@ export default function Community() {
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center justify-between gap-1 text-xs text-text-muted mt-0.5">
-                            <p className="truncate">@{profile.username}</p>
-                            {profile.isOnline ? (
-                              <span className="text-[10px] text-emerald-400/90 font-medium shrink-0">هم‌اکنون فعال</span>
-                            ) : (
-                              <span className="text-[10px] text-text-muted/70 shrink-0">آخرین بازدید</span>
-                            )}
-                          </div>
+                        
                         </div>
                       </button>
                       <p className="min-h-10 text-sm text-text-muted line-clamp-2">{profile.bio || 'Building a consistent programming practice.'}</p>
@@ -552,7 +552,20 @@ export default function Community() {
         </section>
       )}
 
-      <Modal isOpen={profileLoading || Boolean(selectedProfile)} onClose={() => { setSelectedProfile(null); setProfileLoading(false); }} title="Member profile" size="sm">
+      <Modal
+        isOpen={profileLoading || Boolean(selectedProfile)}
+        onClose={() => {
+          setSelectedProfile(null);
+          setProfileLoading(false);
+          if (searchParams.get('user')) {
+            const next = new URLSearchParams(searchParams);
+            next.delete('user');
+            setSearchParams(next, { replace: true });
+          }
+        }}
+        title="Member profile"
+        size="sm"
+      >
         {profileLoading ? <LoadingSpinner /> : selectedProfile && (
           <div className="space-y-5">
             <div className="flex items-center gap-4">

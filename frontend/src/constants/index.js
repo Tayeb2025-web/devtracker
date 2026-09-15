@@ -481,19 +481,19 @@ export function formatLastSeen(dateInput) {
   if (Number.isNaN(timestamp)) return 'مدتی پیش';
 
   const diffMs = Date.now() - timestamp;
-  if (diffMs < 0) return 'همین الان';
+  if (diffMs < 0) return 'right now';
 
   const diffSeconds = Math.floor(diffMs / 1000);
   const diffMinutes = Math.floor(diffSeconds / 60);
   const diffHours = Math.floor(diffMinutes / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMinutes < 1) return 'لحظاتی پیش';
-  if (diffMinutes < 60) return `${diffMinutes} دقیقه پیش`;
-  if (diffHours < 24) return `${diffHours} ساعت پیش`;
-  if (diffDays === 1) return 'دیروز';
-  if (diffDays < 7) return `${diffDays} روز پیش`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} هفته پیش`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)} ماه پیش`;
-  return `${Math.floor(diffDays / 365)} سال پیش`;
+  if (diffMinutes < 1) return 'recently';
+  if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago `;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+  return `${Math.floor(diffDays / 365)} along time ago `;
 }
