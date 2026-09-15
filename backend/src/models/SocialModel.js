@@ -155,7 +155,7 @@ export const SocialModel = {
         avatarUrl: resolveUserAvatar(u.avatar_url, u.username || uid),
         bio: u.bio,
         joinedAt: u.created_at,
-        lastSeenAt: u.last_seen_at,
+        lastSeenAt: u.last_seen_at || u.created_at,
         isOnline,
         isStudying,
         activeTechnology: u.active_technology,
@@ -170,8 +170,20 @@ export const SocialModel = {
     });
 
     results.sort((a, b) => {
+      // 1. Current online users have highest priority
       if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
-      if (a.isStudying !== b.isStudying) return a.isStudying ? -1 : 1;
+
+      // 2. If both are currently online, prioritize studying members
+      if (a.isOnline && b.isOnline && a.isStudying !== b.isStudying) {
+        return a.isStudying ? -1 : 1;
+      }
+
+      // 3. Order by who was online most recently (latest lastSeenAt)
+      const timeA = a.lastSeenAt ? new Date(a.lastSeenAt).getTime() : 0;
+      const timeB = b.lastSeenAt ? new Date(b.lastSeenAt).getTime() : 0;
+      if (timeB !== timeA) return timeB - timeA;
+
+      // 4. Secondary tie-breaker: total XP
       return b.totalXp - a.totalXp;
     });
 
@@ -216,7 +228,7 @@ export const SocialModel = {
       avatarUrl: resolveUserAvatar(u.avatar_url, u.username || uid),
       bio: u.bio,
       joinedAt: u.created_at,
-      lastSeenAt: u.last_seen_at,
+      lastSeenAt: u.last_seen_at || u.created_at,
       isOnline,
       isStudying,
       activeTechnology: u.active_technology,

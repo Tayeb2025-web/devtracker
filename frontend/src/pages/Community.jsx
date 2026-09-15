@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import {
+  HiOutlineCalendar,
   HiOutlineChatAlt2,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
+  HiOutlineClock,
   HiOutlineFire,
   HiOutlineGlobeAlt,
   HiOutlineLockClosed,
@@ -18,7 +20,7 @@ import {
 } from 'react-icons/hi';
 import { Card, LoadingSpinner, Modal } from '../components/ui';
 import Avatar from '../components/Avatar';
-import { API_BASE, formatAfghanDate } from '../constants';
+import { API_BASE, formatAfghanDate, formatLastSeen } from '../constants';
 import { useAuth } from '../contexts/AuthContextStore';
 import { useToast } from '../contexts/ToastContextStore';
 import { socialApi } from '../services/api';
@@ -154,6 +156,15 @@ export default function Community() {
     }
   }, [activeTab, loadDirectory, loadLeague, loadConversations, page, search]);
 
+  // Periodic refresh for discover tab to keep online status and last seen times fresh
+  useEffect(() => {
+    if (activeTab !== 'discover') return undefined;
+    const interval = setInterval(() => {
+      loadDirectory(search, page);
+    }, 45000);
+    return () => clearInterval(interval);
+  }, [activeTab, loadDirectory, page, search]);
+
   useEffect(() => {
     const token = localStorage.getItem('devtracker-auth-token');
     if (!token) return undefined;
@@ -171,6 +182,20 @@ export default function Community() {
       if (activeChatRef.current.type === 'league' && message.leagueId === league?.league?.id) {
         setMessages(current => appendMessage(current, message));
       }
+    });
+    socket.on('activity:presence', (data) => {
+      if (!data?.userId) return;
+      setDirectory(current => current.map(p => {
+        if (p.id === String(data.userId)) {
+          return {
+            ...p,
+            isOnline: true,
+            isStudying: Boolean(data.isStudying),
+            lastSeenAt: new Date().toISOString(),
+          };
+        }
+        return p;
+      }));
     });
     return () => socket.disconnect();
   }, [league?.league?.id, loadConversations]);
@@ -323,7 +348,9 @@ export default function Community() {
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm text-text-muted">Profiles show only the progress members choose to share publicly.</p>
+              <p className="mt-1 text-sm text-text-muted">
+                پروفایل برنامه‌نویسان • مرتب‌شده بر اساس آخرین زمان فعالیت (کاربران آنلاین در اولویت اول).
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <form className="flex w-full gap-2 sm:w-auto" onSubmit={handleSearch}>
@@ -393,16 +420,28 @@ export default function Community() {
                       <button type="button" className="flex min-w-0 items-center gap-3 text-left" onClick={() => openProfile(profile.id)}>
                         <Avatar profile={profile} />
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-between gap-2">
                             <p className="truncate font-semibold text-text">{profile.displayName}</p>
-                            {profile.isOnline && (
+                            {profile.isOnline ? (
                               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 {profile.isStudying ? 'در حال مطالعه' : 'آنلاین'}
                               </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-surface-lighter text-text-muted border border-border/70 shrink-0" title={profile.lastSeenAt ? new Date(profile.lastSeenAt).toLocaleString() : undefined}>
+                                <span className="h-1.5 w-1.5 rounded-full bg-slate-400/80" />
+                                {formatLastSeen(profile.lastSeenAt)}
+                              </span>
                             )}
                           </div>
-                          <p className="truncate text-xs text-text-muted">@{profile.username}</p>
+                          <div className="flex items-center justify-between gap-1 text-xs text-text-muted mt-0.5">
+                            <p className="truncate">@{profile.username}</p>
+                            {profile.isOnline ? (
+                              <span className="text-[10px] text-emerald-400/90 font-medium shrink-0">هم‌اکنون فعال</span>
+                            ) : (
+                              <span className="text-[10px] text-text-muted/70 shrink-0">آخرین بازدید</span>
+                            )}
+                          </div>
                         </div>
                       </button>
                       <p className="min-h-10 text-sm text-text-muted line-clamp-2">{profile.bio || 'Building a consistent programming practice.'}</p>
@@ -521,21 +560,33 @@ export default function Community() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <h2 className="truncate text-xl font-bold">{selectedProfile.displayName}</h2>
-                  {selectedProfile.isOnline && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
+                  {selectedProfile.isOnline ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
                       <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                       {selectedProfile.isStudying ? 'در حال مطالعه' : 'آنلاین'}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-surface-lighter text-text-muted border border-border/70 shrink-0">
+                      <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+                      {formatLastSeen(selectedProfile.lastSeenAt)}
                     </span>
                   )}
                 </div>
                 <p className="truncate text-sm text-text-muted">@{selectedProfile.username}</p>
-                <p className="mt-1 text-xs text-text-muted">
-                  {selectedProfile.isOnline ? (
-                    <span className="text-emerald-400 font-medium">همین الان آنلاین</span>
-                  ) : (
-                    `Joined ${formatAfghanDate(selectedProfile.joinedAt, { includeYear: true })}`
-                  )}
-                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
+                  <span className="inline-flex items-center gap-1.5">
+                    <HiOutlineClock size={15} className="text-primary/70 shrink-0" />
+                    {selectedProfile.isOnline ? (
+                      <span className="text-emerald-400 font-medium">هم‌اکنون در برنامه فعال است</span>
+                    ) : (
+                      <span>آخرین بازدید: <strong className="text-text font-semibold">{formatLastSeen(selectedProfile.lastSeenAt)}</strong></span>
+                    )}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <HiOutlineCalendar size={15} className="text-primary/70 shrink-0" />
+                    عضویت: {formatAfghanDate(selectedProfile.joinedAt, { includeYear: true })}
+                  </span>
+                </div>
               </div>
             </div>
             <p className="rounded-lg bg-surface-lighter/70 p-3 text-sm text-text-muted">{selectedProfile.bio || 'This learner has not added a bio yet.'}</p>

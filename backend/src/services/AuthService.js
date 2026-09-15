@@ -58,6 +58,9 @@ export const AuthService = {
   async login({ email, password }) {
     const user = await UserModel.findByEmail(email.trim().toLowerCase());
     if (!user || !await verifyPassword(password, user.password_hash)) throw new AppError('Email or password is incorrect', 401);
+    const userId = user.id || user._id;
+    await UserModel.update(userId, { last_seen_at: new Date() }).catch(() => {});
+    user.last_seen_at = new Date();
     return createSession(user);
   },
 

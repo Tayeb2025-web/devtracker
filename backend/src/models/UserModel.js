@@ -144,6 +144,7 @@ export const UserModel = {
         display_name: displayName.trim(),
         password_hash: passwordHash,
         avatar_url: finalAvatar,
+        last_seen_at: new Date(),
       },
       { new: true }
     ).lean();
@@ -164,6 +165,7 @@ export const UserModel = {
       display_name: displayName.trim(),
       password_hash: passwordHash,
       avatar_url: finalAvatar,
+      last_seen_at: new Date(),
     });
     const userObj = user.toJSON();
     return normalizeUser(userObj);
@@ -172,7 +174,7 @@ export const UserModel = {
   async update(id, data) {
     const allowedFields = [
       'display_name', 'email', 'theme', 'calendar_type', 'notification_enabled', 'notification_time', 'avatar_url',
-      'bio', 'is_profile_public', 'allow_direct_messages',
+      'bio', 'is_profile_public', 'allow_direct_messages', 'last_seen_at',
     ];
     const updateData = {};
     allowedFields.forEach(key => {
@@ -213,8 +215,21 @@ export const UserModel = {
         await User.bulkWrite(bulkOps);
         console.log(`[UserModel] Migrated ${usersToUpdate.length} users to cool developer avatars.`);
       }
+
+      // Backfill last_seen_at for any users where it is null
+      const nullLastSeen = await User.find({ last_seen_at: null }).select('_id created_at');
+      if (nullLastSeen && nullLastSeen.length > 0) {
+        const lastSeenOps = nullLastSeen.map(u => ({
+          updateOne: {
+            filter: { _id: u._id },
+            update: { $set: { last_seen_at: u.created_at || new Date() } }
+          }
+        }));
+        await User.bulkWrite(lastSeenOps);
+        console.log(`[UserModel] Backfilled last_seen_at for ${nullLastSeen.length} users.`);
+      }
     } catch (err) {
-      console.warn('[UserModel] Avatar migration check skipped or failed:', err.message);
+      console.warn('[UserModel] Migration check skipped or failed:', err.message);
     }
   },
 };
