@@ -86,10 +86,12 @@ export const SocialModel = {
       ];
     }
 
+    const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+
     const [totalUsers, users] = await Promise.all([
       User.countDocuments(query),
       User.find(query)
-        .sort({ created_at: -1 })
+        .sort({ last_seen_at: -1, created_at: -1 })
         .skip(skip)
         .limit(safeLimit)
         .lean(),
@@ -133,10 +135,13 @@ export const SocialModel = {
     const followingSet = new Set(viewerFollowing.map(f => String(f.following_id)));
     const followersSet = new Set(viewerFollowers.map(f => String(f.follower_id)));
 
+    const now = Date.now();
     const results = users.map(u => {
       const uid = u._id.toString();
       const level = levelMap.get(uid);
       const streak = streakMap.get(uid);
+      const isOnline = Boolean(u.last_seen_at && (now - new Date(u.last_seen_at).getTime()) <= ONLINE_THRESHOLD_MS);
+      const isStudying = Boolean(isOnline && u.is_studying);
 
       return {
         id: uid,
@@ -145,6 +150,10 @@ export const SocialModel = {
         avatarUrl: u.avatar_url,
         bio: u.bio,
         joinedAt: u.created_at,
+        lastSeenAt: u.last_seen_at,
+        isOnline,
+        isStudying,
+        activeTechnology: u.active_technology,
         level: Number(level?.current_level || 1),
         totalXp: Number(level?.total_xp || 0),
         currentStreak: Number(streak?.current_streak || 0),
@@ -155,7 +164,11 @@ export const SocialModel = {
       };
     });
 
-    results.sort((a, b) => b.totalXp - a.totalXp);
+    results.sort((a, b) => {
+      if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+      if (a.isStudying !== b.isStudying) return a.isStudying ? -1 : 1;
+      return b.totalXp - a.totalXp;
+    });
 
     const totalPages = Math.ceil(totalUsers / safeLimit) || 1;
 
@@ -187,6 +200,10 @@ export const SocialModel = {
       UserFollow.exists({ follower_id: uid, following_id: String(viewerId) }),
     ]);
 
+    const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+    const isOnline = Boolean(u.last_seen_at && (Date.now() - new Date(u.last_seen_at).getTime()) <= ONLINE_THRESHOLD_MS);
+    const isStudying = Boolean(isOnline && u.is_studying);
+
     return {
       id: uid,
       username: u.username,
@@ -194,6 +211,10 @@ export const SocialModel = {
       avatarUrl: u.avatar_url,
       bio: u.bio,
       joinedAt: u.created_at,
+      lastSeenAt: u.last_seen_at,
+      isOnline,
+      isStudying,
+      activeTechnology: u.active_technology,
       level: Number(level?.current_level || 1),
       totalXp: Number(level?.total_xp || 0),
       currentStreak: Number(streak?.current_streak || 0),
@@ -510,11 +531,14 @@ export const LeagueModel = {
       const streak = streakMap.get(uid);
       const weeklyXp = xpMap.get(uid) || 0;
 
+      const isOnline = Boolean(u.last_seen_at && (Date.now() - new Date(u.last_seen_at).getTime()) <= 5 * 60 * 1000);
+
       leaderboard.push({
         userId: uid,
         username: u.username,
         displayName: u.display_name,
         avatarUrl: u.avatar_url,
+        isOnline,
         level: Number(level?.current_level || 1),
         totalXp: Number(level?.total_xp || 0),
         weeklyXp: Number(weeklyXp),
@@ -649,6 +673,7 @@ export const ChatModel = {
           username: otherUser?.username || 'user',
           displayName: otherUser?.display_name || 'Developer',
           avatarUrl: otherUser?.avatar_url || null,
+          isOnline: Boolean(otherUser?.last_seen_at && (Date.now() - new Date(otherUser.last_seen_at).getTime()) <= 5 * 60 * 1000),
         },
       };
     });

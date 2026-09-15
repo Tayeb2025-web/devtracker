@@ -35,11 +35,38 @@ function profileInitial(profile) {
   return (profile?.displayName || profile?.display_name || profile?.username || '?').trim().charAt(0).toUpperCase();
 }
 
-function Avatar({ profile, size = 'md' }) {
+function Avatar({ profile, size = 'md', showOnline = true }) {
   const sizes = { sm: 'h-9 w-9 text-sm', md: 'h-11 w-11 text-base', lg: 'h-16 w-16 text-xl' };
+  const dotSizes = {
+    sm: 'h-2.5 w-2.5 -bottom-0.5 -right-0.5',
+    md: 'h-3.5 w-3.5 -bottom-0.5 -right-0.5',
+    lg: 'h-4 w-4 bottom-0.5 right-0.5',
+  };
+  const pingSizes = { sm: 'h-2.5 w-2.5', md: 'h-3.5 w-3.5', lg: 'h-4 w-4' };
   const src = profile?.avatarUrl || profile?.avatar_url;
-  if (src) return <img src={src} alt="" className={`${sizes[size]} shrink-0 rounded-full border border-border object-cover`} />;
-  return <div className={`${sizes[size]} grid shrink-0 place-items-center rounded-full bg-primary/20 font-semibold text-primary`}>{profileInitial(profile)}</div>;
+  const isOnline = Boolean(profile?.isOnline || profile?.is_online);
+  const isStudying = Boolean(profile?.isStudying || profile?.is_studying);
+
+  return (
+    <div className="relative inline-flex shrink-0">
+      {src ? (
+        <img src={src} alt="" className={`${sizes[size]} shrink-0 rounded-full border border-border object-cover`} />
+      ) : (
+        <div className={`${sizes[size]} grid shrink-0 place-items-center rounded-full bg-primary/20 font-semibold text-primary`}>
+          {profileInitial(profile)}
+        </div>
+      )}
+      {showOnline && isOnline && (
+        <span
+          className={`absolute ${dotSizes[size]} flex items-center justify-center pointer-events-none`}
+          title={isStudying ? 'آنلاین (در حال مطالعه)' : 'آنلاین'}
+        >
+          <span className={`animate-ping absolute inline-flex ${pingSizes[size]} rounded-full bg-emerald-400 opacity-75`} />
+          <span className={`relative inline-flex rounded-full ${pingSizes[size]} bg-emerald-500 border-2 border-surface shadow-sm`} />
+        </span>
+      )}
+    </div>
+  );
 }
 
 function formatMessageTime(value) {
@@ -402,8 +429,16 @@ export default function Community() {
                     <Card key={profile.id} hover className="flex flex-col gap-4">
                       <button type="button" className="flex min-w-0 items-center gap-3 text-left" onClick={() => openProfile(profile.id)}>
                         <Avatar profile={profile} />
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold text-text">{profile.displayName}</p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate font-semibold text-text">{profile.displayName}</p>
+                            {profile.isOnline && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                {profile.isStudying ? 'در حال مطالعه' : 'آنلاین'}
+                              </span>
+                            )}
+                          </div>
                           <p className="truncate text-xs text-text-muted">@{profile.username}</p>
                         </div>
                       </button>
@@ -516,7 +551,52 @@ export default function Community() {
       )}
 
       <Modal isOpen={profileLoading || Boolean(selectedProfile)} onClose={() => { setSelectedProfile(null); setProfileLoading(false); }} title="Member profile" size="sm">
-        {profileLoading ? <LoadingSpinner /> : selectedProfile && <div className="space-y-5"><div className="flex items-center gap-4"><Avatar profile={selectedProfile} size="lg" /><div className="min-w-0"><h2 className="truncate text-xl font-bold">{selectedProfile.displayName}</h2><p className="truncate text-sm text-text-muted">@{selectedProfile.username}</p><p className="mt-1 text-xs text-text-muted">Joined {formatAfghanDate(selectedProfile.joinedAt, { includeYear: true })}</p></div></div><p className="rounded-lg bg-surface-lighter/70 p-3 text-sm text-text-muted">{selectedProfile.bio || 'This learner has not added a bio yet.'}</p><UserStats profile={selectedProfile} /><div className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3 text-center text-sm"><div><p className="font-semibold">{selectedProfile.followersCount}</p><p className="text-xs text-text-muted">followers</p></div><div><p className="font-semibold">{selectedProfile.followingCount}</p><p className="text-xs text-text-muted">following</p></div></div>{Number(selectedProfile.id) !== Number(user?.id) && <div className="flex flex-col gap-2 sm:flex-row"><button type="button" onClick={() => toggleFollow(selectedProfile)} className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium ${followingIds.has(selectedProfile.id) ? 'border border-border text-text hover:border-red-400/50 hover:text-red-400' : 'bg-primary text-white hover:bg-primary-dark'}`}>{followingIds.has(selectedProfile.id) ? <HiOutlineUserRemove size={17} /> : <HiOutlineUserAdd size={17} />}{followingIds.has(selectedProfile.id) ? 'Following' : 'Follow'}</button><button type="button" onClick={() => startDirectMessage(selectedProfile)} className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-text hover:border-primary/50 hover:bg-surface-lighter"><HiOutlineChatAlt2 size={17} /> Message</button></div>}<div className="flex items-center justify-center gap-2 text-xs text-text-muted"><HiOutlineGlobeAlt size={15} /> Public progress profile <HiOutlineLockClosed size={14} className="ml-2" /> Email stays private</div></div>}
+        {profileLoading ? <LoadingSpinner /> : selectedProfile && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-4">
+              <Avatar profile={selectedProfile} size="lg" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="truncate text-xl font-bold">{selectedProfile.displayName}</h2>
+                  {selectedProfile.isOnline && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      {selectedProfile.isStudying ? 'در حال مطالعه' : 'آنلاین'}
+                    </span>
+                  )}
+                </div>
+                <p className="truncate text-sm text-text-muted">@{selectedProfile.username}</p>
+                <p className="mt-1 text-xs text-text-muted">
+                  {selectedProfile.isOnline ? (
+                    <span className="text-emerald-400 font-medium">همین الان آنلاین</span>
+                  ) : (
+                    `Joined ${formatAfghanDate(selectedProfile.joinedAt, { includeYear: true })}`
+                  )}
+                </p>
+              </div>
+            </div>
+            <p className="rounded-lg bg-surface-lighter/70 p-3 text-sm text-text-muted">{selectedProfile.bio || 'This learner has not added a bio yet.'}</p>
+            <UserStats profile={selectedProfile} />
+            <div className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3 text-center text-sm">
+              <div><p className="font-semibold">{selectedProfile.followersCount}</p><p className="text-xs text-text-muted">followers</p></div>
+              <div><p className="font-semibold">{selectedProfile.followingCount}</p><p className="text-xs text-text-muted">following</p></div>
+            </div>
+            {Number(selectedProfile.id) !== Number(user?.id) && (
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button type="button" onClick={() => toggleFollow(selectedProfile)} className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium ${followingIds.has(selectedProfile.id) ? 'border border-border text-text hover:border-red-400/50 hover:text-red-400' : 'bg-primary text-white hover:bg-primary-dark'}`}>
+                  {followingIds.has(selectedProfile.id) ? <HiOutlineUserRemove size={17} /> : <HiOutlineUserAdd size={17} />}
+                  {followingIds.has(selectedProfile.id) ? 'Following' : 'Follow'}
+                </button>
+                <button type="button" onClick={() => startDirectMessage(selectedProfile)} className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-text hover:border-primary/50 hover:bg-surface-lighter">
+                  <HiOutlineChatAlt2 size={17} /> Message
+                </button>
+              </div>
+            )}
+            <div className="flex items-center justify-center gap-2 text-xs text-text-muted">
+              <HiOutlineGlobeAlt size={15} /> Public progress profile <HiOutlineLockClosed size={14} className="ml-2" /> Email stays private
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
