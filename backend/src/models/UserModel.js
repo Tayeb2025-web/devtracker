@@ -1,12 +1,47 @@
 import mongoose from 'mongoose';
 import { DEFAULT_USER_ID } from '../config/constants.js';
 
+export const DEFAULT_AVATARS = [
+  '/assets/avatars/cyber-hacker.svg',
+  '/assets/avatars/neon-ninja.svg',
+  '/assets/avatars/tech-wizard.svg',
+  '/assets/avatars/pixel-cat.svg',
+  '/assets/avatars/space-astronaut.svg',
+  '/assets/avatars/ai-robot.svg',
+  '/assets/avatars/dragon-coder.svg',
+  '/assets/avatars/falcon-dev.svg',
+  '/assets/avatars/coffee-coder.svg',
+  '/assets/avatars/ghost-dev.svg',
+  '/assets/avatars/samurai-dev.svg',
+  '/assets/avatars/cosmic-alien.svg',
+  '/assets/avatars/phoenix-hacker.svg',
+  '/assets/avatars/viking-coder.svg',
+  '/assets/avatars/synthwave-pilot.svg',
+  '/assets/avatars/matrix-explorer.svg',
+  '/assets/avatars/neon-dev.svg',
+  '/assets/avatars/code-panda.svg',
+  '/assets/avatars/owl-architect.svg',
+  '/assets/avatars/fox-hacker.svg',
+];
+
+export function getDeterministicAvatar(seed = '') {
+  if (!seed) return DEFAULT_AVATARS[0];
+  let hash = 0;
+  const str = String(seed).trim().toLowerCase();
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const idx = Math.abs(hash) % DEFAULT_AVATARS.length;
+  return DEFAULT_AVATARS[idx];
+}
+
 const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, trim: true },
   email: { type: String, sparse: true, trim: true, lowercase: true },
   password_hash: { type: String, default: null },
   display_name: { type: String, default: 'Developer', trim: true },
-  avatar_url: { type: String, default: '/images/profile.jpg' },
+  avatar_url: { type: String, default: null },
   bio: { type: String, default: null, maxlength: 280 },
   is_profile_public: { type: Boolean, default: true, index: true },
   allow_direct_messages: { type: String, enum: ['everyone', 'followers', 'none'], default: 'followers' },
@@ -45,6 +80,15 @@ const AuthSessionSchema = new mongoose.Schema({
 
 export const AuthSession = mongoose.models.AuthSession || mongoose.model('AuthSession', AuthSessionSchema);
 
+function normalizeUser(user) {
+  if (!user) return null;
+  const rawAvatar = user.avatar_url;
+  if (!rawAvatar || rawAvatar === '/images/profile.jpg') {
+    user.avatar_url = getDeterministicAvatar(user.username || user._id?.toString() || user.id);
+  }
+  return user;
+}
+
 export const UserModel = {
   async findById(id = DEFAULT_USER_ID) {
     if (!id) return null;
@@ -60,6 +104,7 @@ export const UserModel = {
     }
     if (user) {
       user.id = user._id.toString();
+      normalizeUser(user);
     }
     return user;
   },
@@ -67,7 +112,10 @@ export const UserModel = {
   async findByEmail(email) {
     if (!email) return null;
     const user = await User.findOne({ email: email.trim().toLowerCase() }).lean();
-    if (user) user.id = user._id.toString();
+    if (user) {
+      user.id = user._id.toString();
+      normalizeUser(user);
+    }
     return user;
   },
 
@@ -78,39 +126,47 @@ export const UserModel = {
         { email: 'dev@devtracker.local', password_hash: null }
       ]
     }).sort({ created_at: 1 }).lean();
-    if (user) user.id = user._id.toString();
+    if (user) {
+      user.id = user._id.toString();
+      normalizeUser(user);
+    }
     return user;
   },
 
-  async claimLegacyUser({ displayName, email, passwordHash }) {
+  async claimLegacyUser({ displayName, email, passwordHash, avatarUrl }) {
     const legacyUser = await this.findLegacyUser();
     if (!legacyUser) return null;
+    const finalAvatar = avatarUrl || getDeterministicAvatar(email || displayName || legacyUser.username);
     const updated = await User.findByIdAndUpdate(
       legacyUser._id,
       {
         email: email.trim().toLowerCase(),
         display_name: displayName.trim(),
         password_hash: passwordHash,
-        avatar_url: '/images/profile.jpg',
+        avatar_url: finalAvatar,
       },
       { new: true }
     ).lean();
-    if (updated) updated.id = updated._id.toString();
+    if (updated) {
+      updated.id = updated._id.toString();
+      normalizeUser(updated);
+    }
     return updated;
   },
 
-  async create({ displayName, email, passwordHash }) {
+  async create({ displayName, email, passwordHash, avatarUrl }) {
     const usernamePrefix = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 80) || 'developer';
     const username = `${usernamePrefix}_${Date.now().toString(36)}`;
+    const finalAvatar = avatarUrl || getDeterministicAvatar(username);
     const user = await User.create({
       username,
       email: email.trim().toLowerCase(),
       display_name: displayName.trim(),
       password_hash: passwordHash,
-      avatar_url: '/images/profile.jpg',
+      avatar_url: finalAvatar,
     });
     const userObj = user.toJSON();
-    return userObj;
+    return normalizeUser(userObj);
   },
 
   async update(id, data) {
@@ -130,7 +186,35 @@ export const UserModel = {
     if (!user) {
       user = await User.findOneAndUpdate({ legacy_id: Number(id) || -1 }, updateData, { new: true }).lean();
     }
-    if (user) user.id = user._id.toString();
+    if (user) {
+      user.id = user._id.toString();
+      normalizeUser(user);
+    }
     return user;
+  },
+
+  async migrateDefaultAvatars() {
+    try {
+      const usersToUpdate = await User.find({
+        $or: [
+          { avatar_url: null },
+          { avatar_url: '' },
+          { avatar_url: '/images/profile.jpg' }
+        ]
+      }).select('_id username email display_name');
+
+      if (usersToUpdate && usersToUpdate.length > 0) {
+        const bulkOps = usersToUpdate.map(u => ({
+          updateOne: {
+            filter: { _id: u._id },
+            update: { $set: { avatar_url: getDeterministicAvatar(u.username || u.email || u._id.toString()) } }
+          }
+        }));
+        await User.bulkWrite(bulkOps);
+        console.log(`[UserModel] Migrated ${usersToUpdate.length} users to cool developer avatars.`);
+      }
+    } catch (err) {
+      console.warn('[UserModel] Avatar migration check skipped or failed:', err.message);
+    }
   },
 };

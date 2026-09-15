@@ -11,6 +11,7 @@ import {
 } from 'react-icons/hi';
 import { socialApi } from '../services/api';
 import { useAuth } from '../contexts/AuthContextStore';
+import Avatar from './Avatar';
 
 const DISPLAY_DURATION_MS = 8500; // 8.5 seconds display
 const COOLDOWN_MIN_MS = 40000;    // 40 seconds minimum cooldown
@@ -262,17 +263,7 @@ export default function LiveActivityBubble() {
         <div className="flex items-start gap-3">
           {/* Avatar with live pulsing indicator */}
           <div className="relative shrink-0 mt-0.5">
-            {currentActivity.avatarUrl ? (
-              <img
-                src={currentActivity.avatarUrl}
-                alt={currentActivity.displayName || ''}
-                className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover border border-border"
-              />
-            ) : (
-              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-gradient-to-tr from-primary/30 to-accent/30 border border-primary/30 text-primary font-bold grid place-items-center text-sm shadow-inner">
-                {getInitials(currentActivity.displayName)}
-              </div>
-            )}
+            <Avatar profile={currentActivity} size="md" showOnline={false} />
 
             {/* Pulsing online / coding indicator */}
             <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">

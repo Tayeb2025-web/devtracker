@@ -4,6 +4,8 @@ import { useToast } from '../contexts/ToastContextStore';
 import { useAuth } from '../contexts/AuthContextStore';
 import { useCalendar } from '../contexts/CalendarContextStore';
 import { Button, Card, Input, LoadingSpinner, Select, Textarea } from '../components/ui';
+import AvatarPickerModal from '../components/AvatarPickerModal';
+import { resolveAvatarUrl, isCustomAvatar, getDefaultAvatar } from '../constants/avatars';
 import {
   HiOutlineUser, HiOutlineLockClosed, HiOutlineFlag, HiOutlineBell,
   HiOutlineSparkles, HiOutlineCheck, HiOutlineDownload, HiOutlineUpload,
@@ -46,6 +48,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
 
   const loadSettings = useCallback(async () => {
     setLoading(true);
@@ -56,7 +59,7 @@ export default function Settings() {
         display_name: profile.display_name || '',
         email: profile.email || '',
         bio: profile.bio || '',
-        avatar_url: profile.avatar_url || user?.avatar_url || '/images/profile.jpg',
+        avatar_url: profile.avatar_url || user?.avatar_url || getDefaultAvatar(user?.username),
         is_profile_public: Boolean(profile.is_profile_public),
         allow_direct_messages: profile.allow_direct_messages || 'followers',
         notification_enabled: Boolean(profile.notification_enabled),
@@ -68,11 +71,28 @@ export default function Settings() {
     } finally {
       setLoading(false);
     }
-  }, [toast, user?.avatar_url]);
+  }, [toast, user?.avatar_url, user?.username]);
 
   useEffect(() => {
     void loadSettings();
   }, [loadSettings]);
+
+  const handlePresetAvatarSelect = async (chosenPath) => {
+    setUploadingAvatar(true);
+    try {
+      const res = await userApi.updateSettings({ avatar_url: chosenPath });
+      const updatedUser = res.data;
+      if (updatedUser) {
+        setUser(updatedUser);
+        setForm(current => ({ ...current, avatar_url: updatedUser.avatar_url }));
+        toast.success('آواتار شما با موفقیت تغییر کرد! ✨');
+      }
+    } catch (error) {
+      toast.error(error.message || 'خطا در تغییر آواتار');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleAvatarSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -97,7 +117,7 @@ export default function Settings() {
       if (updatedUser) {
         setUser(updatedUser);
         setForm(current => ({ ...current, avatar_url: updatedUser.avatar_url }));
-        toast.success('Profile photo uploaded to Cloudinary successfully! ✨');
+        toast.success('عکس پروفایل شخصی با موفقیت ذخیره شد! ✨');
       }
     } catch (error) {
       toast.error(error.message || 'Failed to upload photo to Cloudinary');
@@ -110,12 +130,13 @@ export default function Settings() {
   const handleRemoveAvatar = async () => {
     setUploadingAvatar(true);
     try {
-      const res = await userApi.removeAvatar();
+      const defaultAv = getDefaultAvatar(user?.username || user?.id);
+      const res = await userApi.updateSettings({ avatar_url: defaultAv });
       const updatedUser = res.data;
       if (updatedUser) {
         setUser(updatedUser);
         setForm(current => ({ ...current, avatar_url: updatedUser.avatar_url }));
-        toast.success('Profile photo reset to default');
+        toast.success('عکس شخصی برداشته شد و آواتار برنامه‌نویس فعال گردید ✨');
       }
     } catch (error) {
       toast.error(error.message || 'Failed to remove photo');
@@ -183,12 +204,12 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Cloudinary Avatar Upload Block */}
+        {/* Avatar & Photo Selection Block */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-5 rounded-2xl bg-surface-lighter/40 border border-border/60 backdrop-blur-sm">
           <div className="relative group shrink-0">
-            <div className="relative h-24 w-24 rounded-full overflow-hidden ring-4 ring-indigo-500/20 shadow-xl group-hover:ring-indigo-500/50 transition-all">
+            <div className="relative h-24 w-24 rounded-full overflow-hidden ring-4 ring-indigo-500/20 shadow-xl group-hover:ring-indigo-500/50 transition-all bg-surface">
               <img
-                src={currentAvatar}
+                src={resolveAvatarUrl(currentAvatar, user?.username)}
                 alt="Profile Avatar"
                 className={`h-full w-full object-cover transition-all duration-300 ${uploadingAvatar ? 'opacity-40 scale-105 filter blur-xs' : 'group-hover:scale-105'}`}
               />
@@ -201,29 +222,48 @@ export default function Settings() {
 
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setAvatarPickerOpen(true)}
               disabled={uploadingAvatar}
-              aria-label="Upload photo"
-              title="Change Profile Photo"
+              aria-label="انتخاب آواتار"
+              title="انتخاب از آواتارهای خفن"
               className="absolute -bottom-1 -right-1 p-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 ring-2 ring-surface cursor-pointer transition-transform hover:scale-110 active:scale-95 disabled:opacity-50"
             >
-              <HiOutlineCamera size={16} />
+              <HiOutlineSparkles size={16} />
             </button>
           </div>
 
           <div className="space-y-2 text-center sm:text-left flex-1 min-w-0">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <h3 className="font-bold text-sm text-text">Profile Picture</h3>
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Cloudinary Storage
-              </span>
+              <h3 className="font-bold text-sm text-text">تصویر و آواتار پروفایل</h3>
+              {isCustomAvatar(currentAvatar) ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  عکس شخصی (Cloudinary)
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                  <HiOutlineSparkles size={11} className="text-amber-300" />
+                  آواتار توسعه‌دهنده
+                </span>
+              )}
             </div>
             <p className="text-xs text-text-muted">
-              Upload a clear avatar for your developer rank and community leaderboards. Recommended square JPG, PNG, or WebP under 5MB.
+              می‌توانید از بین آواتارهای باحال و خفن برنامه‌نویسان انتخاب کنید یا عکس شخصی خودتان را آپلود نمایید.
             </p>
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pt-2">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                disabled={uploadingAvatar}
+                onClick={() => setAvatarPickerOpen(true)}
+                className="gap-2 text-xs"
+              >
+                <HiOutlineSparkles size={16} className="text-amber-300" />
+                انتخاب از آواتارهای خفن 🎭
+              </Button>
+
               <input
                 type="file"
                 ref={fileInputRef}
@@ -233,17 +273,17 @@ export default function Settings() {
               />
               <Button
                 type="button"
-                variant="primary"
+                variant="outline"
                 size="sm"
                 disabled={uploadingAvatar}
                 onClick={() => fileInputRef.current?.click()}
                 className="gap-2 text-xs"
               >
-                <HiOutlineCloudUpload size={16} />
-                {uploadingAvatar ? 'Uploading to Cloudinary…' : 'Upload New Photo'}
+                <HiOutlineCamera size={16} />
+                {uploadingAvatar ? 'در حال آپلود…' : 'آپلود عکس شخصی'}
               </Button>
 
-              {!isDefaultAvatar && (
+              {isCustomAvatar(currentAvatar) && (
                 <Button
                   type="button"
                   variant="outline"
@@ -253,7 +293,7 @@ export default function Settings() {
                   className="gap-1.5 text-xs text-red-400 hover:text-red-300 hover:border-red-500/40"
                 >
                   <HiOutlineTrash size={15} />
-                  Remove
+                  حذف عکس شخصی
                 </Button>
               )}
             </div>
@@ -492,6 +532,15 @@ export default function Settings() {
           {saving ? 'Saving Changes…' : 'Save All Settings'}
         </Button>
       </div>
+
+      <AvatarPickerModal
+        isOpen={avatarPickerOpen}
+        onClose={() => setAvatarPickerOpen(false)}
+        currentAvatar={resolveAvatarUrl(currentAvatar, user?.username)}
+        onSelect={handlePresetAvatarSelect}
+        displayName={form.display_name || user?.display_name || user?.username}
+        title="انتخاب آواتار توسعه‌دهنده 🎭"
+      />
     </div>
   );
 }

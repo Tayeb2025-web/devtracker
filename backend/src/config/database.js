@@ -34,6 +34,12 @@ export async function connectDatabase() {
     }).then((m) => {
       console.log('✅ Connected to MongoDB Atlas successfully.');
       cached.conn = m;
+      if (!global._hasRanAvatarMigration) {
+        global._hasRanAvatarMigration = true;
+        import('../models/UserModel.js').then(({ UserModel }) => {
+          UserModel.migrateDefaultAvatars().catch(() => {});
+        }).catch(() => {});
+      }
       return true;
     }).catch((error) => {
       cached.promise = null;

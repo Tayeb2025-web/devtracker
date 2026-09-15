@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-cat" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4c0519" />
+      <stop offset="50%" stop-color="#881337" />
+      <stop offset="100%" stop-color="#f43f5e" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-cat)" stroke="#fb7185" stroke-width="2.5" />
+  
+  <!-- Cat Body / Hoodie -->
+  <path d="M 26 110 C 26 86 40 76 60 76 C 80 76 94 86 94 110 Z" fill="#1f1322" stroke="#4c0519" stroke-width="2" />
+  
+  <!-- Cat Ears -->
+  <polygon points="36,44 48,20 54,42" fill="#1f1322" stroke="#f43f5e" stroke-width="1.8" />
+  <polygon points="40,42 48,26 52,40" fill="#fb7185" />
+  <polygon points="84,44 72,20 66,42" fill="#1f1322" stroke="#f43f5e" stroke-width="1.8" />
+  <polygon points="80,42 72,26 68,40" fill="#fb7185" />
+  
+  <!-- Cat Head -->
+  <circle cx="60" cy="56" r="24" fill="#1f1322" stroke="#f43f5e" stroke-width="1.8" />
+  
+  <!-- Gamer Headphones -->
+  <path d="M 34 56 C 34 36 86 36 86 56" fill="none" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round" />
+  <rect x="30" y="48" width="8" height="16" rx="4" fill="#38bdf8" />
+  <rect x="82" y="48" width="8" height="16" rx="4" fill="#38bdf8" />
+  
+  <!-- Cat Eyes (Large, Cute, Emerald) -->
+  <ellipse cx="50" cy="54" rx="4.5" ry="6" fill="#10b981" />
+  <ellipse cx="70" cy="54" rx="4.5" ry="6" fill="#10b981" />
+  <circle cx="51" cy="52" r="1.8" fill="#ffffff" />
+  <circle cx="71" cy="52" r="1.8" fill="#ffffff" />
+  
+  <!-- Cat Nose & Whiskers -->
+  <polygon points="60,61 58,63 62,63" fill="#fb7185" />
+  <path d="M 57 65 Q 60 67 63 65" stroke="#fb7185" stroke-width="1.2" fill="none" />
+  <line x1="42" y1="62" x2="32" y2="60" stroke="#fecdd3" stroke-width="1.2" />
+  <line x1="42" y1="65" x2="33" y2="67" stroke="#fecdd3" stroke-width="1.2" />
+  <line x1="78" y1="62" x2="88" y2="60" stroke="#fecdd3" stroke-width="1.2" />
+  <line x1="78" y1="65" x2="87" y2="67" stroke="#fecdd3" stroke-width="1.2" />
+</svg>

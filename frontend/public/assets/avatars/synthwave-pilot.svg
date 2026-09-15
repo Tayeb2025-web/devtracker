@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-synth" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2e0854" />
+      <stop offset="55%" stop-color="#9d174d" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <linearGradient id="sun-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#fbbf24" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-synth)" stroke="#f472b6" stroke-width="2.5" />
+  
+  <!-- Retro Sunset in Background -->
+  <circle cx="60" cy="52" r="28" fill="url(#sun-grad)" opacity="0.85" />
+  <line x1="32" y1="46" x2="88" y2="46" stroke="#2e0854" stroke-width="1.8" />
+  <line x1="35" y1="52" x2="85" y2="52" stroke="#2e0854" stroke-width="2.5" />
+  <line x1="40" y1="58" x2="80" y2="58" stroke="#2e0854" stroke-width="3" />
+  
+  <!-- Leather Jacket Shoulders -->
+  <path d="M 22 110 C 22 84 38 72 60 72 C 82 72 98 84 98 110 Z" fill="#18181b" stroke="#ec4899" stroke-width="2" />
+  <path d="M 44 74 L 60 102 L 76 74 Z" fill="#06b6d4" opacity="0.5" />
+  
+  <!-- Pilot Face -->
+  <circle cx="60" cy="56" r="20" fill="#fed7aa" />
+  <!-- Stylish 80s Pompadour Hair -->
+  <path d="M 38 48 C 36 28 84 24 84 46 C 76 34 50 34 38 48 Z" fill="#18181b" />
+  
+  <!-- Aviator Sunglasses with Sunset Mirror -->
+  <polygon points="42,50 56,50 54,62 44,62" fill="#09090b" stroke="#06b6d4" stroke-width="1.8" />
+  <polygon points="64,50 78,50 76,62 66,62" fill="#09090b" stroke="#06b6d4" stroke-width="1.8" />
+  <line x1="56" y1="52" x2="64" y2="52" stroke="#06b6d4" stroke-width="1.8" />
+  <line x1="43" y1="53" x2="53" y2="60" stroke="#f472b6" stroke-width="1.5" />
+  <line x1="65" y1="53" x2="75" y2="60" stroke="#f472b6" stroke-width="1.5" />
+  
+  <!-- Confident Smirk -->
+  <path d="M 58 68 Q 63 71 67 67" stroke="#9f1239" stroke-width="2" fill="none" stroke-linecap="round" />
+</svg>

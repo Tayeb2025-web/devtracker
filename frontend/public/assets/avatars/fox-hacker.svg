@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-fox" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#431407" />
+      <stop offset="50%" stop-color="#7c2d12" />
+      <stop offset="100%" stop-color="#c2410c" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-fox)" stroke="#fb923c" stroke-width="2.5" />
+  
+  <!-- Fox Ears (Pointy with black tips) -->
+  <polygon points="36,44 26,16 50,32" fill="#ea580c" stroke="#c2410c" stroke-width="1.8" />
+  <polygon points="32,24 26,16 38,20" fill="#0f172a" />
+  <polygon points="34,36 30,22 44,30" fill="#ffedd5" />
+  
+  <polygon points="84,44 94,16 70,32" fill="#ea580c" stroke="#c2410c" stroke-width="1.8" />
+  <polygon points="88,24 94,16 82,20" fill="#0f172a" />
+  <polygon points="86,36 90,22 76,30" fill="#ffedd5" />
+  
+  <!-- Hoodie / Shoulders -->
+  <path d="M 22 110 C 22 84 38 74 60 74 C 82 74 98 84 98 110 Z" fill="#18181b" stroke="#ea580c" stroke-width="2" />
+  
+  <!-- Fox Head -->
+  <path d="M 38 46 C 38 32 82 32 82 46 C 82 66 68 76 60 76 C 52 76 38 66 38 46 Z" fill="#ea580c" stroke="#c2410c" stroke-width="2" />
+  <!-- White Cheeks -->
+  <path d="M 39 52 C 45 66 52 74 60 76 C 48 76 40 68 39 52 Z" fill="#ffedd5" />
+  <path d="M 81 52 C 75 66 68 74 60 76 C 72 76 80 68 81 52 Z" fill="#ffedd5" />
+  
+  <!-- Sleek Cunning Eyes -->
+  <polygon points="46,50 56,53 48,56" fill="#0f172a" />
+  <circle cx="51" cy="52" r="1.5" fill="#facc15" />
+  
+  <polygon points="74,50 64,53 72,56" fill="#0f172a" />
+  <circle cx="69" cy="52" r="1.5" fill="#facc15" />
+  
+  <!-- Nose -->
+  <polygon points="57,66 63,66 60,70" fill="#0f172a" />
+</svg>

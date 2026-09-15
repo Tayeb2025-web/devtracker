@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-ghost" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="50%" stop-color="#4338ca" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-ghost)" stroke="#818cf8" stroke-width="2.5" />
+  
+  <!-- Floating Spooky Sparkles -->
+  <polygon points="26,30 28,34 32,34 29,37 30,41 26,38 22,41 23,37 20,34 24,34" fill="#a5b4fc" opacity="0.6" />
+  <polygon points="94,70 95,73 98,73 96,75 97,78 94,76 91,78 92,75 90,73 93,73" fill="#a5b4fc" opacity="0.6" />
+  
+  <!-- Ghost Body (Floating with wavy bottom) -->
+  <path d="M 34 60 C 34 32 86 32 86 60 C 86 86 86 96 82 96 C 78 96 76 88 72 88 C 68 88 66 96 60 96 C 54 96 52 88 48 88 C 44 88 42 96 38 96 C 34 96 34 86 34 60 Z" fill="#ffffff" stroke="#c7d2fe" stroke-width="2" />
+  
+  <!-- Retro CRT Glasses on Ghost -->
+  <rect x="42" y="48" width="16" height="12" rx="3" fill="#0f172a" stroke="#06b6d4" stroke-width="1.8" />
+  <rect x="62" y="48" width="16" height="12" rx="3" fill="#0f172a" stroke="#06b6d4" stroke-width="1.8" />
+  <line x1="58" y1="54" x2="62" y2="54" stroke="#06b6d4" stroke-width="1.8" />
+  
+  <!-- Glowing Code / Terminal Prompt in Eyes -->
+  <text x="44" y="58" fill="#38bdf8" font-size="9" font-family="monospace" font-weight="bold">&gt;_</text>
+  <text x="64" y="58" fill="#38bdf8" font-size="9" font-family="monospace" font-weight="bold">&gt;_</text>
+  
+  <!-- Cute Ghost Cheeks & Smile -->
+  <ellipse cx="40" cy="66" rx="3" ry="1.8" fill="#f472b6" opacity="0.6" />
+  <ellipse cx="80" cy="66" rx="3" ry="1.8" fill="#f472b6" opacity="0.6" />
+  <path d="M 56 65 Q 60 69 64 65" stroke="#4338ca" stroke-width="2" fill="none" stroke-linecap="round" />
+</svg>

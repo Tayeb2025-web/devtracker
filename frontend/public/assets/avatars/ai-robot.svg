@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-robot" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#042f2e" />
+      <stop offset="50%" stop-color="#115e59" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-robot)" stroke="#2dd4bf" stroke-width="2.5" />
+  
+  <!-- Robot Neck & Shoulders -->
+  <rect x="52" y="70" width="16" height="12" rx="2" fill="#334155" />
+  <path d="M 26 110 C 26 88 40 80 60 80 C 80 80 94 88 94 110 Z" fill="#1e293b" stroke="#475569" stroke-width="2" />
+  
+  <!-- Bot Head -->
+  <rect x="36" y="32" width="48" height="42" rx="12" fill="#0f172a" stroke="#2dd4bf" stroke-width="2.2" />
+  
+  <!-- Antennae / Bolts -->
+  <circle cx="60" cy="24" r="3.5" fill="#f43f5e" />
+  <line x1="60" y1="28" x2="60" y2="32" stroke="#475569" stroke-width="2.5" />
+  <rect x="30" y="46" width="6" height="14" rx="2" fill="#2dd4bf" />
+  <rect x="84" y="46" width="6" height="14" rx="2" fill="#2dd4bf" />
+  
+  <!-- Screen Face Area -->
+  <rect x="42" y="38" width="36" height="28" rx="6" fill="#022c22" stroke="#0d9488" stroke-width="1.2" />
+  
+  <!-- Glowing LED Eyes -->
+  <circle cx="51" cy="50" r="4.5" fill="#2dd4bf" />
+  <circle cx="69" cy="50" r="4.5" fill="#2dd4bf" />
+  <circle cx="52" cy="49" r="1.5" fill="#ffffff" />
+  <circle cx="70" cy="49" r="1.5" fill="#ffffff" />
+  
+  <!-- Digital Smile (LED Matrix) -->
+  <path d="M 52 58 Q 60 62 68 58" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" fill="none" />
+</svg>

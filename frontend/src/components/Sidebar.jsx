@@ -13,6 +13,7 @@ import {
 import { ROUTES } from '../constants';
 import { useTheme } from '../contexts/ThemeContextStore';
 import { useAuth } from '../contexts/AuthContextStore';
+import Avatar from './Avatar';
 
 const navItems = [
   { to: ROUTES.DASHBOARD, icon: HiOutlineHome, label: 'Dashboard' },
@@ -92,10 +93,7 @@ export default function Sidebar({ isCollapsed, onToggle }) {
       <div className="p-3 border-t border-border/80 space-y-2">
         {/* User Card */}
         <div className="flex items-center gap-3 rounded-xl bg-surface-lighter/50 border border-border/60 p-2.5 backdrop-blur-sm">
-          <div className="relative">
-            <img src={user?.avatar_url || '/images/profile.jpg'} alt="Profile" className="h-9 w-9 rounded-full object-cover ring-2 ring-primary/30" />
-            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-surface" />
-          </div>
+          <Avatar profile={user} size="sm" showOnline={true} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-bold text-text">{user?.display_name || user?.username}</p>
             <p className="truncate text-[11px] text-text-muted">{user?.email}</p>

@@ -139,7 +139,12 @@ export const userSettingsValidation = [
   body('calendar_type').optional().isIn(['afghan', 'iranian', 'gregorian']).withMessage('Calendar type must be afghan, iranian, or gregorian'),
   body('notification_enabled').optional().isBoolean().withMessage('Notification setting must be true or false'),
   body('notification_time').optional().matches(/^\d{2}:\d{2}(:\d{2})?$/).withMessage('Invalid notification time'),
-  body('avatar_url').optional({ values: 'null' }).isURL({ protocols: ['http', 'https'], require_protocol: true }).withMessage('Avatar URL must be a valid URL'),
+  body('avatar_url').optional({ values: 'null' }).custom(value => {
+    if (value === null || value === '' || (typeof value === 'string' && (value.startsWith('/') || /^https?:\/\//.test(value)))) {
+      return true;
+    }
+    throw new Error('Avatar URL must be a valid URL or path');
+  }),
   body('bio').optional({ values: 'null' }).trim().isLength({ max: 280 }).withMessage('Bio must be 280 characters or less'),
   body('is_profile_public').optional().isBoolean().withMessage('Profile visibility must be true or false'),
   body('allow_direct_messages').optional().isIn(['everyone', 'followers', 'none']).withMessage('Invalid direct message setting'),

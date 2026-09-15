@@ -17,6 +17,7 @@ import {
   HiOutlineX,
 } from 'react-icons/hi';
 import { Card, LoadingSpinner, Modal } from '../components/ui';
+import Avatar from '../components/Avatar';
 import { API_BASE, formatAfghanDate } from '../constants';
 import { useAuth } from '../contexts/AuthContextStore';
 import { useToast } from '../contexts/ToastContextStore';
@@ -30,44 +31,6 @@ const TABS = [
 
 const socketUrl = import.meta.env.VITE_SOCKET_URL
   || (API_BASE.startsWith('http') ? new URL(API_BASE).origin : undefined);
-
-function profileInitial(profile) {
-  return (profile?.displayName || profile?.display_name || profile?.username || '?').trim().charAt(0).toUpperCase();
-}
-
-function Avatar({ profile, size = 'md', showOnline = true }) {
-  const sizes = { sm: 'h-9 w-9 text-sm', md: 'h-11 w-11 text-base', lg: 'h-16 w-16 text-xl' };
-  const dotSizes = {
-    sm: 'h-2.5 w-2.5 -bottom-0.5 -right-0.5',
-    md: 'h-3.5 w-3.5 -bottom-0.5 -right-0.5',
-    lg: 'h-4 w-4 bottom-0.5 right-0.5',
-  };
-  const pingSizes = { sm: 'h-2.5 w-2.5', md: 'h-3.5 w-3.5', lg: 'h-4 w-4' };
-  const src = profile?.avatarUrl || profile?.avatar_url;
-  const isOnline = Boolean(profile?.isOnline || profile?.is_online);
-  const isStudying = Boolean(profile?.isStudying || profile?.is_studying);
-
-  return (
-    <div className="relative inline-flex shrink-0">
-      {src ? (
-        <img src={src} alt="" className={`${sizes[size]} shrink-0 rounded-full border border-border object-cover`} />
-      ) : (
-        <div className={`${sizes[size]} grid shrink-0 place-items-center rounded-full bg-primary/20 font-semibold text-primary`}>
-          {profileInitial(profile)}
-        </div>
-      )}
-      {showOnline && isOnline && (
-        <span
-          className={`absolute ${dotSizes[size]} flex items-center justify-center pointer-events-none`}
-          title={isStudying ? 'آنلاین (در حال مطالعه)' : 'آنلاین'}
-        >
-          <span className={`animate-ping absolute inline-flex ${pingSizes[size]} rounded-full bg-emerald-400 opacity-75`} />
-          <span className={`relative inline-flex rounded-full ${pingSizes[size]} bg-emerald-500 border-2 border-surface shadow-sm`} />
-        </span>
-      )}
-    </div>
-  );
-}
 
 function formatMessageTime(value) {
   if (!value) return '';

@@ -1,8 +1,13 @@
 import mongoose from 'mongoose';
 import { AppError } from '../middlewares/errorHandler.js';
 import { getLocalWeekRange, shiftLocalDate } from '../utils/date.js';
-import { User } from './UserModel.js';
+import { User, getDeterministicAvatar } from './UserModel.js';
 import { Level, Streak, XpHistory } from './GoalModel.js';
+
+function resolveUserAvatar(url, seed) {
+  if (url && url !== '/images/profile.jpg') return url;
+  return getDeterministicAvatar(seed);
+}
 
 const LEAGUE_SIZE = 30;
 const DIRECTORY_LIMIT = 12;
@@ -147,7 +152,7 @@ export const SocialModel = {
         id: uid,
         username: u.username,
         displayName: u.display_name,
-        avatarUrl: u.avatar_url,
+        avatarUrl: resolveUserAvatar(u.avatar_url, u.username || uid),
         bio: u.bio,
         joinedAt: u.created_at,
         lastSeenAt: u.last_seen_at,
@@ -208,7 +213,7 @@ export const SocialModel = {
       id: uid,
       username: u.username,
       displayName: u.display_name,
-      avatarUrl: u.avatar_url,
+      avatarUrl: resolveUserAvatar(u.avatar_url, u.username || uid),
       bio: u.bio,
       joinedAt: u.created_at,
       lastSeenAt: u.last_seen_at,
@@ -400,7 +405,7 @@ export const SocialModel = {
         userId: uid,
         username: u.username,
         displayName: name,
-        avatarUrl: u.avatar_url,
+        avatarUrl: resolveUserAvatar(u.avatar_url, u.username || uid),
         isFollowing,
         isMutual,
         isStudying,
@@ -537,7 +542,7 @@ export const LeagueModel = {
         userId: uid,
         username: u.username,
         displayName: u.display_name,
-        avatarUrl: u.avatar_url,
+        avatarUrl: resolveUserAvatar(u.avatar_url, u.username || uid),
         isOnline,
         level: Number(level?.current_level || 1),
         totalXp: Number(level?.total_xp || 0),
@@ -589,7 +594,7 @@ export const LeagueModel = {
           id: sender ? sender._id.toString() : msg.sender_id,
           username: sender?.username || 'user',
           displayName: sender?.display_name || 'Developer',
-          avatarUrl: sender?.avatar_url || null,
+          avatarUrl: resolveUserAvatar(sender?.avatar_url, sender?.username || msg.sender_id),
         },
       };
     });
@@ -621,7 +626,7 @@ export const LeagueModel = {
           id: sender ? sender._id.toString() : String(userId),
           username: sender?.username || 'user',
           displayName: sender?.display_name || 'Developer',
-          avatarUrl: sender?.avatar_url || null,
+          avatarUrl: resolveUserAvatar(sender?.avatar_url, sender?.username || String(userId)),
         },
       },
     };
@@ -672,7 +677,7 @@ export const ChatModel = {
           id: otherUser ? otherUser._id.toString() : otherUserId,
           username: otherUser?.username || 'user',
           displayName: otherUser?.display_name || 'Developer',
-          avatarUrl: otherUser?.avatar_url || null,
+          avatarUrl: resolveUserAvatar(otherUser?.avatar_url, otherUser?.username || otherUserId),
           isOnline: Boolean(otherUser?.last_seen_at && (Date.now() - new Date(otherUser.last_seen_at).getTime()) <= 5 * 60 * 1000),
         },
       };
@@ -695,7 +700,7 @@ export const ChatModel = {
         id: otherUser ? otherUser._id.toString() : recipientId,
         username: otherUser?.username || 'user',
         displayName: otherUser?.display_name || 'Developer',
-        avatarUrl: otherUser?.avatar_url || null,
+        avatarUrl: resolveUserAvatar(otherUser?.avatar_url, otherUser?.username || recipientId),
       },
     };
   },
@@ -738,7 +743,7 @@ export const ChatModel = {
           id: sender ? sender._id.toString() : msg.sender_id,
           username: sender?.username || 'user',
           displayName: sender?.display_name || 'Developer',
-          avatarUrl: sender?.avatar_url || null,
+          avatarUrl: resolveUserAvatar(sender?.avatar_url, sender?.username || msg.sender_id),
         },
       };
     });
@@ -750,7 +755,7 @@ export const ChatModel = {
           id: otherUser ? otherUser._id.toString() : otherUserId,
           username: otherUser?.username || 'user',
           displayName: otherUser?.display_name || 'Developer',
-          avatarUrl: otherUser?.avatar_url || null,
+          avatarUrl: resolveUserAvatar(otherUser?.avatar_url, otherUser?.username || otherUserId),
         },
       },
       messages: formatted,
@@ -787,7 +792,7 @@ export const ChatModel = {
           id: sender ? sender._id.toString() : String(userId),
           username: sender?.username || 'user',
           displayName: sender?.display_name || 'Developer',
-          avatarUrl: sender?.avatar_url || null,
+          avatarUrl: resolveUserAvatar(sender?.avatar_url, sender?.username || String(userId)),
         },
       },
       recipientId: otherUserId,

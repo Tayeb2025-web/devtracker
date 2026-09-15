@@ -3,7 +3,7 @@ import { TechnologyModel } from '../models/TechnologyModel.js';
 import { ProjectModel } from '../models/ProjectModel.js';
 import { CategoryModel } from '../models/CategoryModel.js';
 import { GoalModel, StreakModel, LevelModel, AchievementModel, ChallengeModel, NoteModel } from '../models/GoalModel.js';
-import { UserModel } from '../models/UserModel.js';
+import { UserModel, getDeterministicAvatar } from '../models/UserModel.js';
 import { XP_PER_HOUR, ACHIEVEMENTS, MOTIVATIONAL_QUOTES, DEFAULT_USER_ID } from '../config/constants.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { afghanToGregorianDate, formatAfghanDate, formatAfghanNumericDate, formatLocalDate, getLocalYearStart, shiftLocalDate } from '../utils/date.js';
@@ -431,7 +431,9 @@ export const UserService = {
   },
 
   async removeAvatar(userId = DEFAULT_USER_ID) {
-    const user = await UserModel.update(userId, { avatar_url: '/images/profile.jpg' });
+    const existing = await UserModel.findById(userId);
+    const fallbackAvatar = getDeterministicAvatar(existing?.username || existing?.id || userId);
+    const user = await UserModel.update(userId, { avatar_url: fallbackAvatar });
     if (!user) throw new AppError('User not found', 404);
     const { password_hash, ...rest } = user;
     return rest;

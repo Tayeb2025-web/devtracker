@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-neon-dev" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#311042" />
+      <stop offset="50%" stop-color="#581c87" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-neon-dev)" stroke="#d8b4fe" stroke-width="2.5" />
+  
+  <!-- Ponytail Hair Behind -->
+  <path d="M 78 40 Q 102 36 100 66 Q 90 70 82 54" fill="#ec4899" />
+  
+  <!-- Shoulders / Cyber Jacket -->
+  <path d="M 22 110 C 22 84 38 72 60 72 C 82 72 98 84 98 110 Z" fill="#180c26" stroke="#9333ea" stroke-width="2" />
+  
+  <!-- Face -->
+  <circle cx="60" cy="56" r="20" fill="#fed7aa" />
+  <!-- Vibrant Pink Bangs -->
+  <path d="M 38 48 C 38 28 82 28 82 48 C 70 36 50 36 38 48 Z" fill="#ec4899" />
+  
+  <!-- VR / Cyber Goggles -->
+  <rect x="40" y="48" width="40" height="13" rx="4" fill="#0f172a" stroke="#06b6d4" stroke-width="2" />
+  <line x1="44" y1="54" x2="76" y2="54" stroke="#a855f7" stroke-width="2" />
+  
+  <!-- Friendly Smile -->
+  <path d="M 56 68 Q 60 72 64 68" stroke="#be185d" stroke-width="2" fill="none" stroke-linecap="round" />
+</svg>

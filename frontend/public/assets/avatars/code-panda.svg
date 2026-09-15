@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-panda" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#042f2e" />
+      <stop offset="50%" stop-color="#134e4a" />
+      <stop offset="100%" stop-color="#0f766e" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-panda)" stroke="#2dd4bf" stroke-width="2.5" />
+  
+  <!-- Panda Black Ears -->
+  <circle cx="40" cy="36" r="11" fill="#0f172a" />
+  <circle cx="80" cy="36" r="11" fill="#0f172a" />
+  
+  <!-- Hoodie Torso -->
+  <path d="M 22 110 C 22 84 38 74 60 74 C 82 74 98 84 98 110 Z" fill="#0f172a" stroke="#14b8a6" stroke-width="2" />
+  
+  <!-- Panda Head -->
+  <circle cx="60" cy="56" r="26" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2" />
+  
+  <!-- Black Eye Patches -->
+  <ellipse cx="48" cy="52" rx="7.5" ry="9" fill="#0f172a" transform="rotate(-15 48 52)" />
+  <ellipse cx="72" cy="52" rx="7.5" ry="9" fill="#0f172a" transform="rotate(15 72 52)" />
+  
+  <!-- Cute Shiny Eyes -->
+  <circle cx="49" cy="50" r="2.5" fill="#ffffff" />
+  <circle cx="71" cy="50" r="2.5" fill="#ffffff" />
+  
+  <!-- Nose & Mouth -->
+  <ellipse cx="60" cy="62" rx="3.5" ry="2.5" fill="#0f172a" />
+  <path d="M 57 65 Q 60 67 63 65" stroke="#0f172a" stroke-width="1.8" fill="none" />
+</svg>

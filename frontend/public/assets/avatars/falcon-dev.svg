@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-falcon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#451a03" />
+      <stop offset="50%" stop-color="#78350f" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-falcon)" stroke="#f59e0b" stroke-width="2.5" />
+  
+  <!-- Feathers / Torso -->
+  <path d="M 24 110 C 24 86 40 76 60 76 C 80 76 96 86 96 110 Z" fill="#291508" stroke="#78350f" stroke-width="2" />
+  
+  <!-- Falcon Head -->
+  <path d="M 40 44 C 40 28 80 28 80 44 C 80 62 72 70 60 70 C 48 70 40 62 40 44 Z" fill="#fffbeb" stroke="#d97706" stroke-width="2" />
+  
+  <!-- Crest Feathers -->
+  <polygon points="60,28 64,16 68,28" fill="#d97706" />
+  <polygon points="52,30 54,18 58,30" fill="#b45309" />
+  <polygon points="68,30 72,18 74,30" fill="#b45309" />
+  
+  <!-- Sharp Golden Beak -->
+  <polygon points="52,56 68,56 60,74" fill="#f59e0b" stroke="#b45309" stroke-width="1.5" />
+  
+  <!-- Cybernetic Eye Left, Falcon Eye Right -->
+  <circle cx="48" cy="48" r="6" fill="#0f172a" />
+  <circle cx="48" cy="48" r="3.5" fill="#06b6d4" />
+  <circle cx="49" cy="47" r="1.2" fill="#ffffff" />
+  
+  <circle cx="72" cy="48" r="6" fill="#0f172a" />
+  <circle cx="72" cy="48" r="3.5" fill="#f59e0b" />
+  <circle cx="73" cy="47" r="1.2" fill="#ffffff" />
+  
+  <!-- Tech Markings Under Left Eye -->
+  <line x1="43" y1="56" x2="48" y2="62" stroke="#06b6d4" stroke-width="1.8" stroke-linecap="round" />
+</svg>

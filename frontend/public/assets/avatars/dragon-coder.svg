@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-dragon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#450a0a" />
+      <stop offset="50%" stop-color="#7f1d1d" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-dragon)" stroke="#f87171" stroke-width="2.5" />
+  
+  <!-- Horns -->
+  <path d="M 44 42 Q 28 26 24 16 Q 36 22 46 32" fill="#fbbf24" stroke="#d97706" stroke-width="1.5" />
+  <path d="M 76 42 Q 92 26 96 16 Q 84 22 74 32" fill="#fbbf24" stroke="#d97706" stroke-width="1.5" />
+  
+  <!-- Dragon Shoulders -->
+  <path d="M 24 110 C 24 88 40 76 60 76 C 80 76 96 88 96 110 Z" fill="#991b1b" stroke="#7f1d1d" stroke-width="2" />
+  <path d="M 46 76 C 46 95 60 110 60 110 C 60 110 74 95 74 76 Z" fill="#fed7aa" />
+  
+  <!-- Dragon Head -->
+  <path d="M 38 46 C 38 32 82 32 82 46 C 84 66 76 76 60 76 C 44 76 36 66 38 46 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2" />
+  
+  <!-- Cool Black Spectacles -->
+  <rect x="42" y="46" width="16" height="12" rx="3" fill="#0f172a" stroke="#fbbf24" stroke-width="1.5" />
+  <rect x="62" y="46" width="16" height="12" rx="3" fill="#0f172a" stroke="#fbbf24" stroke-width="1.5" />
+  <line x1="58" y1="52" x2="62" y2="52" stroke="#fbbf24" stroke-width="2" />
+  <line x1="44" y1="48" x2="56" y2="56" stroke="#38bdf8" stroke-width="1.5" opacity="0.8" />
+  <line x1="64" y1="48" x2="76" y2="56" stroke="#38bdf8" stroke-width="1.5" opacity="0.8" />
+  
+  <!-- Dragon Snout & Friendly Smoke/Flame -->
+  <circle cx="56" cy="65" r="1.5" fill="#450a0a" />
+  <circle cx="64" cy="65" r="1.5" fill="#450a0a" />
+  <path d="M 60 69 Q 62 72 65 70" stroke="#fbbf24" stroke-width="1.5" fill="none" stroke-linecap="round" />
+</svg>
