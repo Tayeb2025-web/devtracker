@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { DEFAULT_USER_ID } from '../config/constants.js';
+import { getTargetUserIds } from '../utils/userHelper.js';
 
 const CategorySchema = new mongoose.Schema({
   user_id: { type: String, required: true, index: true },
@@ -23,25 +24,27 @@ export const CategoryModel = {
   async findAll(userId = DEFAULT_USER_ID) {
     const { TechnologyModel } = await import('./TechnologyModel.js');
     await TechnologyModel.ensureDefaults(userId);
+    const userIds = await getTargetUserIds(userId);
     const list = await TechnologyCategory.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).sort({ sort_order: 1, created_at: 1 }).lean();
     return list.map(item => ({ ...item, id: item._id.toString() }));
   },
 
   async findById(id, userId = DEFAULT_USER_ID) {
     if (!id) return null;
+    const userIds = await getTargetUserIds(userId);
     let category;
     if (mongoose.Types.ObjectId.isValid(String(id))) {
       category = await TechnologyCategory.findOne({
         _id: id,
-        $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+        user_id: { $in: userIds }
       }).lean();
     }
     if (!category) {
       category = await TechnologyCategory.findOne({
         legacy_id: Number(id) || -1,
-        $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+        user_id: { $in: userIds }
       }).lean();
     }
     if (category) category.id = category._id.toString();
@@ -49,8 +52,9 @@ export const CategoryModel = {
   },
 
   async create({ name, color = '#3B82F6' }, userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const last = await TechnologyCategory.findOne({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).sort({ sort_order: -1 }).lean();
     const nextOrder = (last?.sort_order ?? -1) + 1;
 
@@ -68,17 +72,18 @@ export const CategoryModel = {
     if (name !== undefined) updateData.name = name;
     if (color !== undefined) updateData.color = color;
 
+    const userIds = await getTargetUserIds(userId);
     let updated;
     if (mongoose.Types.ObjectId.isValid(String(id))) {
       updated = await TechnologyCategory.findOneAndUpdate(
-        { _id: id, $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
+        { _id: id, user_id: { $in: userIds } },
         updateData,
         { new: true }
       ).lean();
     }
     if (!updated) {
       updated = await TechnologyCategory.findOneAndUpdate(
-        { legacy_id: Number(id) || -1, $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
+        { legacy_id: Number(id) || -1, user_id: { $in: userIds } },
         updateData,
         { new: true }
       ).lean();
@@ -93,8 +98,9 @@ export const CategoryModel = {
 
     // Unset category in technologies
     const { Technology } = await import('./TechnologyModel.js');
+    const userIds = await getTargetUserIds(userId);
     await Technology.updateMany(
-      { category_id: category.id, $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
+      { category_id: category.id, user_id: { $in: userIds } },
       { category_id: null }
     );
 
@@ -103,8 +109,9 @@ export const CategoryModel = {
   },
 
   async move(id, direction, userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const categories = await TechnologyCategory.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).sort({ sort_order: 1, created_at: 1 });
 
     const index = categories.findIndex(c => c._id.toString() === String(id) || c.legacy_id === Number(id));

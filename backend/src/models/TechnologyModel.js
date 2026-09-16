@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { DEFAULT_USER_ID } from '../config/constants.js';
+import { getTargetUserIds } from '../utils/userHelper.js';
 
 const TechnologySchema = new mongoose.Schema({
   user_id: { type: String, required: true, index: true },
@@ -53,8 +54,9 @@ export const TechnologyModel = {
     if (!userId) return;
     const { TechnologyCategory } = await import('./CategoryModel.js');
 
+    const userIds = await getTargetUserIds(userId);
     const userFilter = {
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     };
 
     const [techCount, catCount] = await Promise.all([
@@ -109,25 +111,27 @@ export const TechnologyModel = {
 
   async findAll(userId = DEFAULT_USER_ID) {
     await this.ensureDefaults(userId);
+    const userIds = await getTargetUserIds(userId);
     const list = await Technology.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).sort({ name: 1 }).lean();
     return list.map(item => ({ ...item, id: item._id.toString() }));
   },
 
   async findById(id, userId = DEFAULT_USER_ID) {
     if (!id) return null;
+    const userIds = await getTargetUserIds(userId);
     let tech;
     if (mongoose.Types.ObjectId.isValid(String(id))) {
       tech = await Technology.findOne({
         _id: id,
-        $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+        user_id: { $in: userIds }
       }).lean();
     }
     if (!tech) {
       tech = await Technology.findOne({
         legacy_id: Number(id) || -1,
-        $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+        user_id: { $in: userIds }
       }).lean();
     }
     if (tech) tech.id = tech._id.toString();
@@ -154,17 +158,18 @@ export const TechnologyModel = {
       if (data[key] !== undefined) updateData[key] = data[key];
     });
 
+    const userIds = await getTargetUserIds(userId);
     let updated;
     if (mongoose.Types.ObjectId.isValid(String(id))) {
       updated = await Technology.findOneAndUpdate(
-        { _id: id, $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
+        { _id: id, user_id: { $in: userIds } },
         updateData,
         { new: true }
       ).lean();
     }
     if (!updated) {
       updated = await Technology.findOneAndUpdate(
-        { legacy_id: Number(id) || -1, $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
+        { legacy_id: Number(id) || -1, user_id: { $in: userIds } },
         updateData,
         { new: true }
       ).lean();
@@ -191,6 +196,7 @@ export const TechnologyModel = {
 
   async recalculateHours(userId = DEFAULT_USER_ID) {
     const { StudySession } = await import('./SessionModel.js');
+    const userIds = await getTargetUserIds(userId);
     const techs = await this.findAll(userId);
     for (const tech of techs) {
       const agg = await StudySession.aggregate([
@@ -200,7 +206,7 @@ export const TechnologyModel = {
               { technology_id: tech.id },
               { technology_id: String(tech.legacy_id || -1) }
             ],
-            user_id: String(userId)
+            user_id: { $in: userIds }
           }
         },
         { $group: { _id: null, total: { $sum: '$duration_hours' } } }

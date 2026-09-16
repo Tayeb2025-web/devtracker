@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { DEFAULT_USER_ID, XP_PER_HOUR } from '../config/constants.js';
 import { formatLocalDate, shiftLocalDate } from '../utils/date.js';
+import { getTargetUserIds } from '../utils/userHelper.js';
 
 // DailyGoal Schema
 const DailyGoalSchema = new mongoose.Schema({
@@ -80,15 +81,17 @@ export const DailyNote = mongoose.models.DailyNote || mongoose.model('DailyNote'
 
 export const GoalModel = {
   async get(userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const row = await DailyGoal.findOne({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).sort({ created_at: -1 }).lean();
     return row || { target_hours: 10 };
   },
 
   async update(targetHours, userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const updated = await DailyGoal.findOneAndUpdate(
-      { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
+      { user_id: { $in: userIds } },
       { user_id: String(userId), target_hours: Number(targetHours) },
       { new: true, upsert: true }
     ).lean();
@@ -98,16 +101,18 @@ export const GoalModel = {
 
 export const StreakModel = {
   async get(userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const row = await Streak.findOne({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).lean();
     return row || { current_streak: 0, longest_streak: 0 };
   },
 
   async recalculate(userId = DEFAULT_USER_ID) {
     const { StudySession } = await import('./SessionModel.js');
+    const userIds = await getTargetUserIds(userId);
     const sessions = await StudySession.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).sort({ session_date: -1 }).lean();
 
     const dates = [...new Set(sessions.map(s => s.session_date))];
@@ -134,7 +139,7 @@ export const StreakModel = {
     const lastDate = dates[0] || null;
 
     const streak = await Streak.findOneAndUpdate(
-      { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
+      { user_id: { $in: userIds } },
       { user_id: String(userId), current_streak: currentStreak, longest_streak: longestStreak, last_study_date: lastDate },
       { new: true, upsert: true }
     ).lean();
@@ -149,8 +154,9 @@ export const StreakModel = {
 
 export const LevelModel = {
   async get(userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const row = await Level.findOne({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).lean();
     return row || { current_level: 1, current_xp: 0, total_xp: 0, xp_to_next_level: 1000 };
   },
@@ -168,8 +174,9 @@ export const LevelModel = {
       xpToNext = currentLevel * 1000;
     }
 
+    const userIds = await getTargetUserIds(userId);
     const updated = await Level.findOneAndUpdate(
-      { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
+      { user_id: { $in: userIds } },
       {
         user_id: String(userId),
         current_level: currentLevel,
@@ -193,8 +200,9 @@ export const LevelModel = {
 
   async recalculate(userId = DEFAULT_USER_ID) {
     const { StudySession } = await import('./SessionModel.js');
+    const userIds = await getTargetUserIds(userId);
     const agg = await StudySession.aggregate([
-      { $match: { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] } },
+      { $match: { user_id: { $in: userIds } } },
       { $group: { _id: null, totalHours: { $sum: '$duration_hours' } } }
     ]);
     const totalHours = agg[0]?.totalHours || 0;
@@ -211,7 +219,7 @@ export const LevelModel = {
     }
 
     const updated = await Level.findOneAndUpdate(
-      { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] },
+      { user_id: { $in: userIds } },
       {
         user_id: String(userId),
         current_level: currentLevel,
@@ -228,18 +236,20 @@ export const LevelModel = {
 
 export const AchievementModel = {
   async findAll(userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const list = await Achievement.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).sort({ unlocked_at: -1 }).lean();
     return list.map(a => ({ ...a, id: a._id.toString() }));
   },
 
   async unlock(badgeKey, badgeName, description, icon, userId = DEFAULT_USER_ID) {
     try {
+      const userIds = await getTargetUserIds(userId);
       await Achievement.updateOne(
         {
           badge_key: badgeKey,
-          $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+          user_id: { $in: userIds }
         },
         {
           $setOnInsert: {
@@ -306,12 +316,13 @@ export const DEFAULT_CHALLENGES = [
 
 export const ChallengeModel = {
   async ensureDefaults(userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     for (const def of DEFAULT_CHALLENGES) {
       try {
         await Challenge.updateOne(
           {
             challenge_key: def.challenge_key,
-            $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+            user_id: { $in: userIds }
           },
           {
             $setOnInsert: {
@@ -338,8 +349,9 @@ export const ChallengeModel = {
   async findAll(userId = DEFAULT_USER_ID) {
     await this.ensureDefaults(userId);
     await this.updateProgress(userId);
+    const userIds = await getTargetUserIds(userId);
     const list = await Challenge.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).sort({ status: 1, target_value: 1 }).lean();
     return list.map(c => ({ ...c, id: c._id.toString() }));
   },
@@ -363,16 +375,18 @@ export const ChallengeModel = {
   },
 
   async delete(userId = DEFAULT_USER_ID, id) {
+    const userIds = await getTargetUserIds(userId);
     return Challenge.findOneAndDelete({
       _id: id,
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     });
   },
 
   async updateProgress(userId = DEFAULT_USER_ID) {
     const { StudySession } = await import('./SessionModel.js');
+    const userIds = await getTargetUserIds(userId);
     const agg = await StudySession.aggregate([
-      { $match: { $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }] } },
+      { $match: { user_id: { $in: userIds } } },
       { $group: { _id: null, total: { $sum: '$duration_hours' } } }
     ]);
     const totalHours = Math.floor(agg[0]?.total || 0);
@@ -381,7 +395,7 @@ export const ChallengeModel = {
     const streakValue = Math.max(streak.current_streak || 0, streak.longest_streak || 0);
 
     const allChallenges = await Challenge.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     });
 
     for (const challenge of allChallenges) {
@@ -410,18 +424,20 @@ export const ChallengeModel = {
 
 export const NoteModel = {
   async getByDate(date, userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const note = await DailyNote.findOne({
       note_date: date,
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).lean();
     return note ? { ...note, id: note._id.toString() } : null;
   },
 
   async upsert(date, content, productivityScore, userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const updated = await DailyNote.findOneAndUpdate(
       {
         note_date: date,
-        $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+        user_id: { $in: userIds }
       },
       {
         user_id: String(userId),
@@ -435,8 +451,9 @@ export const NoteModel = {
   },
 
   async findAll(userId = DEFAULT_USER_ID) {
+    const userIds = await getTargetUserIds(userId);
     const list = await DailyNote.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).sort({ note_date: -1 }).lean();
     return list.map(n => ({ ...n, id: n._id.toString() }));
   },

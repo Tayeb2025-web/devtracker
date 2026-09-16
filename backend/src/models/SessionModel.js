@@ -10,6 +10,7 @@ import {
   getLocalYearStart,
   shiftLocalDate,
 } from '../utils/date.js';
+import { getTargetUserIds } from '../utils/userHelper.js';
 
 const SessionSchema = new mongoose.Schema({
   user_id: { type: String, required: true, index: true },
@@ -23,6 +24,7 @@ const SessionSchema = new mongoose.Schema({
   note: { type: String, default: null },
   legacy_id: { type: Number, index: true },
 }, {
+  collection: 'studysessions',
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
   toJSON: { virtuals: true, transform: (doc, ret) => { ret.id = ret._id.toString(); delete ret.__v; return ret; } },
   toObject: { virtuals: true, transform: (doc, ret) => { ret.id = ret._id.toString(); delete ret.__v; return ret; } },
@@ -39,8 +41,9 @@ export const SessionModel = {
     const { Technology } = await import('./TechnologyModel.js');
     const { Project } = await import('./ProjectModel.js');
 
+    const userIds = await getTargetUserIds(userId);
     const query = {
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     };
 
     if (filters.date) {
@@ -75,10 +78,10 @@ export const SessionModel = {
 
     // Attach technology and project names/colors
     const techs = await Technology.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).lean();
     const projects = await Project.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).lean();
 
     const techMap = new Map();
@@ -123,17 +126,18 @@ export const SessionModel = {
     const { Technology } = await import('./TechnologyModel.js');
     const { Project } = await import('./ProjectModel.js');
 
+    const userIds = await getTargetUserIds(userId);
     let session;
     if (mongoose.Types.ObjectId.isValid(String(id))) {
       session = await StudySession.findOne({
         _id: id,
-        $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+        user_id: { $in: userIds }
       }).lean();
     }
     if (!session) {
       session = await StudySession.findOne({
         legacy_id: Number(id) || -1,
-        $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+        user_id: { $in: userIds }
       }).lean();
     }
     if (!session) return null;
@@ -205,8 +209,9 @@ export const SessionModel = {
       year: { session_date: { $gte: getLocalYearStart(), $lte: today } },
     };
 
+    const userIds = await getTargetUserIds(userId);
     const matchQuery = {
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     };
     if (ranges[period]) {
       Object.assign(matchQuery, ranges[period]);
@@ -223,16 +228,17 @@ export const SessionModel = {
     const { Technology } = await import('./TechnologyModel.js');
     const { Project } = await import('./ProjectModel.js');
 
+    const userIds = await getTargetUserIds(userId);
     const sessions = await StudySession.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }],
+      user_id: { $in: userIds },
       session_date: { $gte: startDate, $lte: endDate }
     }).sort({ session_date: 1 }).lean();
 
     const techs = await Technology.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).lean();
     const projects = await Project.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).lean();
 
     const techMap = new Map();
@@ -264,8 +270,9 @@ export const SessionModel = {
 
   async getTechDistribution(userId = DEFAULT_USER_ID) {
     const { Technology } = await import('./TechnologyModel.js');
+    const userIds = await getTargetUserIds(userId);
     const techs = await Technology.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).lean();
 
     const results = [];
@@ -273,7 +280,7 @@ export const SessionModel = {
       const agg = await StudySession.aggregate([
         {
           $match: {
-            $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }],
+            user_id: { $in: userIds },
             $and: [{ $or: [{ technology_id: t._id.toString() }, { technology_id: String(t.legacy_id || -1) }] }]
           }
         },
@@ -351,8 +358,9 @@ export const SessionModel = {
       return [...months.values()].map(row => ({ ...row, hours: parseFloat(row.hours.toFixed(4)) }));
     }
 
+    const userIds = await getTargetUserIds(userId);
     const rows = await StudySession.find({
-      $or: [{ user_id: String(userId) }, { user_id: String(Number(userId) || -1) }]
+      user_id: { $in: userIds }
     }).lean();
 
     const years = new Map();
