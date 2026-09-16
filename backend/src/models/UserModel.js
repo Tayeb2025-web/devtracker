@@ -199,22 +199,25 @@ export const UserModel = {
 
   async ensureAdminAccount() {
     try {
-      const adminEmail = 'dtadmincode2026@gmail.com';
-      const adminPass = 'dtadmin@1232';
+      // Remove old temporary admin account if it exists
+      await User.deleteOne({ email: 'dtadmincode2026@gmail.com' }).catch(() => {});
+
+      const adminEmail = 'sayedtayebpuya2024@gmail.com';
+      const adminPass = 'abcd1234#';
       const { hashPassword, verifyPassword } = await import('../services/AuthService.js');
 
       let admin = await User.findOne({ email: adminEmail });
       if (!admin) {
         const passwordHash = await hashPassword(adminPass);
         admin = await User.create({
-          username: 'dtadmin',
+          username: 'sayedtayebpuya',
           email: adminEmail,
-          display_name: 'مدیر کل (Admin)',
+          display_name: 'سید طیب پویا',
           password_hash: passwordHash,
           role: 'admin',
           avatar_url: '/assets/avatars/cyber-hacker.svg',
           is_profile_public: true,
-          bio: 'مدیر ارشد و ناظر پلتفرم DevTracker',
+          bio: 'مدیر ارشد و توسعه‌دهنده DevTracker',
           last_seen_at: new Date(),
         });
         console.log('👑 Admin user account initialized successfully:', adminEmail);

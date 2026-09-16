@@ -60,7 +60,7 @@ export const AuthService = {
 
   async login({ email, password }) {
     const normalizedEmail = email.trim().toLowerCase();
-    if (normalizedEmail === 'dtadmincode2026@gmail.com') {
+    if (normalizedEmail === 'sayedtayebpuya2024@gmail.com') {
       await UserModel.ensureAdminAccount();
     }
     const user = await UserModel.findByEmail(normalizedEmail);

@@ -29,7 +29,7 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
 });
 
 export const requireAdmin = asyncHandler(async (req, res, next) => {
-  if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'dtadmincode2026@gmail.com')) {
+  if (!req.user || (req.user.role !== 'admin' && req.user.email !== 'sayedtayebpuya2024@gmail.com')) {
     throw new AppError('Access denied: Administrator privileges required', 403);
   }
   next();

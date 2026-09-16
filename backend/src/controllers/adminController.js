@@ -7,7 +7,7 @@ import { UserFollow } from '../models/SocialModel.js';
 import { AppError, asyncHandler } from '../middlewares/errorHandler.js';
 import { formatLocalDate, shiftLocalDate, getLocalWeekRange, getLocalMonthStart } from '../utils/date.js';
 
-const MASTER_ADMIN_EMAIL = 'dtadmincode2026@gmail.com';
+const MASTER_ADMIN_EMAIL = 'sayedtayebpuya2024@gmail.com';
 
 function resolveAvatar(avatarUrl, seed) {
   if (avatarUrl && avatarUrl !== '/images/profile.jpg') return avatarUrl;

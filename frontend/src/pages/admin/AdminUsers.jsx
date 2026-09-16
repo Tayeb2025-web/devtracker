@@ -253,7 +253,7 @@ export default function AdminUsers() {
               </thead>
               <tbody className="divide-y divide-border/40">
                 {users.map(u => {
-                  const isPrimaryAdmin = u.email === 'dtadmincode2026@gmail.com';
+                  const isPrimaryAdmin = u.email === 'sayedtayebpuya2024@gmail.com';
 
                   return (
                     <tr key={u.id} className="hover:bg-surface-lighter/30 transition-colors">

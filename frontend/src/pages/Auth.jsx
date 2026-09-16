@@ -47,7 +47,7 @@ export default function Auth({ mode }) {
     try {
       if (isLogin) {
         const loggedUser = await login({ email: form.email, password: form.password });
-        const isAdmin = loggedUser?.role === 'admin' || form.email.trim().toLowerCase() === 'dtadmincode2026@gmail.com';
+        const isAdmin = loggedUser?.role === 'admin' || form.email.trim().toLowerCase() === 'sayedtayebpuya2024@gmail.com';
         navigate(isAdmin ? '/admin' : '/', { replace: true });
       } else {
         await register(form);

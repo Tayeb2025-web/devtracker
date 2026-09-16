@@ -93,7 +93,7 @@ export default function AdminUserDetail() {
   }
 
   const { profile, study_stats, study_history_14, technologies, projects, social, recent_sessions } = data;
-  const isPrimaryAdmin = profile.email === 'dtadmincode2026@gmail.com';
+  const isPrimaryAdmin = profile.email === 'sayedtayebpuya2024@gmail.com';
   const maxHistoryHours = Math.max(1, ...(study_history_14?.map(d => d.hours) || [1]));
 
   const formatPersianDate = (dateStr) => {

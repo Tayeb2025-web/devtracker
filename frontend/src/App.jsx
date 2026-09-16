@@ -27,7 +27,7 @@ function ProtectedAdminApp() {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center text-text-muted">در حال بارگذاری...</div>;
   if (!user) return <Navigate to="/login" replace />;
-  const isAdmin = user.role === 'admin' || user.email === 'dtadmincode2026@gmail.com';
+  const isAdmin = user.role === 'admin' || user.email === 'sayedtayebpuya2024@gmail.com';
   if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
