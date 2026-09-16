@@ -119,4 +119,12 @@ export const exportApi = {
   import: (data) => api.post('/import', data),
 };
 
+export const adminApi = {
+  getOverview: () => api.get('/admin/stats/overview'),
+  getUsers: (params) => api.get('/admin/users', { params }),
+  getUserDetail: (id) => api.get(`/admin/users/${id}`),
+  updateUserRole: (id, role) => api.patch(`/admin/users/${id}/role`, { role }),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+};
+
 export default api;

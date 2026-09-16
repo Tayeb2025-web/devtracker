@@ -18,6 +18,31 @@ const Community = lazy(() => import('./pages/Community'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Auth = lazy(() => import('./pages/Auth'));
 const About = lazy(() => import('./pages/About'));
+const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminUserDetail = lazy(() => import('./pages/admin/AdminUserDetail'));
+
+function ProtectedAdminApp() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="flex min-h-screen items-center justify-center text-text-muted">در حال بارگذاری...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  const isAdmin = user.role === 'admin' || user.email === 'dtadmincode2026@gmail.com';
+  if (!isAdmin) return <Navigate to="/" replace />;
+
+  return (
+    <AdminLayout>
+      <Suspense fallback={<div className="flex justify-center py-12 text-text-muted">در حال بارگذاری...</div>}>
+        <Routes>
+          <Route path="/" element={<AdminDashboard />} />
+          <Route path="/users" element={<AdminUsers />} />
+          <Route path="/users/:id" element={<AdminUserDetail />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Routes>
+      </Suspense>
+    </AdminLayout>
+  );
+}
 
 function ProtectedApp() {
   const { user, loading } = useAuth();
@@ -29,5 +54,12 @@ function ProtectedApp() {
 }
 
 export default function App() {
-  return <Routes><Route path="/login" element={<Suspense fallback={null}><Auth mode="login" /></Suspense>} /><Route path="/signup" element={<Suspense fallback={null}><Auth mode="signup" /></Suspense>} /><Route path="/*" element={<ProtectedApp />} /></Routes>;
+  return (
+    <Routes>
+      <Route path="/login" element={<Suspense fallback={null}><Auth mode="login" /></Suspense>} />
+      <Route path="/signup" element={<Suspense fallback={null}><Auth mode="signup" /></Suspense>} />
+      <Route path="/admin/*" element={<ProtectedAdminApp />} />
+      <Route path="/*" element={<ProtectedApp />} />
+    </Routes>
+  );
 }

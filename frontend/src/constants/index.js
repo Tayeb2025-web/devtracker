@@ -16,6 +16,8 @@ export const ROUTES = {
   COMMUNITY: '/community',
   SETTINGS: '/settings',
   ABOUT: '/about',
+  ADMIN: '/admin',
+  ADMIN_USERS: '/admin/users',
 };
 
 export const CALENDAR_COLORS = {

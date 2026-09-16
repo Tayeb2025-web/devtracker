@@ -49,6 +49,7 @@ const UserSchema = new mongoose.Schema({
   calendar_type: { type: String, enum: ['afghan', 'iranian', 'gregorian'], default: 'afghan' },
   notification_enabled: { type: Boolean, default: true },
   notification_time: { type: String, default: '09:00:00' },
+  role: { type: String, enum: ['user', 'admin'], default: 'user', index: true },
   legacy_id: { type: Number, index: true },
   last_seen_at: { type: Date, default: null, index: true },
   is_studying: { type: Boolean, default: false, index: true },
@@ -86,6 +87,7 @@ function normalizeUser(user) {
   if (!rawAvatar || rawAvatar === '/images/profile.jpg') {
     user.avatar_url = getDeterministicAvatar(user.username || user._id?.toString() || user.id);
   }
+  user.role = user.role || 'user';
   return user;
 }
 
@@ -174,7 +176,7 @@ export const UserModel = {
   async update(id, data) {
     const allowedFields = [
       'display_name', 'email', 'theme', 'calendar_type', 'notification_enabled', 'notification_time', 'avatar_url',
-      'bio', 'is_profile_public', 'allow_direct_messages', 'last_seen_at',
+      'bio', 'is_profile_public', 'allow_direct_messages', 'last_seen_at', 'role',
     ];
     const updateData = {};
     allowedFields.forEach(key => {
@@ -195,8 +197,55 @@ export const UserModel = {
     return user;
   },
 
+  async ensureAdminAccount() {
+    try {
+      const adminEmail = 'dtadmincode2026@gmail.com';
+      const adminPass = 'dtadmin@1232';
+      const { hashPassword, verifyPassword } = await import('../services/AuthService.js');
+
+      let admin = await User.findOne({ email: adminEmail });
+      if (!admin) {
+        const passwordHash = await hashPassword(adminPass);
+        admin = await User.create({
+          username: 'dtadmin',
+          email: adminEmail,
+          display_name: 'مدیر کل (Admin)',
+          password_hash: passwordHash,
+          role: 'admin',
+          avatar_url: '/assets/avatars/cyber-hacker.svg',
+          is_profile_public: true,
+          bio: 'مدیر ارشد و ناظر پلتفرم DevTracker',
+          last_seen_at: new Date(),
+        });
+        console.log('👑 Admin user account initialized successfully:', adminEmail);
+      } else {
+        let changed = false;
+        if (admin.role !== 'admin') {
+          admin.role = 'admin';
+          changed = true;
+        }
+        const matches = await verifyPassword(adminPass, admin.password_hash);
+        if (!matches) {
+          admin.password_hash = await hashPassword(adminPass);
+          changed = true;
+        }
+        if (changed) {
+          await admin.save();
+          console.log('👑 Admin user account synced with role=admin and credentials.');
+        }
+      }
+      return admin;
+    } catch (err) {
+      console.warn('⚠️ ensureAdminAccount warning:', err.message);
+      return null;
+    }
+  },
+
   async migrateDefaultAvatars() {
     try {
+      // Also ensure the admin account exists
+      await this.ensureAdminAccount();
+
       const usersToUpdate = await User.find({
         $or: [
           { avatar_url: null },

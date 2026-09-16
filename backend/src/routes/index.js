@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/index.js';
+import * as adminCtrl from '../controllers/adminController.js';
 import {
   sessionValidation, technologyValidation, projectValidation, categoryValidation, categoryMoveValidation, goalValidation, noteValidation, idParam,
   dateParam, calendarValidation, userSettingsValidation,
   registerValidation, loginValidation,
   socialDirectoryValidation, messageListValidation, directConversationValidation, chatMessageValidation,
 } from '../middlewares/validation.js';
-import { requireAuth } from '../middlewares/auth.js';
+import { requireAuth, requireAdmin } from '../middlewares/auth.js';
 import { avatarUpload } from '../middlewares/upload.js';
 
 const router = Router();
@@ -87,5 +88,12 @@ router.post('/social/conversations/:id/messages', idParam, chatMessageValidation
 // Export & Import
 router.get('/export', ctrl.exportData);
 router.post('/import', ctrl.importData);
+
+// Admin Portal Endpoints
+router.get('/admin/stats/overview', requireAdmin, adminCtrl.getAdminOverview);
+router.get('/admin/users', requireAdmin, adminCtrl.getAdminUsers);
+router.get('/admin/users/:id', requireAdmin, idParam, adminCtrl.getAdminUserDetail);
+router.patch('/admin/users/:id/role', requireAdmin, idParam, adminCtrl.updateUserRole);
+router.delete('/admin/users/:id', requireAdmin, idParam, adminCtrl.deleteUser);
 
 export default router;

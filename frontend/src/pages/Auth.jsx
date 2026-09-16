@@ -21,7 +21,7 @@ export default function Auth({ mode }) {
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   // If user is already authenticated and not currently picking an avatar, go to dashboard
-  if (user && step !== 'avatar') return <Navigate to="/" replace />;
+  if (user && step !== 'avatar') return <Navigate to={user.role === 'admin' ? '/admin' : '/'} replace />;
 
   const categories = [
     { id: 'all', label: 'همه' },
@@ -46,8 +46,9 @@ export default function Auth({ mode }) {
     setSubmitting(true);
     try {
       if (isLogin) {
-        await login({ email: form.email, password: form.password });
-        navigate('/', { replace: true });
+        const loggedUser = await login({ email: form.email, password: form.password });
+        const isAdmin = loggedUser?.role === 'admin' || form.email.trim().toLowerCase() === 'dtadmincode2026@gmail.com';
+        navigate(isAdmin ? '/admin' : '/', { replace: true });
       } else {
         await register(form);
         // Preselect a deterministic avatar based on their name/email

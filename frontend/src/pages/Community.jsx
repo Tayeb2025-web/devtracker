@@ -427,7 +427,7 @@ export default function Community() {
                       <button type="button" className="flex min-w-0 items-center gap-3 text-left" onClick={() => openProfile(profile.id)}>
                         <Avatar profile={profile} />
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-center">
+                          <div className="flex items-center justify-between">
                             <p className="truncate font-semibold text-text">{profile.displayName}</p>
                             {profile.isOnline ? (
                               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">

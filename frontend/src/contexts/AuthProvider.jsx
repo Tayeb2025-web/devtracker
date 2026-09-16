@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem(USER_KEY, JSON.stringify(result.data.user));
       setUser(result.data.user);
     }
+    return result?.data?.user;
   }, []);
 
   const login = useCallback(async (data) => finishAuth(await authApi.login(data)), [finishAuth]);
