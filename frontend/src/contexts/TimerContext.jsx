@@ -3,7 +3,7 @@ import { sessionApi } from '../services/api';
 import { useToast } from './ToastContextStore';
 import { formatLocalDate, formatLocalTime } from '../constants';
 import { TimerContext } from './TimerContextStore';
-import { playCompletionChime } from '../utils/audioUtils';
+import { playCompletionChime, startCatAlarm, stopCatAlarm } from '../utils/audioUtils';
 
 const STORAGE_KEY = 'devtracker-time-tools';
 const LEGACY_STORAGE_KEY = 'devtracker-timer';
@@ -167,54 +167,15 @@ export function TimerProvider({ children }) {
   }, []);
 
   const dismissAlarm = useCallback(() => {
-    const nodes = alarmNodesRef.current;
-    if (nodes) {
-      nodes.forEach((node) => {
-        try {
-          node.stop();
-          node.disconnect();
-        } catch {
-          // The node may already have been stopped by the browser.
-        }
-      });
-      alarmNodesRef.current = null;
-    }
+    stopCatAlarm();
     setIsAlarmActive(false);
   }, []);
 
   const startAlarm = useCallback(() => {
     setIsAlarmActive(true);
     try {
-      if (alarmNodesRef.current) return;
-      const context = prepareAlarm();
-      if (!context) return;
-
-      const now = context.currentTime;
-      const primaryTone = context.createOscillator();
-      const harmonyTone = context.createOscillator();
-      const alarmGain = context.createGain();
-      const pulse = context.createOscillator();
-      const pulseGain = context.createGain();
-
-      primaryTone.type = 'triangle';
-      primaryTone.frequency.setValueAtTime(698.46, now);
-      harmonyTone.type = 'sine';
-      harmonyTone.frequency.setValueAtTime(1046.5, now);
-      alarmGain.gain.setValueAtTime(0.04, now);
-      pulse.type = 'sine';
-      pulse.frequency.setValueAtTime(0.85, now);
-      pulseGain.gain.setValueAtTime(0.1, now);
-
-      primaryTone.connect(alarmGain);
-      harmonyTone.connect(alarmGain);
-      pulse.connect(pulseGain);
-      pulseGain.connect(alarmGain.gain);
-      alarmGain.connect(context.destination);
-      primaryTone.start(now);
-      harmonyTone.start(now);
-      pulse.start(now);
-
-      alarmNodesRef.current = [primaryTone, harmonyTone, pulse];
+      prepareAlarm();
+      startCatAlarm();
     } catch {
       // Keep the visible alarm control available if audio is unavailable.
     }

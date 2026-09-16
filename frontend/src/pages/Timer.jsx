@@ -396,7 +396,7 @@ export default function TimerPage() {
                 disabled={!countdown.isIdle}
               />
             </div>
-            <p className="text-[11px] text-text-muted -mt-1">When countdown reaches zero, an alarm sounds and time is logged.</p>
+            <p className="text-[11px] text-text-muted -mt-1">When countdown reaches zero, your cat meows to alert you and time is logged 🐱🐾</p>
             <Select
               label="Technology (optional)"
               options={[{ value: '', label: 'Select technology...' }, ...techOptions]}

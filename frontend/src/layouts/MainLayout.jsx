@@ -102,22 +102,22 @@ export default function MainLayout({ children }) {
         </button>
       )}
       {isAlarmActive && (
-        <div role="alert" className="fixed top-3 right-3 left-3 z-[70] flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-500/40 bg-red-500/20 px-5 py-3.5 shadow-2xl backdrop-blur-md animate-pulse sm:top-4 sm:right-4 sm:left-auto sm:flex-nowrap">
+        <div role="alert" className="fixed top-3 right-3 left-3 z-[70] flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/40 bg-primary/20 px-5 py-3.5 shadow-2xl backdrop-blur-md animate-pulse sm:top-4 sm:right-4 sm:left-auto sm:flex-nowrap">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-red-500/30 text-red-300">
-              <HiOutlineBell size={22} className="animate-bounce" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/30 text-2xl shadow-inner animate-bounce">
+              🐱
             </div>
             <div>
-              <p className="text-sm font-bold text-text">Timer Complete!</p>
-              <p className="text-xs text-text-muted">Alarm is ringing until you turn it off.</p>
+              <p className="text-sm font-bold text-text">تایمر تمام شد! میو میو 🐾</p>
+              <p className="text-xs text-text-muted">پیشی ناز داره صدات می‌کنه، خسته نباشی قهرمان!</p>
             </div>
           </div>
           <button
             type="button"
             onClick={dismissAlarm}
-            className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-4 py-2 text-xs font-bold text-white hover:bg-red-600 transition-all shadow-lg shadow-red-500/30"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover transition-all shadow-lg shadow-primary/30"
           >
-            <HiOutlineVolumeOff size={16} /> Turn Off
+            <HiOutlineVolumeOff size={16} /> متشکرم پیشی 🐾
           </button>
         </div>
       )}

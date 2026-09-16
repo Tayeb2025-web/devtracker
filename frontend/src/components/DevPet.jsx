@@ -26,7 +26,8 @@ export default function DevPet() {
 
   const isStopwatchRunning = Boolean(timer?.isRunning);
   const isCountdownRunning = Boolean(timer?.countdown?.isRunning);
-  const isPetActive = isStopwatchRunning || isCountdownRunning;
+  const isAlarmActive = Boolean(timer?.isAlarmActive);
+  const isPetActive = isStopwatchRunning || isCountdownRunning || isAlarmActive;
 
   const sleepingSrc = '/assets/pet/pet_sleeping.png';
   const activeSrc = '/assets/pet/pet_active.png';
@@ -136,6 +137,15 @@ export default function DevPet() {
 
   // Generate dynamic, rich quote lists
   const quotesList = useMemo(() => {
+    if (isAlarmActive) {
+      return [
+        `میو میو! 🐾 ${userName} جان زمانت تموم شد! خسته نباشی قهرمان 🐱🎉`,
+        `میو! تایمر صفر شد! وقت استراحت و جایزه رسیده 🐟✨`,
+        `میو میو! جلسه تمرکزت عالی بود ${userName}، بیا یه چای یا شیر بنوشیم ☕🐾`,
+        `آفرین به این تلاش فوق‌العاده ${userName}! منم دارم برات جشن می‌گیرم 🐱🥳`,
+      ];
+    }
+
     if (isHovered) {
       return [
         `میو! مرسی که نازم کردی ${userName}! داری فوق‌العاده پیش میری 🔥🐾`,
@@ -190,7 +200,7 @@ export default function DevPet() {
     }
 
     return sleepList;
-  }, [isHovered, isPetActive, userName, activeSubjectName, formattedDuration, elapsedMinutes, streakDays]);
+  }, [isAlarmActive, isHovered, isPetActive, userName, activeSubjectName, formattedDuration, elapsedMinutes, streakDays]);
 
   const currentQuote = quotesList[quoteIndex % quotesList.length] || quotesList[0];
 
@@ -345,6 +355,9 @@ export default function DevPet() {
     if (dragRef.current.hasMoved) {
       dragRef.current.hasMoved = false;
       return;
+    }
+    if (isAlarmActive && timer?.dismissAlarm) {
+      timer.dismissAlarm();
     }
     setActionState('laugh');
     setTimeout(() => setActionState(isPetActive ? 'typing' : 'sleep'), 1600);

@@ -147,3 +147,102 @@ class AmbientSoundGenerator {
 }
 
 export const ambientSound = new AmbientSoundGenerator();
+
+// Cat Meow Sound Management for Pet & Timer Alarm
+let currentCatAudio = null;
+let catAlarmInterval = null;
+
+// Synthetic realistic cat meow using Web Audio API as 100% reliable fallback
+export function playSyntheticMeow() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const formant = ctx.createBiquadFilter();
+
+    osc.type = 'triangle';
+    formant.type = 'bandpass';
+    formant.frequency.setValueAtTime(850, now);
+    formant.Q.setValueAtTime(2.5, now);
+
+    // Pitch contour for expressive "Me-ow"
+    osc.frequency.setValueAtTime(380, now);
+    osc.frequency.exponentialRampToValueAtTime(760, now + 0.35);
+    osc.frequency.exponentialRampToValueAtTime(420, now + 1.1);
+
+    // Subtle vocal flutter / vibrato
+    const vibrato = ctx.createOscillator();
+    const vibratoGain = ctx.createGain();
+    vibrato.frequency.setValueAtTime(5.2, now);
+    vibratoGain.gain.setValueAtTime(14, now);
+    vibrato.connect(osc.frequency);
+    vibrato.start(now);
+    vibrato.stop(now + 1.3);
+
+    // Smooth amplitude envelope
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.4, now + 0.12);
+    gain.gain.setValueAtTime(0.35, now + 0.6);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.25);
+
+    osc.connect(formant);
+    formant.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 1.3);
+  } catch (err) {
+    console.warn('Synthetic meow error:', err);
+  }
+}
+
+// Play single cat meow sound (MP3 with Web Audio fallback)
+export function playCatMeowSound() {
+  try {
+    if (typeof Audio !== 'undefined') {
+      const audio = new Audio('/assets/sounds/cat-meow.mp3');
+      audio.volume = 0.85;
+      currentCatAudio = audio;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          playSyntheticMeow();
+        });
+      }
+      return audio;
+    } else {
+      playSyntheticMeow();
+    }
+  } catch {
+    playSyntheticMeow();
+  }
+}
+
+// Start repeating cat meow alarm (repeats every 3.8 seconds until stopped)
+export function startCatAlarm() {
+  stopCatAlarm();
+  playCatMeowSound();
+  catAlarmInterval = setInterval(() => {
+    playCatMeowSound();
+  }, 3800);
+}
+
+// Stop cat alarm immediately
+export function stopCatAlarm() {
+  if (catAlarmInterval) {
+    clearInterval(catAlarmInterval);
+    catAlarmInterval = null;
+  }
+  if (currentCatAudio) {
+    try {
+      currentCatAudio.pause();
+      currentCatAudio.currentTime = 0;
+    } catch {
+      // Ignore
+    }
+    currentCatAudio = null;
+  }
+}
