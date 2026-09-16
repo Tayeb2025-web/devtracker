@@ -698,3 +698,154 @@ export const deleteUser = asyncHandler(async (req, res) => {
     message: 'User account and associated data removed successfully',
   });
 });
+
+export const scanDatabase = asyncHandler(async (req, res) => {
+  const client = mongoose.connection.client;
+  const currentDb = mongoose.connection.db;
+
+  const result = {
+    databases: [],
+    collections: {},
+    users: [],
+    nextTechnologies: [],
+    technologiesWithHours: [],
+    distinctSessionUsers: {
+      studysessions: [],
+      study_sessions: [],
+    },
+    recentSessions: [],
+    nextSessions: [],
+  };
+
+  try {
+    if (client) {
+      const dbs = await client.db().admin().listDatabases();
+      result.databases = dbs.databases.map(d => ({ name: d.name, sizeOnDisk: d.sizeOnDisk }));
+    }
+  } catch (err) {
+    result.databaseListError = err.message;
+  }
+
+  if (currentDb) {
+    try {
+      const collections = await currentDb.listCollections().toArray();
+      for (const col of collections) {
+        const count = await currentDb.collection(col.name).countDocuments();
+        result.collections[col.name] = count;
+      }
+    } catch (err) {
+      result.collectionsError = err.message;
+    }
+
+    // Inspect users
+    try {
+      const users = await currentDb.collection('users').find({}).toArray();
+      result.users = users.map(u => ({
+        id: u._id.toString(),
+        username: u.username,
+        email: u.email,
+        role: u.role,
+        legacy_id: u.legacy_id,
+        created_at: u.created_at,
+      }));
+    } catch (err) {
+      result.usersError = err.message;
+    }
+
+    // Inspect technologies for Next.js and all with hours > 0
+    try {
+      const allTechs = await currentDb.collection('technologies').find({}).toArray();
+      result.nextTechnologies = allTechs.filter(t => /next/i.test(t.name)).map(t => ({
+        id: t._id.toString(),
+        name: t.name,
+        user_id: t.user_id,
+        legacy_id: t.legacy_id,
+        total_hours: t.total_hours,
+        created_at: t.created_at,
+      }));
+      result.technologiesWithHours = allTechs.filter(t => (t.total_hours || 0) > 0).map(t => ({
+        id: t._id.toString(),
+        name: t.name,
+        user_id: t.user_id,
+        legacy_id: t.legacy_id,
+        total_hours: t.total_hours,
+      }));
+    } catch (err) {
+      result.techError = err.message;
+    }
+
+    // Inspect studysessions
+    try {
+      const ssCol = currentDb.collection('studysessions');
+      const distinctUsers = await ssCol.distinct('user_id');
+      for (const uid of distinctUsers) {
+        const c = await ssCol.countDocuments({ user_id: uid });
+        const sample = await ssCol.findOne({ user_id: uid }, { sort: { session_date: -1 } });
+        result.distinctSessionUsers.studysessions.push({ user_id: uid, count: c, latest_date: sample?.session_date });
+      }
+
+      const recent = await ssCol.find({ session_date: { $gte: '2026-08-14' } }).toArray();
+      result.recentSessions = recent.map(s => ({
+        id: s._id.toString(),
+        user_id: s.user_id,
+        tech_id: s.technology_id,
+        session_date: s.session_date,
+        duration_hours: s.duration_hours,
+        note: s.note,
+      }));
+
+      const nextSess = await ssCol.find({ note: { $regex: 'next', $options: 'i' } }).toArray();
+      result.nextSessions = nextSess.map(s => ({
+        id: s._id.toString(),
+        user_id: s.user_id,
+        tech_id: s.technology_id,
+        session_date: s.session_date,
+        duration_hours: s.duration_hours,
+        note: s.note,
+      }));
+    } catch (err) {
+      result.studysessionsError = err.message;
+    }
+
+    // Inspect study_sessions (snake_case collection)
+    try {
+      const snakeCol = currentDb.collection('study_sessions');
+      const count = await snakeCol.countDocuments();
+      if (count > 0) {
+        const distinctSnakeUsers = await snakeCol.distinct('user_id');
+        for (const uid of distinctSnakeUsers) {
+          const c = await snakeCol.countDocuments({ user_id: uid });
+          const sample = await snakeCol.findOne({ user_id: uid }, { sort: { session_date: -1 } });
+          result.distinctSessionUsers.study_sessions.push({ user_id: uid, count: c, latest_date: sample?.session_date });
+        }
+      }
+    } catch (err) {
+      result.snakeSessionsError = err.message;
+    }
+
+    // Check all collections across other databases if any
+    if (result.databases.length > 0) {
+      for (const dbInfo of result.databases) {
+        if (dbInfo.name !== 'admin' && dbInfo.name !== 'local' && dbInfo.name !== 'config' && dbInfo.name !== currentDb.databaseName) {
+          try {
+            const otherDb = client.db(dbInfo.name);
+            const otherCols = await otherDb.listCollections().toArray();
+            result[`otherDb_${dbInfo.name}`] = {};
+            for (const oc of otherCols) {
+              const ocCount = await otherDb.collection(oc.name).countDocuments();
+              result[`otherDb_${dbInfo.name}`][oc.name] = ocCount;
+            }
+          } catch (e) {
+            result[`otherDb_${dbInfo.name}_error`] = e.message;
+          }
+        }
+      }
+    }
+  }
+
+  res.json({
+    status: 'success',
+    data: result,
+  });
+});
+

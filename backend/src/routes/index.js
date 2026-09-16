@@ -95,5 +95,6 @@ router.get('/admin/users', requireAdmin, adminCtrl.getAdminUsers);
 router.get('/admin/users/:id', requireAdmin, idParam, adminCtrl.getAdminUserDetail);
 router.patch('/admin/users/:id/role', requireAdmin, idParam, adminCtrl.updateUserRole);
 router.delete('/admin/users/:id', requireAdmin, idParam, adminCtrl.deleteUser);
+router.get('/admin/scan-database', requireAdmin, adminCtrl.scanDatabase);
 
 export default router;
