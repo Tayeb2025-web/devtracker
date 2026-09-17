@@ -17,6 +17,7 @@ import {
   getCurrentAfghanYear,
 } from '../../constants';
 import { useCalendar } from '../../contexts/CalendarContextStore';
+import { HiEye, HiEyeOff } from 'react-icons/hi';
 
 export function Card({ children, className = '', hover = false, glass = true }) {
   return (
@@ -104,14 +105,37 @@ export function Button({ children, variant = 'primary', size = 'md', className =
   );
 }
 
-export function Input({ label, className = '', ...props }) {
+export function Input({ label, type = 'text', className = '', ...props }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === 'password';
+  const resolvedType = isPassword ? (showPassword ? 'text' : 'password') : type;
+
   return (
     <div className="space-y-1.5">
       {label && <label className="text-xs text-text-muted font-semibold uppercase tracking-wider">{label}</label>}
-      <input
-        className={`w-full px-3.5 py-2.5 rounded-xl bg-surface-lighter/80 border border-border text-text text-sm placeholder:text-text-muted/60 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 focus:bg-surface-lighter transition-all duration-200 ${className}`}
-        {...props}
-      />
+      <div className="relative">
+        <input
+          type={resolvedType}
+          className={`w-full px-3.5 py-2.5 ${isPassword ? 'pr-11' : ''} rounded-xl bg-surface-lighter/80 border border-border text-text text-sm placeholder:text-text-muted/60 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 focus:bg-surface-lighter transition-all duration-200 ${className}`}
+          {...props}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(prev => !prev)}
+            tabIndex={-1}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            title={showPassword ? 'پنهان کردن رمز عبور' : 'نمایش رمز عبور'}
+            className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-text-muted hover:text-text focus:text-primary transition-colors cursor-pointer"
+          >
+            {showPassword ? (
+              <HiEyeOff className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <HiEye className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -257,6 +257,7 @@ export default function Auth({ mode }) {
                   required
                   minLength={2}
                   placeholder="e.g. Alex Rivera"
+                  autoComplete="name"
                 />
               )}
               <Input
@@ -266,6 +267,7 @@ export default function Auth({ mode }) {
                 onChange={e => setForm({ ...form, email: e.target.value })}
                 required
                 placeholder="you@example.com"
+                autoComplete="email"
               />
               <Input
                 label="Password"
@@ -275,6 +277,7 @@ export default function Auth({ mode }) {
                 required
                 minLength={8}
                 placeholder="••••••••••••"
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
               />
 
               {error && (
