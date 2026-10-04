@@ -84,10 +84,19 @@ export default function Statistics() {
   const [chartType, setChartType] = useState('line');
 
   useEffect(() => {
-    statsApi.get().then(res => setStats(res.data)).finally(() => setLoading(false));
-  }, []);
+    let active = true;
+    setLoading(true);
+    statsApi.get({ calendar }).then(res => {
+      if (active) setStats(res.data);
+    }).catch(() => {
+      if (active) setStats(null);
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [calendar]);
 
-  const rawChartData = stats?.charts?.[period] || [];
+  const rawChartData = useMemo(() => stats?.charts?.[period] || [], [stats, period]);
 
   const chartData = useMemo(() => {
     if (period === 'daily') {
@@ -132,8 +141,8 @@ export default function Statistics() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard title="Average Hours/Day" value={formatHours(stats.averageHours)} icon={HiOutlineChartBar} color="primary" />
-        <StatCard title="Focus Score" value={`${stats.focusScore}%`} icon={HiOutlineTrendingUp} color="accent" />
+        <StatCard title="Hours per Active Day" value={formatHours(stats.averageHoursPerActiveDay ?? stats.averageHours)} icon={HiOutlineChartBar} color="primary" />
+        <StatCard title="30-Day Study Consistency" value={`${stats.consistencyScore ?? stats.focusScore ?? 0}%`} icon={HiOutlineTrendingUp} color="accent" />
         <StatCard title="Best Day" value={stats.bestDay ? formatHours(parseFloat(stats.bestDay.hours)) : '—'} subtitle={stats.bestDay ? formatUserDate(stats.bestDay.session_date) : ''} icon={HiOutlineTrendingUp} color="accent" />
         <StatCard title="Most Studied" value={stats.mostStudied?.name || '—'} subtitle={stats.mostStudied ? formatHours(parseFloat(stats.mostStudied.hours)) : ''} icon={HiOutlineCode} color="purple" />
       </div>

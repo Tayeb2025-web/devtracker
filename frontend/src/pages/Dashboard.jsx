@@ -1,14 +1,16 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HiOutlineCalendar, HiOutlineClock, HiOutlineFire, HiOutlineTrendingUp, HiOutlineStar, HiOutlineSparkles, HiOutlineLightningBolt, HiOutlineBookOpen, HiOutlineChevronDown } from 'react-icons/hi';
 import { dashboardApi } from '../services/api';
-import { StatCard, Card, ProgressBar, LoadingSpinner, Badge } from '../components/ui';
-import { formatAfghanDate, formatHours } from '../constants';
+import { StatCard, Card, ProgressBar, LoadingSpinner, Badge, Button } from '../components/ui';
+import { formatHours } from '../constants';
 import { useAuth } from '../contexts/AuthContextStore';
 import { useCalendar } from '../contexts/CalendarContextStore';
 
 const GoalConfetti = lazy(() => import('../components/Charts').then(module => ({ default: module.GoalConfetti })));
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { calendar, setCalendar, calendarOptions, formatDate } = useCalendar();
   const [data, setData] = useState(null);
@@ -158,6 +160,19 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {Number(hours.total || 0) === 0 && (
+        <Card className="border border-indigo-500/25 bg-gradient-to-br from-indigo-500/10 via-surface to-violet-500/10">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Start here</p>
+              <h2 className="mt-1 text-lg font-bold">Make your first focus session count</h2>
+              <p className="mt-1 max-w-2xl text-sm text-text-muted">Pick a technology or project, focus for as little as 25 minutes, and your progress will appear here automatically.</p>
+            </div>
+            <Button className="shrink-0" onClick={() => navigate('/timer')}>Start first session</Button>
+          </div>
+        </Card>
+      )}
 
       {/* Hours Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

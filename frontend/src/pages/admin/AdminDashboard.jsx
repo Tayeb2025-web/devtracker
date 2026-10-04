@@ -5,7 +5,6 @@ import {
   HiOutlineClock,
   HiOutlineFire,
   HiOutlineAcademicCap,
-  HiOutlineFolder,
   HiOutlineLightningBolt,
   HiOutlineArrowRight,
   HiOutlineRefresh,
@@ -66,7 +65,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const { metrics, studyTrend14, popularTechnologies, recentActivity } = data || {};
+  const { metrics, studyTrend14, popularTechnologies, recentActivity, recentAdminActions } = data || {};
   const maxTrendHours = Math.max(1, ...(studyTrend14?.map(d => d.hours) || [1]));
 
   return (
@@ -399,6 +398,32 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      <section aria-labelledby="admin-audit-heading" className="rounded-3xl border border-border/80 bg-surface p-6 shadow-sm">
+        <div className="mb-5">
+          <h2 id="admin-audit-heading" className="text-base font-extrabold text-text">تغییرات مدیریتی اخیر</h2>
+          <p className="mt-1 text-xs text-text-muted">تغییر نقش‌ها و حذف حساب‌ها، همراه با شناسهٔ درخواست برای پیگیری خطاها.</p>
+        </div>
+        {recentAdminActions?.length ? (
+          <ul className="divide-y divide-border/60">
+            {recentAdminActions.map(action => {
+              const description = action.action === 'user.role.updated'
+                ? `${action.actor_username} نقش ${action.target_username} را از ${action.details?.previousRole || 'user'} به ${action.details?.role || 'user'} تغییر داد.`
+                : `${action.actor_username} حساب ${action.target_username} را حذف کرد.`;
+              return (
+                <li key={action._id} className="flex flex-col gap-1 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-text">{description}</span>
+                  <time className="shrink-0 text-xs text-text-muted" dateTime={action.created_at} title={action.request_id || undefined}>
+                    {new Intl.DateTimeFormat('fa-AF', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(action.created_at))}
+                  </time>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="py-5 text-center text-xs text-text-muted">هنوز تغییر مدیریتی ثبت نشده است.</p>
+        )}
+      </section>
     </div>
   );
 }

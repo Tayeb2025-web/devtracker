@@ -1,62 +1,23 @@
 import mongoose from 'mongoose';
+import { resolveOwnedUserIds } from './domainRules.js';
 
-let cachedAdminId = null;
-
-export function setCachedAdminId(id) {
-  if (id) cachedAdminId = String(id);
-}
-
-export function getCachedAdminId() {
-  return cachedAdminId;
-}
-
-/**
- * Resolves all identifier strings for a given userId to ensure
- * queries match across legacy IDs, MongoDB ObjectIds, and usernames.
- * Specifically for the admin user (user 1 / sayedtayebpuya2024@gmail.com),
- * it returns both '1' and their MongoDB _id.
- */
+/** Return only identifiers that resolve to this exact account. */
 export async function getTargetUserIds(userId) {
-  const strId = String(userId || '').trim();
-  const ids = new Set();
-  if (strId) ids.add(strId);
-  const num = Number(strId);
-  if (!isNaN(num) && num > 0) ids.add(String(num));
+  const id = String(userId ?? '').trim();
+  if (!id) throw new Error('Authenticated user identity is required for data access.');
 
-  // If this is user 1 or known admin ID
-  if (strId === '1' || num === 1 || (cachedAdminId && cachedAdminId === strId)) {
-    ids.add('1');
-    ids.add('tayeb');
-    ids.add('sayedtayebpuya');
-    if (cachedAdminId) ids.add(cachedAdminId);
-    return Array.from(ids);
+  const { User } = await import('../models/UserModel.js');
+  let user = null;
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    user = await User.findById(id).select('_id legacy_id username').lean();
   }
-
-  try {
-    const { User } = await import('../models/UserModel.js');
-    if (mongoose.Types.ObjectId.isValid(strId)) {
-      const user = await User.findById(strId).select('legacy_id email role username').lean();
-      if (user) {
-        if (user.legacy_id) ids.add(String(user.legacy_id));
-        if (user.legacy_id === 1 || user.email === 'sayedtayebpuya2024@gmail.com' || user.role === 'admin') {
-          cachedAdminId = strId;
-          ids.add('1');
-          ids.add('tayeb');
-          ids.add('sayedtayebpuya');
-        }
-      }
-    }
-  } catch {
-    // Non-blocking fallback
+  if (!user) {
+    user = await User.findOne({ $or: [{ legacy_id: Number(id) || -1 }, { username: id }] })
+      .select('_id legacy_id username').lean();
   }
-
-  return Array.from(ids);
+  return resolveOwnedUserIds(id, user);
 }
 
-/**
- * Returns a MongoDB query object matching any of the user's possible IDs.
- */
 export async function getUserFilter(userId) {
-  const ids = await getTargetUserIds(userId);
-  return { user_id: { $in: ids } };
+  return { user_id: { $in: await getTargetUserIds(userId) } };
 }

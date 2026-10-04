@@ -12,6 +12,7 @@ const FILTERS = [
   { value: 'week', label: 'This Week' },
   { value: 'month', label: 'This Month' },
 ];
+const PAGE_SIZE = 25;
 
 export default function History() {
   const toast = useToast();
@@ -29,6 +30,8 @@ export default function History() {
   const [endDate, setEndDate] = useState('');
   const [deleteId, setDeleteId] = useState(null);
   const [sortBy, setSortBy] = useState('date-desc');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: PAGE_SIZE, total: 0, totalPages: 0 });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -38,6 +41,9 @@ export default function History() {
       if (techFilter) params.technologyId = techFilter;
       if (projectFilter) params.projectId = projectFilter;
       if (submittedSearch) params.search = submittedSearch;
+      params.page = page;
+      params.pageSize = PAGE_SIZE;
+      params.sortBy = sortBy;
       if (startDate && endDate) {
         params.startDate = startDate;
         params.endDate = endDate;
@@ -49,6 +55,7 @@ export default function History() {
         projectApi.getAll(),
       ]);
       setSessions(sessionsRes.data || []);
+      setPagination(sessionsRes.pagination || { page: 1, pageSize: PAGE_SIZE, total: (sessionsRes.data || []).length, totalPages: 1 });
       setTechnologies(techRes.data || []);
       setProjects(projectRes.data || []);
     } catch (err) {
@@ -56,7 +63,7 @@ export default function History() {
     } finally {
       setLoading(false);
     }
-  }, [filter, techFilter, projectFilter, submittedSearch, startDate, endDate, toast]);
+  }, [filter, techFilter, projectFilter, submittedSearch, startDate, endDate, sortBy, page, toast]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -69,13 +76,16 @@ export default function History() {
   const handleSearch = (e) => {
     e.preventDefault();
     setSubmittedSearch(search.trim());
+    setPage(1);
   };
 
   const handleDelete = async () => {
     try {
       await sessionApi.delete(deleteId);
       toast.success('Session deleted');
-      load();
+      setDeleteId(null);
+      if (sessions.length === 1 && page > 1) setPage(current => current - 1);
+      else load();
     } catch (err) {
       toast.error(err.message);
     }
@@ -110,11 +120,11 @@ export default function History() {
           <span>Filter Sessions</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-          <Select label="Period" options={FILTERS} value={filter} onChange={e => { setFilter(e.target.value); setStartDate(''); setEndDate(''); }} />
-          <Select label="Technology" options={techOptions} value={techFilter} onChange={e => setTechFilter(e.target.value)} />
-          <Select label="Project" options={projectOptions} value={projectFilter} onChange={e => setProjectFilter(e.target.value)} />
-          <AfghanDateInput label="From" value={startDate} onChange={setStartDate} allowEmpty />
-          <AfghanDateInput label="To" value={endDate} onChange={setEndDate} allowEmpty />
+          <Select label="Period" options={FILTERS} value={filter} onChange={e => { setFilter(e.target.value); setStartDate(''); setEndDate(''); setPage(1); }} />
+          <Select label="Technology" options={techOptions} value={techFilter} onChange={e => { setTechFilter(e.target.value); setPage(1); }} />
+          <Select label="Project" options={projectOptions} value={projectFilter} onChange={e => { setProjectFilter(e.target.value); setPage(1); }} />
+          <AfghanDateInput label="From" value={startDate} onChange={value => { setStartDate(value); setPage(1); }} allowEmpty />
+          <AfghanDateInput label="To" value={endDate} onChange={value => { setEndDate(value); setPage(1); }} allowEmpty />
         </div>
         <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row pt-1">
           <div className="flex-1 relative">
@@ -135,18 +145,18 @@ export default function History() {
               { value: 'duration-asc', label: 'Shortest First' },
             ]}
             value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
+            onChange={e => { setSortBy(e.target.value); setPage(1); }}
           />
           <Button type="submit" className="w-full sm:w-auto">Search</Button>
         </form>
 
         {/* Filter Summary Metrics */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/60 text-xs text-text-muted">
-          <span>Showing <strong className="text-text">{sorted.length}</strong> matching sessions</span>
+          <span>Showing <strong className="text-text">{pagination.total ? (page - 1) * PAGE_SIZE + 1 : 0}–{Math.min(page * PAGE_SIZE, pagination.total)}</strong> of <strong className="text-text">{pagination.total}</strong> sessions</span>
           <div className="flex items-center gap-3">
-            <span>Total: <strong className="text-indigo-400 font-mono font-bold">{formatHours(sorted.reduce((acc, s) => acc + parseFloat(s.duration_hours || 0), 0))}</strong></span>
+            <span>Page total: <strong className="text-indigo-400 font-mono font-bold">{formatHours(sorted.reduce((acc, s) => acc + parseFloat(s.duration_hours || 0), 0))}</strong></span>
             <span>·</span>
-            <span>Avg: <strong className="text-emerald-400 font-mono font-bold">{sorted.length > 0 ? formatHours(sorted.reduce((acc, s) => acc + parseFloat(s.duration_hours || 0), 0) / sorted.length) : '0h'}</strong></span>
+            <span>Page avg: <strong className="text-emerald-400 font-mono font-bold">{sorted.length > 0 ? formatHours(sorted.reduce((acc, s) => acc + parseFloat(s.duration_hours || 0), 0) / sorted.length) : '0h'}</strong></span>
           </div>
         </div>
       </Card>
@@ -191,6 +201,14 @@ export default function History() {
             </Card>
           ))}
         </div>
+      )}
+
+      {!loading && pagination.totalPages > 1 && (
+        <nav aria-label="Session history pages" className="flex items-center justify-center gap-3">
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(current => Math.max(1, current - 1))}>Previous</Button>
+          <span aria-live="polite" className="text-xs text-text-muted">Page {page} of {pagination.totalPages}</span>
+          <Button variant="outline" size="sm" disabled={page >= pagination.totalPages} onClick={() => setPage(current => Math.min(pagination.totalPages, current + 1))}>Next</Button>
+        </nav>
       )}
 
       <ConfirmDialog

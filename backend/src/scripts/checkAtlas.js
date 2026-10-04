@@ -1,16 +1,12 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import dns from 'dns';
 
 dotenv.config();
-
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
-} catch (e) {}
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
 async function checkMongo() {
+  if (!MONGODB_URI) throw new Error('Set MONGODB_URI before checking the database.');
   console.log('Connecting to MongoDB Atlas...');
   await mongoose.connect(MONGODB_URI);
   console.log('Connected!');
@@ -23,10 +19,6 @@ async function checkMongo() {
     const count = await db.collection(c.name).countDocuments();
     console.log(`Collection ${c.name}: ${count} documents`);
   }
-
-  const users = await db.collection('users').find().toArray();
-  console.log('Users in Mongo Atlas:');
-  console.log(JSON.stringify(users, null, 2));
 
   await mongoose.disconnect();
 }

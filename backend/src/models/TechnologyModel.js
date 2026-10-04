@@ -2,9 +2,18 @@ import mongoose from 'mongoose';
 import { DEFAULT_USER_ID } from '../config/constants.js';
 import { getTargetUserIds } from '../utils/userHelper.js';
 
+export function inferTechnologyKey(name) {
+  const normalized = String(name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (['react', 'reactjs'].includes(normalized)) return 'react';
+  if (['node', 'nodejs'].includes(normalized)) return 'nodejs';
+  if (normalized === 'tailwind' || normalized === 'tailwindcss') return 'tailwind';
+  return null;
+}
+
 const TechnologySchema = new mongoose.Schema({
   user_id: { type: String, required: true, index: true },
   name: { type: String, required: true, trim: true },
+  technology_key: { type: String, default: null, index: true },
   color: { type: String, default: '#3B82F6' },
   icon: { type: String, default: 'code' },
   custom_icon: { type: String, default: null },
@@ -16,6 +25,7 @@ const TechnologySchema = new mongoose.Schema({
   toJSON: { virtuals: true, transform: (doc, ret) => { ret.id = ret._id.toString(); delete ret.__v; return ret; } },
   toObject: { virtuals: true, transform: (doc, ret) => { ret.id = ret._id.toString(); delete ret.__v; return ret; } },
 });
+TechnologySchema.index({ user_id: 1, name: 1 }, { unique: true });
 
 TechnologySchema.virtual('id').get(function () {
   return this._id.toString();
@@ -143,6 +153,7 @@ export const TechnologyModel = {
     const created = await Technology.create({
       user_id: String(userId),
       name,
+      technology_key: inferTechnologyKey(name),
       color,
       icon,
       custom_icon,
@@ -197,22 +208,17 @@ export const TechnologyModel = {
   async recalculateHours(userId = DEFAULT_USER_ID) {
     const { StudySession } = await import('./SessionModel.js');
     const userIds = await getTargetUserIds(userId);
-    const techs = await this.findAll(userId);
-    for (const tech of techs) {
-      const agg = await StudySession.aggregate([
-        {
-          $match: {
-            $or: [
-              { technology_id: tech.id },
-              { technology_id: String(tech.legacy_id || -1) }
-            ],
-            user_id: { $in: userIds }
-          }
-        },
-        { $group: { _id: null, total: { $sum: '$duration_hours' } } }
-      ]);
-      const total = agg[0]?.total || 0;
-      await Technology.updateOne({ _id: tech._id }, { total_hours: parseFloat(total.toFixed(4)) });
-    }
+    const techs = await Technology.find({ user_id: { $in: userIds } }).select('_id legacy_id').lean();
+    const totals = await StudySession.aggregate([
+      { $match: { user_id: { $in: userIds }, technology_id: { $ne: null } } },
+      { $group: { _id: '$technology_id', total: { $sum: '$duration_hours' } } },
+    ]);
+    const totalMap = new Map(totals.map(row => [String(row._id), Number(row.total || 0)]));
+    if (techs.length) await Technology.bulkWrite(techs.map(tech => ({
+      updateOne: {
+        filter: { _id: tech._id, user_id: { $in: userIds } },
+        update: { $set: { total_hours: Number((totalMap.get(tech._id.toString()) || totalMap.get(String(tech.legacy_id)) || 0).toFixed(4)) } },
+      },
+    })));
   },
 };

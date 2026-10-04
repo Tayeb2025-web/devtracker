@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { resolveAvatarUrl } from '../constants/avatars';
 
-function profileInitial(profile) {
-  return (profile?.displayName || profile?.display_name || profile?.username || '?').trim().charAt(0).toUpperCase();
-}
-
 export default function Avatar({
   profile,
   size = 'md',

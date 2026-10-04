@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AuthContext } from './AuthContext';
 import { authApi, userApi } from '../services/api';
 
@@ -7,6 +7,10 @@ const USER_KEY = 'devtracker-user';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
+    if (!localStorage.getItem(TOKEN_KEY)) {
+      localStorage.removeItem(USER_KEY);
+      return null;
+    }
     try {
       return JSON.parse(localStorage.getItem(USER_KEY) || 'null');
     } catch {
@@ -19,6 +23,9 @@ export function AuthProvider({ children }) {
     const hasCachedUser = Boolean(localStorage.getItem(USER_KEY));
     return hasToken && !hasCachedUser;
   });
+  const userRef = useRef(user);
+
+  useEffect(() => { userRef.current = user; }, [user]);
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -38,7 +45,9 @@ export function AuthProvider({ children }) {
         if (err?.response?.status === 401 || err?.statusCode === 401) {
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(USER_KEY);
+          userRef.current = null;
           setUser(null);
+          window.dispatchEvent(new CustomEvent('devtracker-auth-user-changed', { detail: { userId: null } }));
         }
       })
       .finally(() => setLoading(false));
@@ -50,7 +59,9 @@ export function AuthProvider({ children }) {
     }
     if (result?.data?.user) {
       localStorage.setItem(USER_KEY, JSON.stringify(result.data.user));
+      userRef.current = result.data.user;
       setUser(result.data.user);
+      window.dispatchEvent(new CustomEvent('devtracker-auth-user-changed', { detail: { userId: result.data.user.id } }));
     }
     return result?.data?.user;
   }, []);
@@ -63,12 +74,26 @@ export function AuthProvider({ children }) {
     } finally {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      userRef.current = null;
       setUser(null);
+      window.dispatchEvent(new CustomEvent('devtracker-auth-user-changed', { detail: { userId: null } }));
     }
   }, []);
 
+  const updateUser = useCallback((nextUser) => {
+    const current = userRef.current;
+    const updated = typeof nextUser === 'function' ? nextUser(current) : nextUser;
+    userRef.current = updated;
+    if (updated) localStorage.setItem(USER_KEY, JSON.stringify(updated));
+    else localStorage.removeItem(USER_KEY);
+    if (String(current?.id || '') !== String(updated?.id || '')) {
+      window.dispatchEvent(new CustomEvent('devtracker-auth-user-changed', { detail: { userId: updated?.id || null } }));
+    }
+    setUser(updated);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser: updateUser }}>
       {children}
     </AuthContext.Provider>
   );

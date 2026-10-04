@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import {
@@ -31,6 +31,7 @@ const TABS = [
   { id: 'league', label: 'League', icon: HiOutlineStar },
   { id: 'messages', label: 'Messages', icon: HiOutlineChatAlt2 },
 ];
+const MESSAGE_PAGE_SIZE = 50;
 
 const socketUrl = import.meta.env.VITE_SOCKET_URL
   || (API_BASE.startsWith('http') ? new URL(API_BASE).origin : undefined);
@@ -77,6 +78,8 @@ export default function Community() {
   const [activeChat, setActiveChat] = useState({ type: 'league' });
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [olderMessagesLoading, setOlderMessagesLoading] = useState(false);
   const [messageBody, setMessageBody] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -86,6 +89,8 @@ export default function Community() {
   const socketRef = useRef(null);
   const activeChatRef = useRef(activeChat);
   const messagesEndRef = useRef(null);
+  const messageListRef = useRef(null);
+  const preservedMessageScrollRef = useRef(null);
   const hasLoadedLeague = useRef(false);
   const hasLoadedConversations = useRef(false);
 
@@ -95,7 +100,14 @@ export default function Community() {
 
   useEffect(() => { activeChatRef.current = activeChat; }, [activeChat]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const list = messageListRef.current;
+    const preserved = preservedMessageScrollRef.current;
+    if (list && preserved) {
+      list.scrollTop = preserved.scrollTop + (list.scrollHeight - preserved.scrollHeight);
+      preservedMessageScrollRef.current = null;
+      return;
+    }
     if (activeTab === 'messages') {
       scrollToBottom();
     }
@@ -211,11 +223,17 @@ export default function Community() {
     let active = true;
     const loadMessages = async () => {
       setMessagesLoading(true);
+      setMessages([]);
+      setHasMoreMessages(false);
       try {
         const result = activeChat.type === 'league'
-          ? await socialApi.getLeagueMessages()
-          : await socialApi.getDirectMessages(activeChat.id);
-        if (active) setMessages(result.data?.messages || []);
+          ? await socialApi.getLeagueMessages({ limit: MESSAGE_PAGE_SIZE })
+          : await socialApi.getDirectMessages(activeChat.id, { limit: MESSAGE_PAGE_SIZE });
+        const loadedMessages = result.data?.messages || [];
+        if (active) {
+          setMessages(loadedMessages);
+          setHasMoreMessages(loadedMessages.length === MESSAGE_PAGE_SIZE);
+        }
         if (activeChat.type === 'direct') loadConversations();
       } catch (error) {
         if (active) toast.error(error.message);
@@ -226,6 +244,38 @@ export default function Community() {
     loadMessages();
     return () => { active = false; };
   }, [activeChat, loadConversations, toast]);
+
+  const loadEarlierMessages = async () => {
+    if (!hasMoreMessages || olderMessagesLoading || messages.length === 0) return;
+    const chat = activeChat;
+    const firstMessageId = messages[0].id;
+    const list = messageListRef.current;
+    if (list) preservedMessageScrollRef.current = { scrollTop: list.scrollTop, scrollHeight: list.scrollHeight };
+    setOlderMessagesLoading(true);
+    try {
+      const params = { beforeId: firstMessageId, limit: MESSAGE_PAGE_SIZE };
+      const result = chat.type === 'league'
+        ? await socialApi.getLeagueMessages(params)
+        : await socialApi.getDirectMessages(chat.id, params);
+      const current = activeChatRef.current;
+      if (current.type !== chat.type || current.id !== chat.id) {
+        preservedMessageScrollRef.current = null;
+        return;
+      }
+      const olderMessages = result.data?.messages || [];
+      setHasMoreMessages(olderMessages.length === MESSAGE_PAGE_SIZE);
+      if (olderMessages.length === 0) preservedMessageScrollRef.current = null;
+      setMessages(existing => {
+        const knownIds = new Set(existing.map(message => message.id));
+        return [...olderMessages.filter(message => !knownIds.has(message.id)), ...existing];
+      });
+    } catch (error) {
+      preservedMessageScrollRef.current = null;
+      toast.error(error.message);
+    } finally {
+      setOlderMessagesLoading(false);
+    }
+  };
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -548,7 +598,7 @@ export default function Community() {
       {activeTab === 'messages' && (
         <section className="grid min-h-[600px] overflow-hidden rounded-xl border border-border bg-surface-light lg:grid-cols-[19rem_minmax(0,1fr)]">
           <aside className="border-b border-border lg:border-b-0 lg:border-r"><div className="flex items-center justify-between border-b border-border px-4 py-4"><div><h2 className="font-semibold">Messages</h2><p className="text-xs text-text-muted">Private and league chat</p></div><span className={`h-2 w-2 rounded-full ${connected ? 'bg-accent' : 'bg-yellow-400'}`} /></div><div className="max-h-64 overflow-y-auto p-2 lg:max-h-[535px]"><button type="button" onClick={() => setActiveChat({ type: 'league' })} className={`mb-1 flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${activeChat.type === 'league' ? 'bg-primary/15 text-text' : 'hover:bg-surface-lighter'}`}><div className="grid h-10 w-10 place-items-center rounded-full bg-yellow-400/15 text-yellow-400"><HiOutlineStar size={19} /></div><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">League lounge</span><span className="block truncate text-xs text-text-muted">Group {league?.league?.groupNumber || '…'} discussion</span></span></button><p className="px-2 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Direct messages</p>{conversationsLoading ? <div className="py-5 text-center text-xs text-text-muted">Loading conversations…</div> : conversations.length === 0 ? <div className="px-2 py-4 text-xs text-text-muted">Open a public profile to start a conversation.</div> : conversations.map(conversation => <button key={conversation.id} type="button" onClick={() => setActiveChat({ type: 'direct', id: conversation.id, otherUser: conversation.otherUser })} className={`mb-1 flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${activeChat.type === 'direct' && activeChat.id === conversation.id ? 'bg-primary/15 text-text' : 'hover:bg-surface-lighter'}`}><Avatar profile={conversation.otherUser} size="sm" /><span className="min-w-0 flex-1"><span className="flex items-center gap-2"><span className="truncate text-sm font-semibold">{conversation.otherUser.displayName}</span>{conversation.unreadCount > 0 && <span className="grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] text-white">{conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}</span>}</span><span className="block truncate text-xs text-text-muted">{conversation.lastMessage || 'Start the conversation'}</span></span></button>)}</div></aside>
-          <div className="flex min-h-[450px] flex-col"><header className="flex items-center gap-3 border-b border-border px-4 py-3.5"><>{activeChat.type === 'league' ? <><div className="grid h-10 w-10 place-items-center rounded-full bg-yellow-400/15 text-yellow-400"><HiOutlineStar size={19} /></div><div><p className="font-semibold">League lounge</p><p className="text-xs text-text-muted">Only your weekly group can join</p></div></> : <><Avatar profile={activeConversation?.otherUser || activeChat.otherUser} size="sm" /><div><p className="font-semibold">{activeConversation?.otherUser?.displayName || activeChat.otherUser?.displayName}</p><p className="text-xs text-text-muted">Private conversation</p></div></>}</></header><div className="flex-1 space-y-3 overflow-y-auto p-4">{messagesLoading ? <LoadingSpinner /> : messages.length === 0 ? <div className="grid h-full min-h-52 place-items-center text-center"><div><HiOutlineChatAlt2 className="mx-auto mb-3 text-text-muted" size={30} /><p className="font-medium">No messages yet</p><p className="mt-1 text-sm text-text-muted">Start a thoughtful study conversation.</p></div></div> : messages.map(message => { const own = Number(message.sender?.id) === Number(user?.id); return <div key={message.id} className={`flex gap-2 ${own ? 'justify-end' : 'justify-start'}`}>{!own && <Avatar profile={message.sender} size="sm" />}<div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm ${own ? 'rounded-br-md bg-primary text-white' : 'rounded-bl-md bg-surface-lighter text-text'}`}><p className={`mb-1 text-xs font-semibold ${own ? 'text-white/80' : 'text-text-muted'}`}>{own ? 'You' : message.sender?.displayName}</p><p className="whitespace-pre-wrap break-words">{message.body}</p><p className={`mt-1 text-right text-[10px] ${own ? 'text-white/65' : 'text-text-muted'}`}>{formatMessageTime(message.createdAt)}</p></div></div>; })}<div ref={messagesEndRef} /></div><form onSubmit={sendMessage} className="flex gap-2 border-t border-border p-3"><input value={messageBody} maxLength={1000} onChange={event => setMessageBody(event.target.value)} placeholder={activeChat.type === 'league' ? 'Share a study win with your league…' : 'Write a message…'} className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary/60" /><button type="submit" disabled={!messageBody.trim() || sending} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50" aria-label="Send message"><HiOutlinePaperAirplane size={18} /></button></form></div>
+          <div className="flex min-h-[450px] flex-col"><header className="flex items-center gap-3 border-b border-border px-4 py-3.5"><>{activeChat.type === 'league' ? <><div className="grid h-10 w-10 place-items-center rounded-full bg-yellow-400/15 text-yellow-400"><HiOutlineStar size={19} /></div><div><p className="font-semibold">League lounge</p><p className="text-xs text-text-muted">Only your weekly group can join</p></div></> : <><Avatar profile={activeConversation?.otherUser || activeChat.otherUser} size="sm" /><div><p className="font-semibold">{activeConversation?.otherUser?.displayName || activeChat.otherUser?.displayName}</p><p className="text-xs text-text-muted">Private conversation</p></div></>}</></header><div ref={messageListRef} className="flex-1 space-y-3 overflow-y-auto p-4">{hasMoreMessages && <button type="button" onClick={loadEarlierMessages} disabled={olderMessagesLoading || messagesLoading} className="mx-auto block rounded-lg border border-border px-3 py-2 text-xs text-text-muted hover:bg-surface-lighter disabled:opacity-50">{olderMessagesLoading ? 'Loading older messages…' : 'Load earlier messages'}</button>}{messagesLoading ? <LoadingSpinner /> : messages.length === 0 ? <div className="grid h-full min-h-52 place-items-center text-center"><div><HiOutlineChatAlt2 className="mx-auto mb-3 text-text-muted" size={30} /><p className="font-medium">No messages yet</p><p className="mt-1 text-sm text-text-muted">Start a thoughtful study conversation.</p></div></div> : messages.map(message => { const own = String(message.sender?.id) === String(user?.id); return <div key={message.id} className={`flex gap-2 ${own ? 'justify-end' : 'justify-start'}`}>{!own && <Avatar profile={message.sender} size="sm" />}<div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm ${own ? 'rounded-br-md bg-primary text-white' : 'rounded-bl-md bg-surface-lighter text-text'}`}><p className={`mb-1 text-xs font-semibold ${own ? 'text-white/80' : 'text-text-muted'}`}>{own ? 'You' : message.sender?.displayName}</p><p className="whitespace-pre-wrap break-words">{message.body}</p><p className={`mt-1 text-right text-[10px] ${own ? 'text-white/65' : 'text-text-muted'}`}>{formatMessageTime(message.createdAt)}</p></div></div>; })}<div ref={messagesEndRef} /></div><form onSubmit={sendMessage} className="flex gap-2 border-t border-border p-3"><input value={messageBody} maxLength={1000} onChange={event => setMessageBody(event.target.value)} placeholder={activeChat.type === 'league' ? 'Share a study win with your league…' : 'Write a message…'} className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary/60" /><button type="submit" disabled={!messageBody.trim() || sending} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50" aria-label="Send message"><HiOutlinePaperAirplane size={18} /></button></form></div>
         </section>
       )}
 

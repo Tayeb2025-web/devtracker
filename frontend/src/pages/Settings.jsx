@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { goalApi, userApi, exportApi } from '../services/api';
+import { goalApi, userApi, exportApi, authApi } from '../services/api';
 import { useToast } from '../contexts/ToastContextStore';
 import { useAuth } from '../contexts/AuthContextStore';
 import { useCalendar } from '../contexts/CalendarContextStore';
@@ -9,7 +9,7 @@ import { resolveAvatarUrl, isCustomAvatar, getDefaultAvatar } from '../constants
 import {
   HiOutlineUser, HiOutlineLockClosed, HiOutlineFlag, HiOutlineBell,
   HiOutlineSparkles, HiOutlineCheck, HiOutlineDownload, HiOutlineUpload,
-  HiOutlineCamera, HiOutlineTrash, HiOutlineCloudUpload, HiOutlineCalendar,
+  HiOutlineCamera, HiOutlineTrash, HiOutlineCalendar,
 } from 'react-icons/hi';
 
 const NOTIFICATION_OPTIONS = [
@@ -44,11 +44,13 @@ export default function Settings() {
     notification_enabled: true,
     notification_time: '09:00',
   });
-  const [dailyGoal, setDailyGoal] = useState('10');
+  const [dailyGoal, setDailyGoal] = useState('1');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current: '', next: '', confirm: '' });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const loadSettings = useCallback(async () => {
     setLoading(true);
@@ -65,7 +67,7 @@ export default function Settings() {
         notification_enabled: Boolean(profile.notification_enabled),
         notification_time: profile.notification_time?.slice(0, 5) || '09:00',
       });
-      setDailyGoal(String(goalRes.data?.target_hours ?? 10));
+      setDailyGoal(String(goalRes.data?.target_hours ?? 1));
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -157,7 +159,6 @@ export default function Settings() {
       const [profileResult] = await Promise.all([
         userApi.updateSettings({
           display_name: form.display_name.trim(),
-          email: form.email.trim() || null,
           bio: form.bio.trim() || null,
           is_profile_public: form.is_profile_public,
           allow_direct_messages: form.allow_direct_messages,
@@ -176,11 +177,32 @@ export default function Settings() {
     }
   };
 
+  const changePassword = async (event) => {
+    event.preventDefault();
+    if (passwordForm.next.length < 8 || passwordForm.next.length > 128) {
+      toast.warning('New password must be between 8 and 128 characters');
+      return;
+    }
+    if (passwordForm.next !== passwordForm.confirm) {
+      toast.warning('New password confirmation does not match');
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const result = await authApi.changePassword({ currentPassword: passwordForm.current, newPassword: passwordForm.next });
+      if (result.data?.token) localStorage.setItem('devtracker-auth-token', result.data.token);
+      setPasswordForm({ current: '', next: '', confirm: '' });
+      toast.success('Password changed. Other signed-in sessions were ended.');
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
 
   const currentAvatar = form.avatar_url || user?.avatar_url || '/images/profile.jpg';
-  const isDefaultAvatar = currentAvatar === '/images/profile.jpg';
-
   return (
     <div className="max-w-3xl mx-auto space-y-7">
       <div className="animate-fade-in">
@@ -312,8 +334,9 @@ export default function Settings() {
             label="Email Address"
             type="email"
             value={form.email}
-            onChange={event => setForm(current => ({ ...current, email: event.target.value }))}
+            disabled
           />
+          <p className="text-xs text-text-muted sm:col-span-2">Email changes are disabled until account ownership can be verified.</p>
         </div>
         <Textarea
           label="Short Bio"
@@ -454,6 +477,26 @@ export default function Settings() {
             onChange={event => setForm(current => ({ ...current, notification_time: event.target.value }))}
           />
         </div>
+      </Card>
+
+      <Card className="space-y-5 p-6">
+        <div className="flex items-center gap-3 border-b border-border/60 pb-4">
+          <div className="p-2 rounded-xl bg-rose-500/15 text-rose-400"><HiOutlineLockClosed size={20} /></div>
+          <div>
+            <h2 className="font-bold text-base">Password & Sessions</h2>
+            <p className="text-xs text-text-muted">Changing your password signs out other devices.</p>
+          </div>
+        </div>
+        <form onSubmit={changePassword} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Input label="Current password" type="password" autoComplete="current-password" required maxLength={128} value={passwordForm.current} onChange={event => setPasswordForm(current => ({ ...current, current: event.target.value }))} />
+          <Input label="New password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={passwordForm.next} onChange={event => setPasswordForm(current => ({ ...current, next: event.target.value }))} />
+          <Input label="Confirm new password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={passwordForm.confirm} onChange={event => setPasswordForm(current => ({ ...current, confirm: event.target.value }))} />
+          <div className="sm:col-span-3 flex justify-end">
+            <Button type="submit" variant="outline" disabled={changingPassword}>
+              {changingPassword ? 'Updating password…' : 'Change password'}
+            </Button>
+          </div>
+        </form>
       </Card>
 
       {/* Data Backup & Restore Section */}

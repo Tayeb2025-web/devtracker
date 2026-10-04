@@ -4,21 +4,21 @@ import CommandPaletteModal from '../components/CommandPaletteModal';
 import DevPet from '../components/DevPet';
 import LiveActivityBubble from '../components/LiveActivityBubble';
 import { useEffect, useState } from 'react';
-import { HiOutlineBell, HiOutlineMenuAlt2, HiOutlineVolumeOff } from 'react-icons/hi';
+import { HiOutlineMenuAlt2, HiOutlineVolumeOff } from 'react-icons/hi';
 import { useTimer } from '../contexts/TimerContextStore';
 import { useAuth } from '../contexts/AuthContextStore';
-import { socialApi, technologyApi } from '../services/api';
+import { socialApi } from '../services/api';
 
 export default function MainLayout({ children }) {
   const timer = useTimer();
   const { user } = useAuth();
   const { isAlarmActive, dismissAlarm } = timer || {};
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(() => localStorage.getItem('devtracker-focus-mode') === 'true');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => window.matchMedia('(max-width: 767px)').matches
       || localStorage.getItem('devtracker-sidebar-collapsed') === 'true'
   );
-  const [techMap, setTechMap] = useState({});
 
   useEffect(() => {
     const handleTogglePalette = () => setCommandPaletteOpen(prev => !prev);
@@ -27,19 +27,14 @@ export default function MainLayout({ children }) {
   }, []);
 
   useEffect(() => {
+    const handleFocusMode = (event) => setFocusMode(Boolean(event.detail?.enabled));
+    window.addEventListener('devtracker-focus-mode-change', handleFocusMode);
+    return () => window.removeEventListener('devtracker-focus-mode-change', handleFocusMode);
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem('devtracker-sidebar-collapsed', String(sidebarCollapsed));
   }, [sidebarCollapsed]);
-
-  // Pre-fetch technologies map to identify active technology name
-  useEffect(() => {
-    if (!user) return;
-    technologyApi.getAll().then(res => {
-      const list = Array.isArray(res.data) ? res.data : (res.data?.technologies || []);
-      const map = {};
-      list.forEach(t => { map[t.id] = t.name; });
-      setTechMap(map);
-    }).catch(() => {});
-  }, [user]);
 
   // Presence heartbeat tracking: records online state and active coding session
   const isStopwatchRunning = Boolean(timer?.isRunning);
@@ -51,10 +46,9 @@ export default function MainLayout({ children }) {
     if (!user) return;
 
     const sendHeartbeat = () => {
-      const techName = activeTechId ? techMap[activeTechId] : undefined;
       socialApi.presenceHeartbeat({
         is_studying: isStudying,
-        technology_name: techName || null,
+        technology_id: isStudying ? activeTechId || null : null,
       }).catch(() => {});
     };
 
@@ -74,7 +68,7 @@ export default function MainLayout({ children }) {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [user, isStudying, activeTechId, techMap]);
+  }, [user, isStudying, activeTechId]);
 
   return (
     <div className="min-h-screen bg-surface relative overflow-x-hidden">
@@ -127,9 +121,9 @@ export default function MainLayout({ children }) {
         </div>
       </main>
       <CommandPaletteModal isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
-      <DevPet />
-      <MiniMusicPlayer />
-      <LiveActivityBubble />
+      {!focusMode && <DevPet />}
+      {!focusMode && <MiniMusicPlayer />}
+      {!focusMode && <LiveActivityBubble />}
     </div>
   );
 }

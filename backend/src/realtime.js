@@ -5,9 +5,13 @@ import { hashToken } from './middlewares/auth.js';
 import { AuthSession, User } from './models/UserModel.js';
 import { LeagueModel } from './models/SocialModel.js';
 
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-  : true;
+const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').map(origin => origin.trim()).filter(Boolean);
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  return process.env.NODE_ENV !== 'production' && /^https?:\/\/localhost(?::\d+)?$/.test(origin);
+}
 
 async function configureRedisAdapter(io) {
   if (!process.env.REDIS_URL) return;
@@ -24,7 +28,7 @@ async function configureRedisAdapter(io) {
 
 export async function createRealtimeServer(httpServer) {
   const io = new Server(httpServer, {
-    cors: { origin: allowedOrigins, methods: ['GET', 'POST'] },
+    cors: { origin: (origin, callback) => callback(null, isAllowedOrigin(origin)), methods: ['GET', 'POST'] },
     transports: ['websocket', 'polling'],
   });
 

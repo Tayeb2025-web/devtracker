@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'node:url';
 
 function parseSql(sql) {
   const tables = {};
@@ -124,7 +125,8 @@ function cleanVal(v) {
   return trimmed;
 }
 
-const sqlPath = path.resolve('../database/devtracker.sql');
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const sqlPath = path.resolve(process.argv[2] || path.resolve(scriptDir, '../../../database/devtracker.sql'));
 const sql = fs.readFileSync(sqlPath, 'utf8');
 
 const tables = parseSql(sql);
@@ -134,15 +136,13 @@ for (const [table, rows] of Object.entries(tables)) {
   console.log(`Table: ${table} -> ${rows.length} rows`);
 }
 
-// Save parsed data to devtracker_mysql_backup.json
 const output = {
   exported_at: new Date().toISOString(),
   data: tables
 };
 
-fs.writeFileSync('./devtracker_mysql_backup.json', JSON.stringify(output, null, 2));
-console.log('Saved to devtracker_mysql_backup.json!');
-
-if (tables.users) {
-  console.log('Users found:', tables.users);
-}
+const privateBackupDir = path.resolve(scriptDir, '../../private-backups');
+fs.mkdirSync(privateBackupDir, { recursive: true });
+const outputPath = path.join(privateBackupDir, 'devtracker-mysql-backup.json');
+fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), { mode: 0o600 });
+console.log(`Private SQL backup written to ${outputPath}`);

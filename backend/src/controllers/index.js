@@ -19,8 +19,8 @@ export const createSession = asyncHandler(async (req, res) => {
 });
 
 export const getSessions = asyncHandler(async (req, res) => {
-  const { date, startDate, endDate, technologyId, search, limit, filter } = req.query;
-  const filters = { date, startDate, endDate, technologyId, search, limit };
+  const { date, startDate, endDate, technologyId, projectId, search, limit, page, pageSize, sortBy, filter } = req.query;
+  const filters = { date, startDate, endDate, technologyId, projectId, search, limit, page, pageSize, sortBy };
 
   if (filter === 'today') {
     filters.date = formatLocalDate();
@@ -34,6 +34,10 @@ export const getSessions = asyncHandler(async (req, res) => {
   }
 
   const sessions = await SessionService.getSessions(filters, req.user.id);
+  if (sessions?.items) {
+    res.json({ success: true, data: sessions.items, pagination: sessions.pagination });
+    return;
+  }
   res.json({ success: true, data: sessions });
 });
 
@@ -118,13 +122,14 @@ export const updateGoal = asyncHandler(async (req, res) => {
 });
 
 export const getStats = asyncHandler(async (req, res) => {
-  const data = await StatsService.getStats(req.user.id);
+  const data = await StatsService.getStats(req.user.id, req.query.calendar);
   res.json({ success: true, data });
 });
 
 export const getCalendar = asyncHandler(async (req, res) => {
   const year = req.query.year ? Number(req.query.year) : Number(getLocalYear());
-  const data = await StatsService.getCalendar(year, req.user.id);
+  const calendar = req.query.calendar || 'afghan';
+  const data = await StatsService.getCalendar(year, req.user.id, calendar);
   res.json({ success: true, data, year });
 });
 
@@ -219,6 +224,11 @@ export const logout = asyncHandler(async (req, res) => {
   res.json({ success: true });
 });
 
+export const changePassword = asyncHandler(async (req, res) => {
+  const data = await AuthService.changePassword(req.user.id, req.body);
+  res.json({ success: true, data });
+});
+
 export const getSocialDirectory = asyncHandler(async (req, res) => {
   const result = await SocialModel.getDirectory(req.user.id, req.query);
   res.json({
@@ -246,8 +256,11 @@ export const unfollowUser = asyncHandler(async (req, res) => {
 export const heartbeatPresence = asyncHandler(async (req, res) => {
   const result = await SocialModel.updatePresence(req.user.id, req.body || {});
   const io = req.app.get('io');
-  if (io && req.body?.is_studying) {
-    io.emit('activity:presence', { userId: req.user.id, isStudying: req.body.is_studying });
+  if (io) {
+    const profile = await SocialModel.getProfile(req.user.id, req.user.id);
+    if (profile?.is_profile_public) {
+      io.emit('activity:presence', { userId: req.user.id, isStudying: Boolean(req.body?.is_studying) });
+    }
   }
   res.json({ success: true, data: result });
 });
@@ -290,7 +303,7 @@ export const getDirectMessages = asyncHandler(async (req, res) => {
 
 export const sendDirectMessage = asyncHandler(async (req, res) => {
   const data = await ChatModel.sendMessage(req.user.id, req.params.id, req.body.body);
-  req.app.get('io')?.to(`user:${data.recipientId}`).emit('direct:message', data.message);
+  req.app.get('io')?.to(`user:${data.recipientId}`).emit('chat:message', data.message);
   res.status(201).json({ success: true, data });
 });
 

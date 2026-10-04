@@ -1,0 +1,67 @@
+{
+  "databaseConnected": false,
+  "checks": 15,
+  "reproduced": 15,
+  "outcomes": [
+    {
+      "name": "Editable email grants administrator access to a regular user",
+      "reproduced": true
+    },
+    {
+      "name": "Unknown user ID resolves to an unrelated oldest account",
+      "reproduced": true
+    },
+    {
+      "name": "Legacy account can be claimed by an unrelated registration",
+      "reproduced": true
+    },
+    {
+      "name": "Any administrator receives primary legacy user aliases",
+      "reproduced": true
+    },
+    {
+      "name": "History controller discards projectId query filter",
+      "reproduced": true
+    },
+    {
+      "name": "Session validator accepts impossible time, future date and extreme duration",
+      "reproduced": true
+    },
+    {
+      "name": "Session validator rejects null note sent by timers with no note",
+      "reproduced": true
+    },
+    {
+      "name": "Backup import preserves source IDs instead of remapping new entities",
+      "reproduced": true
+    },
+    {
+      "name": "Sending a direct message ignores recipient permission none",
+      "reproduced": true
+    },
+    {
+      "name": "Concurrent XP updates lose one increment",
+      "reproduced": true
+    },
+    {
+      "name": "New custom challenge counts old lifetime hours and remains completed after reduction",
+      "reproduced": true
+    },
+    {
+      "name": "Default REACT/NODE JS/TAILWIND names do not unlock corresponding badges",
+      "reproduced": true
+    },
+    {
+      "name": "Axios error interceptor removes HTTP status used by AuthProvider",
+      "reproduced": true
+    },
+    {
+      "name": "MongoDB IDs cannot identify own chat messages after Number conversion",
+      "reproduced": true
+    },
+    {
+      "name": "Direct message socket event names disagree",
+      "reproduced": true
+    }
+  ]
+}

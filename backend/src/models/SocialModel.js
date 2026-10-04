@@ -1,8 +1,10 @@
 import mongoose from 'mongoose';
 import { AppError } from '../middlewares/errorHandler.js';
-import { getLocalWeekRange, shiftLocalDate } from '../utils/date.js';
+import { formatLocalDate, getLocalWeekRange, shiftLocalDate } from '../utils/date.js';
 import { User, getDeterministicAvatar } from './UserModel.js';
 import { Level, Streak, XpHistory } from './GoalModel.js';
+import { Technology } from './TechnologyModel.js';
+import { canReceiveDirectMessage } from '../utils/domainRules.js';
 
 function resolveUserAvatar(url, seed) {
   if (url && url !== '/images/profile.jpg') return url;
@@ -70,7 +72,30 @@ export const DirectMessage = mongoose.models.DirectMessage || mongoose.model('Di
 const cleanMessage = (body) => String(body || '').trim().replace(/\s+/g, ' ');
 
 async function getUser(userId) {
-  return User.findById(userId).lean() || User.findOne({ legacy_id: Number(userId) || -1 }).lean();
+  if (mongoose.Types.ObjectId.isValid(String(userId))) {
+    const user = await User.findById(userId).lean();
+    if (user) return user;
+  }
+  return User.findOne({ $or: [{ legacy_id: Number(userId) || -1 }, { username: String(userId) }] }).lean();
+}
+
+async function assertCanMessage(senderId, recipientId) {
+  if (String(senderId) === String(recipientId)) throw new AppError('You cannot message yourself', 400);
+  const recipient = await getUser(recipientId);
+  if (!recipient) throw new AppError('Recipient not found', 404);
+  let followsSender = false;
+  if (recipient.allow_direct_messages === 'followers') {
+    followsSender = Boolean(await UserFollow.exists({
+      follower_id: recipient._id.toString(),
+      following_id: String(senderId),
+    }));
+  }
+  if (!canReceiveDirectMessage(recipient.allow_direct_messages, followsSender)) {
+    throw new AppError(recipient.allow_direct_messages === 'none'
+      ? 'This user does not accept direct messages'
+      : 'Only people this user follows can send direct messages', 403);
+  }
+  return recipient;
 }
 
 export const SocialModel = {
@@ -267,16 +292,20 @@ export const SocialModel = {
     const update = {
       last_seen_at: new Date(),
     };
-    if (data.is_studying !== undefined) {
-      update.is_studying = Boolean(data.is_studying);
+    if (typeof data.is_studying === 'boolean') {
+      update.is_studying = data.is_studying;
+      if (!data.is_studying) update.active_technology = null;
     }
-    if (data.technology_name !== undefined) {
-      update.active_technology = data.technology_name ? String(data.technology_name).trim().slice(0, 50) : null;
-    }
-    if (data.today_hours !== undefined) {
-      const h = Number(data.today_hours);
-      if (Number.isFinite(h) && h >= 0) {
-        update.today_study_hours = Math.round(h * 10) / 10;
+    if (Object.hasOwn(data, 'technology_id')) {
+      if (!data.technology_id) {
+        update.active_technology = null;
+      } else {
+      let tech = null;
+      if (mongoose.Types.ObjectId.isValid(String(data.technology_id))) {
+        tech = await Technology.findOne({ _id: data.technology_id, user_id: String(userId) }).select('name').lean();
+      }
+      if (!tech) tech = await Technology.findOne({ legacy_id: Number(data.technology_id) || -1, user_id: String(userId) }).select('name').lean();
+      update.active_technology = tech?.name || null;
       }
     }
 
@@ -311,13 +340,18 @@ export const SocialModel = {
     if (!candidates || candidates.length === 0) return [];
 
     const candidateIds = candidates.map(c => c._id.toString());
-    const [streaks, levels] = await Promise.all([
+    const [streaks, levels, sessionHours] = await Promise.all([
       Streak.find({ user_id: { $in: candidateIds } }).lean(),
       Level.find({ user_id: { $in: candidateIds } }).lean(),
+      (await import('./SessionModel.js')).StudySession.aggregate([
+        { $match: { user_id: { $in: candidateIds }, session_date: formatLocalDate() } },
+        { $group: { _id: '$user_id', hours: { $sum: '$duration_hours' } } },
+      ]),
     ]);
 
     const streakMap = new Map(streaks.map(s => [String(s.user_id), s]));
     const levelMap = new Map(levels.map(l => [String(l.user_id), l]));
+    const todayHoursMap = new Map(sessionHours.map(row => [String(row._id), Number(row.hours || 0)]));
 
     // Format relative time helper for Persian
     const formatTimeFa = (date) => {
@@ -347,7 +381,7 @@ export const SocialModel = {
 
       const streak = Number(streakMap.get(uid)?.current_streak || 0);
       const level = Number(levelMap.get(uid)?.current_level || 1);
-      const todayHours = Number(u.today_study_hours || 0);
+      const todayHours = Number(todayHoursMap.get(uid) || 0);
       const name = u.display_name || u.username;
       const tech = u.active_technology;
 
@@ -690,15 +724,13 @@ export const ChatModel = {
   },
 
   async createConversation(userId, recipientId) {
-    if (String(userId) === String(recipientId)) throw new AppError('You cannot message yourself', 400);
-    const [lowId, highId] = [String(userId), String(recipientId)].sort();
-
-    let conv = await DirectConversation.findOne({ user_low_id: lowId, user_high_id: highId });
-    if (!conv) {
-      conv = await DirectConversation.create({ user_low_id: lowId, user_high_id: highId });
-    }
-
-    const otherUser = await User.findById(recipientId).lean();
+    const otherUser = await assertCanMessage(userId, recipientId);
+    const [lowId, highId] = [String(userId), otherUser._id.toString()].sort();
+    const conv = await DirectConversation.findOneAndUpdate(
+      { user_low_id: lowId, user_high_id: highId },
+      { $setOnInsert: { user_low_id: lowId, user_high_id: highId } },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
     return {
       id: conv._id.toString(),
       otherUser: {
@@ -777,6 +809,7 @@ export const ChatModel = {
     if (!messageBody) throw new AppError('Message cannot be empty', 400);
 
     const otherUserId = conv.user_low_id === String(userId) ? conv.user_high_id : conv.user_low_id;
+    await assertCanMessage(userId, otherUserId);
     const msg = await DirectMessage.create({
       conversation_id: String(conversationId),
       sender_id: String(userId),

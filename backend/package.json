@@ -7,8 +7,10 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "db:migrate": "node src/scripts/importJsonToMongo.js",
-    "db:export": "node src/scripts/exportMysqlToJson.js"
+    "db:migrate:inspect": "node src/scripts/importJsonToMongo.js",
+    "db:export": "node src/scripts/exportUserData.js",
+    "admin:grant": "node src/scripts/grantAdmin.js",
+    "test": "node --test"
   },
   "dependencies": {
     "@socket.io/redis-adapter": "^8.3.0",

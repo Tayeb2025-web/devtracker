@@ -1,6 +1,7 @@
 export const XP_PER_HOUR = 100;
-export const DEFAULT_DAILY_GOAL = 10;
-export const DEFAULT_USER_ID = 1;
+export const DEFAULT_DAILY_GOAL = 1;
+// No request or service may silently fall back to a shared/legacy account.
+export const DEFAULT_USER_ID = null;
 
 export const ACHIEVEMENTS = {
   first_session: { key: 'first_session', name: 'First Study Session', description: 'Complete your first study session', icon: 'rocket' },

@@ -6,7 +6,6 @@ import {
   getAfghanMonthLength,
   getCalendarLevel,
   getSaturdayFirstDayIndex,
-  getMonthNames,
   getShortMonthNames,
   getWeekdayNames,
   getShortWeekdayNames,
@@ -105,14 +104,19 @@ export default function ContributionCalendar({ data, year, onSelectDay }) {
             {weeks.map((week, wi) => (
               <div key={wi} className="flex flex-col gap-[3px]">
                 {week.map((day, di) => (
-                  <div
-                    key={di}
-                    className="w-[11px] h-[11px] rounded-sm transition-all duration-150 hover:ring-1 hover:ring-primary/50 cursor-pointer"
-                    style={{ backgroundColor: day ? getColor(day.level) : 'transparent' }}
-                    onClick={() => day && onSelectDay?.(day)}
-                    onMouseEnter={(e) => day && setTooltip({ ...day, x: e.clientX, y: e.clientY })}
-                    onMouseLeave={() => setTooltip(null)}
-                  />
+                  day ? (
+                    <button
+                      key={di}
+                      type="button"
+                      aria-label={`${day.displayDate}: ${day.hours.toFixed(1)} study hours${day.technologies ? `, ${day.technologies}` : ''}`}
+                      title={`${day.hours.toFixed(1)} hours on ${day.displayDate}`}
+                      className="w-[11px] h-[11px] rounded-sm transition-all duration-150 hover:ring-1 hover:ring-primary/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                      style={{ backgroundColor: getColor(day.level) }}
+                      onClick={() => onSelectDay?.(day)}
+                      onMouseEnter={(e) => setTooltip({ ...day, x: e.clientX, y: e.clientY })}
+                      onMouseLeave={() => setTooltip(null)}
+                    />
+                  ) : <span key={di} aria-hidden="true" className="w-[11px] h-[11px]" />
                 ))}
               </div>
             ))}

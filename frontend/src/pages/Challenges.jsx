@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { challengeApi } from '../services/api';
 import { Card, ProgressBar, LoadingSpinner, Badge, Modal, Button, Input, Select, Textarea } from '../components/ui';
-import { DEFAULT_CHALLENGES } from '../constants';
 import { useCalendar } from '../contexts/CalendarContextStore';
 import {
   HiOutlineSparkles,
@@ -17,14 +16,15 @@ import {
 function getChallengeIcon(challenge) {
   if (challenge.status === 'completed') return '🏆';
   if (challenge.icon) return challenge.icon;
-  if (challenge.unit === 'days' || challenge.challenge_key?.includes('day')) return '🔥';
-  if (challenge.unit === 'hours' || challenge.challenge_key?.includes('hour')) return '🎯';
+  if (challenge.unit === 'days' || challenge.unit === 'streak_days' || challenge.challenge_key?.includes('day')) return '🔥';
+  if (challenge.unit === 'hours' || challenge.unit === 'lifetime_hours' || challenge.challenge_key?.includes('hour')) return '🎯';
   return '⚡';
 }
 
 export default function Challenges() {
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [filter, setFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -37,23 +37,22 @@ export default function Challenges() {
 
   const { formatDate } = useCalendar();
 
-  const fetchChallenges = () => {
+  const fetchChallenges = useCallback(() => {
     setLoading(true);
+    setLoadError('');
     challengeApi
       .getAll()
       .then(res => {
-        const list = res.data && res.data.length > 0 ? res.data : DEFAULT_CHALLENGES;
-        setChallenges(list);
-      })
-      .catch(() => {
-        setChallenges(DEFAULT_CHALLENGES);
+        setChallenges(Array.isArray(res.data) ? res.data : []);
+      }).catch((error) => {
+        setLoadError(error.message || 'Could not load challenges.');
       })
       .finally(() => setLoading(false));
-  };
+  }, []);
 
   useEffect(() => {
     fetchChallenges();
-  }, []);
+  }, [fetchChallenges]);
 
   const stats = useMemo(() => {
     const total = challenges.length;
@@ -89,7 +88,7 @@ export default function Challenges() {
       setModalOpen(false);
       setForm({ challenge_name: '', challenge_description: '', target_value: '20', unit: 'hours' });
     } catch (err) {
-      console.error('Failed to create challenge:', err);
+      setLoadError(err.message || 'Could not create the challenge.');
     } finally {
       setSubmitting(false);
     }
@@ -103,14 +102,23 @@ export default function Challenges() {
       await challengeApi.delete(id);
       setChallenges(prev => prev.filter(c => (c.id || c._id) !== id));
     } catch (err) {
-      console.error('Failed to delete challenge:', err);
+      setLoadError(err.message || 'Could not delete the challenge.');
     }
   };
 
   if (loading) return <LoadingSpinner />;
 
+  if (loadError && challenges.length === 0) return (
+    <Card className="mx-auto max-w-xl p-8 text-center">
+      <p className="font-semibold text-red-400">{loadError}</p>
+      <p className="mt-2 text-sm text-text-muted">Your saved challenge list is unavailable right now.</p>
+      <Button className="mt-5" onClick={fetchChallenges}>Try again</Button>
+    </Card>
+  );
+
   return (
     <div className="space-y-7">
+      {loadError && <Card role="alert" className="border-red-500/30 p-3 text-sm text-red-400">{loadError}</Card>}
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
         <div>

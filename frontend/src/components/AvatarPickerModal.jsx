@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HiOutlineCheck, HiOutlineSparkles, HiOutlineX } from 'react-icons/hi';
+import { HiOutlineCheck, HiOutlineSparkles } from 'react-icons/hi';
 import { DEFAULT_AVATARS } from '../constants/avatars';
 import { Modal } from './ui';
 

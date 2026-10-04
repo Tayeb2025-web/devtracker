@@ -3,21 +3,19 @@ import { Link } from 'react-router-dom';
 import {
   HiOutlineUsers,
   HiOutlineSearch,
-  HiOutlineFilter,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
   HiOutlineTrash,
   HiOutlineShieldCheck,
   HiOutlineUser,
-  HiOutlineClock,
-  HiOutlineFire,
   HiOutlineExternalLink,
-  HiOutlineRefresh,
 } from 'react-icons/hi';
 import { adminApi } from '../../services/api';
 import Avatar from '../../components/Avatar';
+import { useAuth } from '../../contexts/AuthContextStore';
 
 export default function AdminUsers() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
@@ -253,7 +251,7 @@ export default function AdminUsers() {
               </thead>
               <tbody className="divide-y divide-border/40">
                 {users.map(u => {
-                  const isPrimaryAdmin = u.email === 'sayedtayebpuya2024@gmail.com';
+                  const isSelf = String(u.id) === String(currentUser?.id);
 
                   return (
                     <tr key={u.id} className="hover:bg-surface-lighter/30 transition-colors">
@@ -376,7 +374,7 @@ export default function AdminUsers() {
                           </Link>
 
                           {/* Role Toggle Button */}
-                          {!isPrimaryAdmin && (
+                          {!isSelf && (
                             <button
                               type="button"
                               onClick={() => handleRoleToggle(u.id, u.role)}
@@ -389,7 +387,7 @@ export default function AdminUsers() {
                           )}
 
                           {/* Delete Button */}
-                          {!isPrimaryAdmin && (
+                          {!isSelf && (
                             <button
                               type="button"
                               onClick={() => handleDeleteUser(u.id, u.username)}

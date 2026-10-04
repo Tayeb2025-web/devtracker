@@ -1,20 +1,12 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useId } from 'react';
 import {
-  AFGHAN_MONTHS,
-  IRANIAN_MONTHS,
-  GREGORIAN_MONTHS,
   afghanToGregorianDate,
   formatDate,
-  formatAfghanDate,
   formatLocalDate,
-  getAfghanDateParts,
-  getGregorianDateParts,
   getDateParts,
-  getAfghanMonthLength,
   getMonthLength,
   getMonthNames,
   getCurrentYear,
-  getCurrentAfghanYear,
 } from '../../constants';
 import { useCalendar } from '../../contexts/CalendarContextStore';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
@@ -105,17 +97,20 @@ export function Button({ children, variant = 'primary', size = 'md', className =
   );
 }
 
-export function Input({ label, type = 'text', className = '', ...props }) {
+export function Input({ label, id, type = 'text', className = '', ...props }) {
   const [showPassword, setShowPassword] = useState(false);
+  const generatedId = useId();
+  const inputId = id || generatedId;
   const isPassword = type === 'password';
   const resolvedType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
     <div className="space-y-1.5">
-      {label && <label className="text-xs text-text-muted font-semibold uppercase tracking-wider">{label}</label>}
+      {label && <label htmlFor={inputId} className="text-xs text-text-muted font-semibold uppercase tracking-wider">{label}</label>}
       <div className="relative">
         <input
           type={resolvedType}
+          id={inputId}
           className={`w-full px-3.5 py-2.5 ${isPassword ? 'pr-11' : ''} rounded-xl bg-surface-lighter/80 border border-border text-text text-sm placeholder:text-text-muted/60 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 focus:bg-surface-lighter transition-all duration-200 ${className}`}
           {...props}
         />
@@ -140,11 +135,14 @@ export function Input({ label, type = 'text', className = '', ...props }) {
   );
 }
 
-export function Select({ label, options, className = '', ...props }) {
+export function Select({ label, options, id, className = '', ...props }) {
+  const generatedId = useId();
+  const selectId = id || generatedId;
   return (
     <div className="space-y-1.5">
-      {label && <label className="text-xs text-text-muted font-semibold uppercase tracking-wider">{label}</label>}
+      {label && <label htmlFor={selectId} className="text-xs text-text-muted font-semibold uppercase tracking-wider">{label}</label>}
       <select
+        id={selectId}
         className={`w-full px-3.5 py-2.5 rounded-xl bg-surface-lighter/80 border border-border text-text text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 transition-all duration-200 ${className}`}
         {...props}
       >
@@ -156,11 +154,14 @@ export function Select({ label, options, className = '', ...props }) {
   );
 }
 
-export function Textarea({ label, className = '', ...props }) {
+export function Textarea({ label, id, className = '', ...props }) {
+  const generatedId = useId();
+  const textareaId = id || generatedId;
   return (
     <div className="space-y-1.5">
-      {label && <label className="text-xs text-text-muted font-semibold uppercase tracking-wider">{label}</label>}
+      {label && <label htmlFor={textareaId} className="text-xs text-text-muted font-semibold uppercase tracking-wider">{label}</label>}
       <textarea
+        id={textareaId}
         className={`w-full px-3.5 py-2.5 rounded-xl bg-surface-lighter/80 border border-border text-text text-sm placeholder:text-text-muted/60 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 transition-all duration-200 resize-none ${className}`}
         {...props}
       />
@@ -169,17 +170,53 @@ export function Textarea({ label, className = '', ...props }) {
 }
 
 export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
+  const dialogRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  const titleId = useId();
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const previouslyFocused = document.activeElement;
+    const dialog = dialogRef.current;
+    const focusableSelector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+    const focusFirst = () => (dialog?.querySelector(focusableSelector) || dialog)?.focus();
+    focusFirst();
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current?.();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialog) return;
+      const focusable = [...dialog.querySelectorAll(focusableSelector)];
+      if (!focusable.length) { event.preventDefault(); dialog.focus(); return; }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) previouslyFocused.focus();
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-5xl' };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/65 backdrop-blur-md" onClick={onClose} />
-      <div className={`relative w-full ${sizes[size]} max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl p-5 glass animate-scale-in sm:p-7`}>
+      <div className="absolute inset-0 bg-black/65 backdrop-blur-md" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }} />
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className={`relative w-full ${sizes[size]} max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl p-5 glass animate-scale-in sm:p-7`}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold">{title}</h3>
-          <button onClick={onClose} className="text-text-muted hover:text-text p-1.5 rounded-xl hover:bg-surface-lighter transition-colors">
+          <h3 id={titleId} className="text-lg font-bold">{title}</h3>
+          <button type="button" onClick={onClose} aria-label="Close dialog" className="text-text-muted hover:text-text p-1.5 rounded-xl hover:bg-surface-lighter transition-colors">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
           </button>
         </div>
@@ -330,7 +367,7 @@ export function AfghanDateInput({ label, value, onChange, max = null, minYear, m
 
 export const DateInput = AfghanDateInput;
 
-export const PRESET_COLORS = [
+const PRESET_COLORS = [
   '#6366F1', // Indigo
   '#10B981', // Emerald
   '#EF4444', // Red

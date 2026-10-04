@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   HiOutlinePlay, HiOutlinePause, HiOutlineStop, HiOutlineRefresh,
   HiOutlineClock, HiOutlineBell, HiOutlinePlus, HiOutlineTrash,
-  HiOutlineBookmark, HiOutlineSparkles, HiOutlineVolumeUp, HiOutlineVolumeOff,
+  HiOutlineBookmark, HiOutlineSparkles, HiOutlineVolumeUp, HiOutlineVolumeOff, HiOutlineEye, HiOutlineEyeOff,
 } from 'react-icons/hi';
 import { useTimer } from '../contexts/TimerContextStore';
 import { useToast } from '../contexts/ToastContextStore';
@@ -12,6 +12,15 @@ import { formatDuration, formatLocalDate, formatLocalTime } from '../constants';
 import { ambientSound } from '../utils/audioUtils';
 
 const CUSTOM_TIMERS_KEY = 'devtracker-custom-timers';
+const TIMER_USER_KEY = 'devtracker-user';
+const getCustomTimersKey = (userId = getCurrentUserId()) => `${CUSTOM_TIMERS_KEY}:${userId || 'guest'}`;
+function getCurrentUserId() {
+  if (!localStorage.getItem('devtracker-auth-token')) return null;
+  try { return JSON.parse(localStorage.getItem(TIMER_USER_KEY) || 'null')?.id || null; }
+  catch { return null; }
+}
+const makeSessionId = () => globalThis.crypto?.randomUUID?.()
+  || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const getDurationParts = (seconds) => ({
   hours: Math.floor(seconds / 3600),
@@ -24,9 +33,9 @@ const getDurationSeconds = (hours, minutes) => {
   return (safeHours * 60 + safeMinutes) * 60;
 };
 
-const loadCustomTimers = () => {
+const loadCustomTimers = (key) => {
   try {
-    const saved = JSON.parse(localStorage.getItem(CUSTOM_TIMERS_KEY) || '[]');
+    const saved = JSON.parse(localStorage.getItem(key) || '[]');
     return Array.isArray(saved) ? saved : [];
   } catch {
     return [];
@@ -44,7 +53,11 @@ export default function TimerPage() {
   const initialDuration = getDurationParts(countdown.totalSeconds);
   const [hours, setHours] = useState(String(initialDuration.hours));
   const [minutes, setMinutes] = useState(String(initialDuration.minutes));
-  const [customTimers, setCustomTimers] = useState(loadCustomTimers);
+  const [customTimerState, setCustomTimerState] = useState(() => {
+    const key = getCustomTimersKey();
+    return { key, timers: loadCustomTimers(key) };
+  });
+  const customTimers = customTimerState.timers;
   const [customLabel, setCustomLabel] = useState('');
   const [customHours, setCustomHours] = useState('0');
   const [customMinutes, setCustomMinutes] = useState('25');
@@ -52,6 +65,7 @@ export default function TimerPage() {
   const [customProjectId, setCustomProjectId] = useState('');
   const [ambientType, setAmbientType] = useState('off');
   const [ambientVolume, setAmbientVolume] = useState(0.3);
+  const [focusMode, setFocusMode] = useState(() => localStorage.getItem('devtracker-focus-mode') === 'true');
 
   // Quick Log modal state
   const [logModalOpen, setLogModalOpen] = useState(false);
@@ -60,12 +74,13 @@ export default function TimerPage() {
   const [logProjectId, setLogProjectId] = useState('');
   const [logNote, setLogNote] = useState('');
   const [logSaving, setLogSaving] = useState(false);
+  const [logSessionId, setLogSessionId] = useState(makeSessionId);
 
   const handleQuickLog = async (e) => {
     e.preventDefault();
     const mins = parseInt(logMinutes, 10);
-    if (!mins || mins < 1) {
-      toast.warning('Session duration must be at least 1 minute');
+    if (!mins || mins < 1 || mins > 720) {
+      toast.warning('Session duration must be between 1 minute and 12 hours');
       return;
     }
     if (!logTechId && !logProjectId) {
@@ -84,10 +99,13 @@ export default function TimerPage() {
         duration_minutes: mins,
         duration_hours: Number((mins / 60).toFixed(4)),
         note: logNote.trim() || null,
+        client_session_id: logSessionId,
+        source: 'manual',
       });
       toast.success(`Logged ${mins}m session! +${res.data?.xpEarned || 0} XP earned`);
       setLogModalOpen(false);
       setLogNote('');
+      setLogSessionId(makeSessionId());
       window.dispatchEvent(new Event('devtracker-session-saved'));
     } catch (err) {
       toast.error(err.message);
@@ -137,8 +155,17 @@ export default function TimerPage() {
   }, [countdown.isIdle, countdown.totalSeconds]);
 
   useEffect(() => {
-    localStorage.setItem(CUSTOM_TIMERS_KEY, JSON.stringify(customTimers));
-  }, [customTimers]);
+    const onAccountChange = (event) => {
+      const key = getCustomTimersKey(event.detail?.userId || null);
+      setCustomTimerState({ key, timers: loadCustomTimers(key) });
+    };
+    window.addEventListener('devtracker-auth-user-changed', onAccountChange);
+    return () => window.removeEventListener('devtracker-auth-user-changed', onAccountChange);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(customTimerState.key, JSON.stringify(customTimerState.timers));
+  }, [customTimerState]);
 
   if (loading) return <LoadingSpinner />;
 
@@ -150,7 +177,7 @@ export default function TimerPage() {
     if (value >= 60) countdown.setDuration(value);
     return value;
   };
-  const startCountdown = () => countdown.start(syncCountdownDuration());
+  const startCountdown = () => countdown.start(syncCountdownDuration(), { kind: countdown.kind });
   const getTechnologyName = (technologyId) => (
     technologies.find(technology => String(technology.id) === String(technologyId))?.name || 'Technology'
   );
@@ -172,21 +199,28 @@ export default function TimerPage() {
       toast.warning('Custom timer must be at least 1 minute');
       return;
     }
+    if (totalSeconds > 12 * 60 * 60) {
+      toast.warning('Custom timers cannot be longer than 12 hours');
+      return;
+    }
     if (!technologyId && !projectId) {
       toast.warning('Please select a technology or project for this timer');
       return;
     }
 
-    setCustomTimers(current => [
-      {
-        id: `${Date.now()}`,
-        label,
-        totalSeconds,
-        technologyId,
-        projectId,
-      },
+    setCustomTimerState(current => ({
       ...current,
-    ]);
+      timers: [
+        {
+          id: `${Date.now()}`,
+          label,
+          totalSeconds,
+          technologyId,
+          projectId,
+        },
+        ...current.timers,
+      ],
+    }));
     setCustomLabel('');
     toast.success('Custom timer added');
   };
@@ -202,17 +236,23 @@ export default function TimerPage() {
       technologyId: timer.technologyId,
       projectId: timer.projectId,
       note,
+      kind: 'focus',
     });
   };
 
-  const removeCustomTimer = (timerId) => {
-    setCustomTimers(current => current.filter(timer => timer.id !== timerId));
+  const toggleFocusMode = () => {
+    const enabled = !focusMode;
+    setFocusMode(enabled);
+    localStorage.setItem('devtracker-focus-mode', String(enabled));
+    window.dispatchEvent(new CustomEvent('devtracker-focus-mode-change', { detail: { enabled } }));
   };
 
-  // Progress for countdown ring
-  const countdownPct = countdown.totalSeconds > 0
-    ? (countdown.remainingSeconds / countdown.totalSeconds) * 100
-    : 100;
+  const removeCustomTimer = (timerId) => {
+    setCustomTimerState(current => ({
+      ...current,
+      timers: current.timers.filter(timer => timer.id !== timerId),
+    }));
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-7">
@@ -226,9 +266,15 @@ export default function TimerPage() {
           <p className="text-text-muted text-xs sm:text-sm mt-1">Set a study timer, track an open-ended session, or quick log time</p>
         </div>
 
-        <Button onClick={() => setLogModalOpen(true)} className="shadow-lg shadow-indigo-500/20 self-start sm:self-auto shrink-0">
-          <HiOutlinePlus size={18} /> Quick Log
-        </Button>
+        <div className="flex flex-wrap gap-2 self-start sm:self-auto">
+          <Button variant="outline" onClick={toggleFocusMode} aria-pressed={focusMode} title="Hide or show the floating study companion and music player">
+            {focusMode ? <HiOutlineEye size={17} /> : <HiOutlineEyeOff size={17} />}
+            {focusMode ? 'Exit quiet mode' : 'Quiet focus mode'}
+          </Button>
+          <Button onClick={() => setLogModalOpen(true)} className="shadow-lg shadow-indigo-500/20 shrink-0">
+            <HiOutlinePlus size={18} /> Quick Log
+          </Button>
+        </div>
       </div>
 
 
@@ -257,7 +303,7 @@ export default function TimerPage() {
             <button
               type="button"
               disabled={!countdown.isIdle}
-              onClick={() => { setHours('0'); setMinutes('25'); countdown.setDuration(25 * 60); }}
+              onClick={() => { setHours('0'); setMinutes('25'); countdown.setDuration(25 * 60); countdown.setKind('focus'); }}
               className="px-3.5 py-1.5 rounded-full bg-surface-lighter/80 hover:bg-indigo-500/20 hover:text-indigo-400 border border-border text-xs font-bold transition-all disabled:opacity-50"
             >
               ⚡ 25m Focus
@@ -265,7 +311,7 @@ export default function TimerPage() {
             <button
               type="button"
               disabled={!countdown.isIdle}
-              onClick={() => { setHours('0'); setMinutes('5'); countdown.setDuration(5 * 60); }}
+              onClick={() => { setHours('0'); setMinutes('5'); countdown.setDuration(5 * 60); countdown.setKind('break'); }}
               className="px-3.5 py-1.5 rounded-full bg-surface-lighter/80 hover:bg-emerald-500/20 hover:text-emerald-400 border border-border text-xs font-bold transition-all disabled:opacity-50"
             >
               ☕ 5m Break
@@ -273,7 +319,7 @@ export default function TimerPage() {
             <button
               type="button"
               disabled={!countdown.isIdle}
-              onClick={() => { setHours('0'); setMinutes('15'); countdown.setDuration(15 * 60); }}
+              onClick={() => { setHours('0'); setMinutes('15'); countdown.setDuration(15 * 60); countdown.setKind('break'); }}
               className="px-3.5 py-1.5 rounded-full bg-surface-lighter/80 hover:bg-amber-500/20 hover:text-amber-400 border border-border text-xs font-bold transition-all disabled:opacity-50"
             >
               🌴 15m Long Break
@@ -281,7 +327,7 @@ export default function TimerPage() {
             <button
               type="button"
               disabled={!countdown.isIdle}
-              onClick={() => { setHours('1'); setMinutes('0'); countdown.setDuration(60 * 60); }}
+              onClick={() => { setHours('1'); setMinutes('0'); countdown.setDuration(60 * 60); countdown.setKind('focus'); }}
               className="px-3.5 py-1.5 rounded-full bg-surface-lighter/80 hover:bg-violet-500/20 hover:text-violet-400 border border-border text-xs font-bold transition-all disabled:opacity-50"
             >
               🚀 60m Deep Work
@@ -378,6 +424,7 @@ export default function TimerPage() {
                 label="Hours"
                 type="number"
                 min="0"
+                max="12"
                 inputMode="numeric"
                 value={hours}
                 onChange={e => setHours(e.target.value)}
@@ -445,6 +492,7 @@ export default function TimerPage() {
                 label="Hours"
                 type="number"
                 min="0"
+                max="12"
                 inputMode="numeric"
                 value={customHours}
                 onChange={e => setCustomHours(e.target.value)}
@@ -601,7 +649,7 @@ export default function TimerPage() {
             label="Duration (minutes)"
             type="number"
             min="1"
-            max="1440"
+            max="720"
             value={logMinutes}
             onChange={e => setLogMinutes(e.target.value)}
           />

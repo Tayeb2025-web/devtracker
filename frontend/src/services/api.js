@@ -17,7 +17,13 @@ api.interceptors.response.use(
   (res) => res.data,
   (err) => {
     const message = err.response?.data?.message || err.message || 'Something went wrong';
-    return Promise.reject(new Error(message));
+    const apiError = new Error(message);
+    apiError.statusCode = err.response?.status;
+    apiError.response = err.response;
+    apiError.code = err.code;
+    apiError.isAxiosError = Boolean(err.isAxiosError);
+    apiError.requestId = err.response?.data?.requestId || err.response?.headers?.['x-request-id'] || null;
+    return Promise.reject(apiError);
   }
 );
 
@@ -49,6 +55,7 @@ export const authApi = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   logout: () => api.post('/auth/logout'),
+  changePassword: (data) => api.post('/auth/password', data),
 };
 
 export const categoryApi = {
@@ -65,8 +72,8 @@ export const goalApi = {
 };
 
 export const statsApi = {
-  get: () => api.get('/stats'),
-  getCalendar: (year) => api.get('/calendar', { params: { year } }),
+  get: (params) => api.get('/stats', { params }),
+  getCalendar: (year, calendar = 'afghan') => api.get('/calendar', { params: { year, calendar } }),
 };
 
 export const achievementApi = {

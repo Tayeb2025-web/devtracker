@@ -1,0 +1,33 @@
+{
+  "observedOn": "2026-10-02",
+  "command": "npm audit --json",
+  "applicationDependenciesModified": false,
+  "countsArePackageEntriesNotIndependentExploits": true,
+  "backend": {
+    "high": 2,
+    "moderate": 3,
+    "total": 5,
+    "reportedPackages": ["body-parser", "engine.io", "express", "multer", "qs"],
+    "selectedLockfileVersions": { "express": "4.22.2", "multer": "2.2.0", "engine.io": "6.6.9" },
+    "allReportedEntriesHaveFixAvailable": true
+  },
+  "frontend": {
+    "high": 5,
+    "moderate": 1,
+    "total": 6,
+    "reportedPackages": ["axios", "dompurify", "nanoid", "postcss", "react-router", "react-router-dom"],
+    "selectedLockfileVersions": { "axios": "1.18.1", "react-router": "7.18.1", "postcss": "8.5.16", "nanoid": "3.3.15", "dompurify": "3.4.11" },
+    "allReportedEntriesHaveFixAvailable": true
+  },
+  "reachabilityNotes": [
+    "Several Axios advisories concern Node HTTP/HTTP2 adapters; frontend uses browser Axios.",
+    "The React Router advisory concerns RSC mode; this frontend uses BrowserRouter.",
+    "PostCSS is part of the build pipeline.",
+    "Package severity is not proof of an exploitable path in this application."
+  ],
+  "exampleAdvisoriesReturnedByNpm": [
+    "https://github.com/advisories/GHSA-2gc4-cqfq-p2gv",
+    "https://github.com/advisories/GHSA-wc9g-mqfw-jrwm",
+    "https://github.com/advisories/GHSA-qwww-vcr4-c8h2"
+  ]
+}

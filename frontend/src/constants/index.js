@@ -66,17 +66,17 @@ export const DEFAULT_CHALLENGES = [
   {
     challenge_key: '7_days',
     challenge_name: '7 Days Streak',
-    challenge_description: 'Study consistently for 7 consecutive days',
+    challenge_description: 'Build a current streak of 7 consecutive study days',
     target_value: 7,
-    unit: 'days',
+    unit: 'streak_days',
     icon: '🔥',
   },
   {
     challenge_key: '30_days',
     challenge_name: '30 Days Challenge',
-    challenge_description: 'Study every day for 30 consecutive days',
+    challenge_description: 'Build a current streak of 30 consecutive study days',
     target_value: 30,
-    unit: 'days',
+    unit: 'streak_days',
     icon: '⚡',
   },
   {
@@ -84,7 +84,7 @@ export const DEFAULT_CHALLENGES = [
     challenge_name: '50 Hours Milestone',
     challenge_description: 'Reach 50 hours of total study time',
     target_value: 50,
-    unit: 'hours',
+    unit: 'lifetime_hours',
     icon: '⏳',
   },
   {
@@ -92,7 +92,7 @@ export const DEFAULT_CHALLENGES = [
     challenge_name: '100 Hours Challenge',
     challenge_description: 'Complete 100 hours of focused study',
     target_value: 100,
-    unit: 'hours',
+    unit: 'lifetime_hours',
     icon: '🎯',
   },
   {
@@ -100,7 +100,7 @@ export const DEFAULT_CHALLENGES = [
     challenge_name: '250 Hours Deep Diver',
     challenge_description: 'Reach 250 hours of total study time',
     target_value: 250,
-    unit: 'hours',
+    unit: 'lifetime_hours',
     icon: '🚀',
   },
   {
@@ -108,7 +108,7 @@ export const DEFAULT_CHALLENGES = [
     challenge_name: '365 Days Challenge',
     challenge_description: 'Study every day for a full year',
     target_value: 365,
-    unit: 'days',
+    unit: 'streak_days',
     icon: '👑',
   },
 ];

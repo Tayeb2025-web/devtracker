@@ -1,29 +1,19 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import dns from 'dns';
 
 dotenv.config();
 
-// Only override DNS servers in local development environments, never on Vercel / serverless
-if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
-  try {
-    dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
-  } catch (e) {
-    // Ignore DNS override errors in restricted environments
-  }
-}
+const MONGODB_URI = process.env.MONGODB_URI;
+const cached = global._mongooseConn || (global._mongooseConn = { conn: null, promise: null });
 
-const MONGODB_URI = process.env.MONGODB_URI || 
-  'mongodb+srv://devtracker_user:HQz9dZ2yv7bcVsZl@cluster0.9xfi3bk.mongodb.net/devtracker?retryWrites=true&w=majority&appName=Cluster0';
-
-let cached = global._mongooseConn;
-if (!cached) {
-  cached = global._mongooseConn = { conn: null, promise: null };
-}
+mongoose.connection.on('disconnected', () => {
+  cached.conn = null;
+  cached.promise = null;
+});
 
 export async function connectDatabase() {
   if (mongoose.connection.readyState === 1) return true;
-  if (cached.conn) return true;
+  if (!MONGODB_URI) throw new Error('MONGODB_URI is required before the API can access data.');
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
@@ -31,29 +21,20 @@ export async function connectDatabase() {
       connectTimeoutMS: 8000,
       socketTimeoutMS: 45000,
       maxPoolSize: 20,
-    }).then((m) => {
-      console.log('✅ Connected to MongoDB Atlas successfully.');
-      cached.conn = m;
-      if (!global._hasRanAvatarMigration) {
-        global._hasRanAvatarMigration = true;
-        import('../models/UserModel.js').then(({ UserModel }) => {
-          UserModel.migrateDefaultAvatars().catch(() => {});
-        }).catch(() => {});
-      }
+    }).then((connection) => {
+      cached.conn = connection;
+      console.log('Connected to MongoDB.');
       return true;
     }).catch((error) => {
       cached.promise = null;
-      console.warn(`⚠️ MongoDB connection warning: ${error.message}`);
-      return false;
+      throw error;
     });
   }
-
   return cached.promise;
 }
 
 export async function checkDatabaseConnection() {
-  if (mongoose.connection.readyState === 1) return true;
-  return connectDatabase();
+  return mongoose.connection.readyState === 1 || connectDatabase();
 }
 
 export default mongoose;

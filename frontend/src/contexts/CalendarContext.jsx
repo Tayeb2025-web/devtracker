@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import { userApi } from '../services/api';
+import { useAuth } from './AuthContextStore';
 import {
   CALENDAR_OPTIONS,
   CALENDAR_TYPES,
@@ -17,6 +18,7 @@ import {
 import { CalendarContext } from './CalendarContextStore';
 
 export function CalendarProvider({ children }) {
+  const { user } = useAuth();
   const [calendar, setCalendarState] = useState(getGlobalCalendarType);
 
   useEffect(() => {
@@ -42,13 +44,21 @@ export function CalendarProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    if (!user?.id) return undefined;
+    if (user.calendar_type && ['afghan', 'iranian', 'gregorian'].includes(user.calendar_type)) {
+      setCalendarState(user.calendar_type);
+      setGlobalCalendarType(user.calendar_type);
+    }
+    let active = true;
     userApi.getProfile().then(res => {
+      if (!active) return;
       if (res.data?.calendar_type && ['afghan', 'iranian', 'gregorian'].includes(res.data.calendar_type)) {
         setCalendarState(res.data.calendar_type);
         setGlobalCalendarType(res.data.calendar_type);
       }
     }).catch(() => {});
-  }, []);
+    return () => { active = false; };
+  }, [user?.id, user?.calendar_type]);
 
   const formatDate = useCallback((val, opts) => (
     formatWithCalendar(val, { calendar, ...opts })

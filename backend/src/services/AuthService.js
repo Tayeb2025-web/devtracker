@@ -12,9 +12,11 @@ export const hashPassword = (password, salt = crypto.randomBytes(16).toString('h
 
 export const verifyPassword = async (password, stored) => {
   const [salt, savedHash] = String(stored || '').split(':');
-  if (!salt || !savedHash) return false;
+  if (!salt || !/^[\da-f]{128}$/i.test(savedHash || '')) return false;
   const comparison = await hashPassword(password, salt);
-  return crypto.timingSafeEqual(Buffer.from(comparison), Buffer.from(stored));
+  const actual = Buffer.from(comparison.split(':')[1], 'hex');
+  const expected = Buffer.from(savedHash, 'hex');
+  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
 };
 
 const publicUser = ({ password_hash, ...user }) => ({
@@ -37,11 +39,9 @@ export const AuthService = {
   async register({ displayName, email, password }) {
     const normalizedEmail = email.trim().toLowerCase();
     const existing = await UserModel.findByEmail(normalizedEmail);
-    if (existing?.password_hash) throw new AppError('An account with this email already exists', 409);
+    if (existing) throw new AppError('An account with this email already exists', 409);
     const passwordHash = await hashPassword(password);
-    // Claim legacy account if present, otherwise create new
-    const user = await UserModel.claimLegacyUser({ displayName: displayName.trim(), email: normalizedEmail, passwordHash })
-      || await UserModel.create({ displayName: displayName.trim(), email: normalizedEmail, passwordHash });
+    const user = await UserModel.create({ displayName: displayName.trim(), email: normalizedEmail, passwordHash });
 
     try {
       const { TechnologyModel } = await import('../models/TechnologyModel.js');
@@ -60,15 +60,30 @@ export const AuthService = {
 
   async login({ email, password }) {
     const normalizedEmail = email.trim().toLowerCase();
-    if (normalizedEmail === 'sayedtayebpuya2024@gmail.com') {
-      await UserModel.ensureAdminAccount();
-    }
     const user = await UserModel.findByEmail(normalizedEmail);
     if (!user || !await verifyPassword(password, user.password_hash)) throw new AppError('Email or password is incorrect', 401);
     const userId = user.id || user._id;
     await UserModel.update(userId, { last_seen_at: new Date() }).catch(() => {});
     user.last_seen_at = new Date();
     return createSession(user);
+  },
+
+  async changePassword(userId, { currentPassword, newPassword }) {
+    const user = await UserModel.findById(userId);
+    if (!user || !await verifyPassword(currentPassword, user.password_hash)) {
+      throw new AppError('Current password is incorrect', 400);
+    }
+    if (currentPassword === newPassword) throw new AppError('Choose a password you have not used before', 400);
+
+    const passwordHash = await hashPassword(newPassword);
+    const updated = await UserModel.updatePassword(user.id, passwordHash);
+    if (!updated) throw new AppError('User account not found', 404);
+
+    const ownerIds = [updated.id, updated._id?.toString(), updated.username, updated.legacy_id]
+      .filter(value => value !== undefined && value !== null)
+      .map(String);
+    await AuthSession.deleteMany({ user_id: { $in: ownerIds } });
+    return createSession(updated);
   },
 
   async logout(token) {

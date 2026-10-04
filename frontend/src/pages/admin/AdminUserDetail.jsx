@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   HiOutlineArrowRight,
@@ -17,8 +17,10 @@ import {
 } from 'react-icons/hi';
 import { adminApi } from '../../services/api';
 import Avatar from '../../components/Avatar';
+import { useAuth } from '../../contexts/AuthContextStore';
 
 export default function AdminUserDetail() {
+  const { user: currentUser } = useAuth();
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ export default function AdminUserDetail() {
   const [activeTab, setActiveTab] = useState('techs'); // 'techs' | 'projects' | 'social' | 'sessions' | 'trend'
   const [roleUpdating, setRoleUpdating] = useState(false);
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -39,11 +41,11 @@ export default function AdminUserDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     loadUser();
-  }, [id]);
+  }, [loadUser]);
 
   const handleRoleToggle = async () => {
     if (!data?.profile) return;
@@ -93,7 +95,7 @@ export default function AdminUserDetail() {
   }
 
   const { profile, study_stats, study_history_14, technologies, projects, social, recent_sessions } = data;
-  const isPrimaryAdmin = profile.email === 'sayedtayebpuya2024@gmail.com';
+  const isSelf = String(profile.id) === String(currentUser?.id);
   const maxHistoryHours = Math.max(1, ...(study_history_14?.map(d => d.hours) || [1]));
 
   const formatPersianDate = (dateStr) => {
@@ -130,7 +132,7 @@ export default function AdminUserDetail() {
           >
             <HiOutlineRefresh size={14} /> تازه‌سازی
           </button>
-          {!isPrimaryAdmin && (
+          {!isSelf && (
             <button
               onClick={handleRoleToggle}
               disabled={roleUpdating}

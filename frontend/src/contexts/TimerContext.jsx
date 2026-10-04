@@ -7,7 +7,20 @@ import { playCompletionChime, startCatAlarm, stopCatAlarm } from '../utils/audio
 
 const STORAGE_KEY = 'devtracker-time-tools';
 const LEGACY_STORAGE_KEY = 'devtracker-timer';
+const USER_KEY = 'devtracker-user';
 const DEFAULT_COUNTDOWN_SECONDS = 25 * 60;
+const MAX_SESSION_SECONDS = 12 * 60 * 60;
+
+const makeSessionId = () => globalThis.crypto?.randomUUID?.()
+  || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+function currentUserId() {
+  if (!localStorage.getItem('devtracker-auth-token')) return null;
+  try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null')?.id || null; }
+  catch { return null; }
+}
+
+const timerStorageKey = (userId) => `${STORAGE_KEY}:${userId || 'guest'}`;
 
 const elapsedSince = (baseSeconds, startedAt) => (
   baseSeconds + Math.max(0, Math.floor((Date.now() - startedAt) / 1000))
@@ -16,6 +29,7 @@ const elapsedSince = (baseSeconds, startedAt) => (
 export function TimerProvider({ children }) {
   const toast = useToast();
   const [restored, setRestored] = useState(false);
+  const storageKeyRef = useRef(timerStorageKey(currentUserId()));
 
   // Stopwatch state. The timestamp is the source of truth while it is running,
   // so throttled browser timers cannot make the displayed time drift.
@@ -28,6 +42,7 @@ export function TimerProvider({ children }) {
   const [sessionDate, setSessionDate] = useState(null);
   const [elapsedBeforeStart, setElapsedBeforeStart] = useState(0);
   const [startedAt, setStartedAt] = useState(null);
+  const [clientSessionId, setClientSessionId] = useState(null);
 
   // Countdown timer state. Its deadline lets it keep correct time even while
   // the tab is hidden, minimized, or temporarily suspended by the browser.
@@ -40,68 +55,79 @@ export function TimerProvider({ children }) {
   const [countdownDeadline, setCountdownDeadline] = useState(null);
   const [countdownStartTime, setCountdownStartTime] = useState(null);
   const [countdownSessionDate, setCountdownSessionDate] = useState(null);
+  const [countdownClientSessionId, setCountdownClientSessionId] = useState(null);
+  const [countdownKind, setCountdownKind] = useState('focus');
   const [isAlarmActive, setIsAlarmActive] = useState(false);
 
   const audioContextRef = useRef(null);
-  const alarmNodesRef = useRef(null);
+  const secondsRef = useRef(seconds);
+  const countdownRemainingRef = useRef(countdownRemainingSeconds);
   const stopwatchSavingRef = useRef(false);
   const countdownCompletingRef = useRef(false);
 
+  useEffect(() => { secondsRef.current = seconds; }, [seconds]);
+  useEffect(() => { countdownRemainingRef.current = countdownRemainingSeconds; }, [countdownRemainingSeconds]);
+
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
-      const data = JSON.parse(saved || legacy || 'null');
+    const restore = (userId, adoptLegacy = false) => {
+      setRestored(false);
+      storageKeyRef.current = timerStorageKey(userId);
+      try {
+        const saved = localStorage.getItem(storageKeyRef.current);
+        const legacy = adoptLegacy ? localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) : null;
+        const data = JSON.parse(saved || legacy || 'null');
+        setSeconds(0); setStatus('idle'); setTechnologyId(null); setProjectId(null); setNote('');
+        setStartTime(null); setSessionDate(null); setElapsedBeforeStart(0); setStartedAt(null); setClientSessionId(null);
+        setCountdownRemainingSeconds(DEFAULT_COUNTDOWN_SECONDS); setCountdownTotalSeconds(DEFAULT_COUNTDOWN_SECONDS);
+        setCountdownStatus('idle'); setCountdownTechnologyId(null); setCountdownProjectId(null); setCountdownNote('');
+        setCountdownDeadline(null); setCountdownStartTime(null); setCountdownSessionDate(null);
+        setCountdownClientSessionId(null); setCountdownKind('focus'); setIsAlarmActive(false);
 
-      if (data?.stopwatch) {
-        const stopwatch = data.stopwatch;
-        setSeconds(stopwatch.seconds || 0);
-        setStatus(stopwatch.status || 'idle');
-        setTechnologyId(stopwatch.technologyId ?? null);
-        setProjectId(stopwatch.projectId ?? null);
-        setNote(stopwatch.note || '');
-        setStartTime(stopwatch.startTime || null);
-        setSessionDate(stopwatch.sessionDate || null);
-        setElapsedBeforeStart(stopwatch.elapsedBeforeStart || 0);
-        setStartedAt(stopwatch.startedAt || null);
-      } else if (data) {
-        // Keep sessions started with the previous stopwatch implementation.
-        setSeconds(data.seconds || 0);
-        setStatus(data.status || 'idle');
-        setTechnologyId(data.technologyId ?? null);
-        setNote(data.note || '');
-        setStartTime(data.startTime || null);
-        setSessionDate(data.sessionDate || null);
-        setElapsedBeforeStart(data.seconds || 0);
-        setStartedAt(null);
-        if (data.status === 'running') setStatus('paused');
+        if (data?.stopwatch) {
+          const stopwatch = data.stopwatch;
+          setSeconds(stopwatch.seconds || 0); setStatus(stopwatch.status || 'idle');
+          setTechnologyId(stopwatch.technologyId ?? null); setProjectId(stopwatch.projectId ?? null);
+          setNote(stopwatch.note || ''); setStartTime(stopwatch.startTime || null); setSessionDate(stopwatch.sessionDate || null);
+          setElapsedBeforeStart(stopwatch.elapsedBeforeStart || 0); setStartedAt(stopwatch.startedAt || null);
+          setClientSessionId(stopwatch.clientSessionId || (stopwatch.status !== 'idle' ? makeSessionId() : null));
+        } else if (data) {
+          setSeconds(data.seconds || 0); setStatus(data.status === 'running' ? 'paused' : (data.status || 'idle'));
+          setTechnologyId(data.technologyId ?? null); setNote(data.note || ''); setStartTime(data.startTime || null);
+          setSessionDate(data.sessionDate || null); setElapsedBeforeStart(data.seconds || 0); setStartedAt(null);
+          setClientSessionId(data.status !== 'idle' ? makeSessionId() : null);
+        }
+        if (data?.countdown) {
+          const countdown = data.countdown;
+          setCountdownRemainingSeconds(countdown.remainingSeconds ?? DEFAULT_COUNTDOWN_SECONDS);
+          setCountdownTotalSeconds(countdown.totalSeconds ?? DEFAULT_COUNTDOWN_SECONDS);
+          setCountdownStatus(countdown.status || 'idle'); setCountdownTechnologyId(countdown.technologyId ?? null);
+          setCountdownProjectId(countdown.projectId ?? null); setCountdownNote(countdown.note || '');
+          setCountdownDeadline(countdown.deadline || null); setCountdownStartTime(countdown.startTime || null);
+          setCountdownSessionDate(countdown.sessionDate || null);
+          setCountdownClientSessionId(countdown.clientSessionId || (countdown.status !== 'idle' ? makeSessionId() : null));
+          setCountdownKind(countdown.kind || 'focus');
+        }
+        if (!saved && legacy) localStorage.setItem(storageKeyRef.current, legacy);
+        if (adoptLegacy && legacy) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(LEGACY_STORAGE_KEY); }
+      } catch {
+        // An unreadable saved timer should never stop the app from loading.
+      } finally {
+        setRestored(true);
       }
+    };
 
-      if (data?.countdown) {
-        const countdown = data.countdown;
-        setCountdownRemainingSeconds(countdown.remainingSeconds ?? DEFAULT_COUNTDOWN_SECONDS);
-        setCountdownTotalSeconds(countdown.totalSeconds ?? DEFAULT_COUNTDOWN_SECONDS);
-        setCountdownStatus(countdown.status || 'idle');
-        setCountdownTechnologyId(countdown.technologyId ?? null);
-        setCountdownProjectId(countdown.projectId ?? null);
-        setCountdownNote(countdown.note || '');
-        setCountdownDeadline(countdown.deadline || null);
-        setCountdownStartTime(countdown.startTime || null);
-        setCountdownSessionDate(countdown.sessionDate || null);
-      }
-    } catch {
-      // An unreadable saved timer should never stop the app from loading.
-    } finally {
-      setRestored(true);
-    }
+    restore(currentUserId(), true);
+    const onAccountChange = (event) => restore(event.detail?.userId || null, false);
+    window.addEventListener('devtracker-auth-user-changed', onAccountChange);
+    return () => window.removeEventListener('devtracker-auth-user-changed', onAccountChange);
   }, []);
 
   useEffect(() => {
     if (!restored) return;
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    localStorage.setItem(storageKeyRef.current, JSON.stringify({
       stopwatch: {
-        seconds,
+        seconds: secondsRef.current,
         status,
         technologyId,
         projectId,
@@ -110,9 +136,10 @@ export function TimerProvider({ children }) {
         sessionDate,
         elapsedBeforeStart,
         startedAt,
+        clientSessionId,
       },
       countdown: {
-        remainingSeconds: countdownRemainingSeconds,
+        remainingSeconds: countdownRemainingRef.current,
         totalSeconds: countdownTotalSeconds,
         status: countdownStatus,
         technologyId: countdownTechnologyId,
@@ -121,25 +148,37 @@ export function TimerProvider({ children }) {
         deadline: countdownDeadline,
         startTime: countdownStartTime,
         sessionDate: countdownSessionDate,
+        clientSessionId: countdownClientSessionId,
+        kind: countdownKind,
       },
     }));
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
   }, [
-    restored, seconds, status, technologyId, projectId, note, startTime, sessionDate,
-    elapsedBeforeStart, startedAt, countdownRemainingSeconds, countdownTotalSeconds,
+    restored, status, technologyId, projectId, note, startTime, sessionDate,
+    elapsedBeforeStart, startedAt, clientSessionId, countdownTotalSeconds,
     countdownStatus, countdownTechnologyId, countdownProjectId, countdownNote, countdownDeadline,
-    countdownStartTime, countdownSessionDate,
+    countdownStartTime, countdownSessionDate, countdownClientSessionId, countdownKind,
   ]);
 
   const getStopwatchSeconds = useCallback(() => {
     if (status !== 'running' || !startedAt) return seconds;
-    return elapsedSince(elapsedBeforeStart, startedAt);
+    return Math.min(MAX_SESSION_SECONDS, elapsedSince(elapsedBeforeStart, startedAt));
   }, [status, startedAt, elapsedBeforeStart, seconds]);
 
   useEffect(() => {
     if (!restored || status !== 'running' || !startedAt) return undefined;
 
-    const sync = () => setSeconds(elapsedSince(elapsedBeforeStart, startedAt));
+    const sync = () => {
+      const elapsed = elapsedSince(elapsedBeforeStart, startedAt);
+      if (elapsed >= MAX_SESSION_SECONDS) {
+        setSeconds(MAX_SESSION_SECONDS);
+        setElapsedBeforeStart(MAX_SESSION_SECONDS);
+        setStartedAt(null);
+        setStatus('paused');
+        toast.info('The 12-hour session limit was reached. Save the session or reset the stopwatch.');
+        return;
+      }
+      setSeconds(elapsed);
+    };
     sync();
     const interval = window.setInterval(sync, 1000);
     document.addEventListener('visibilitychange', sync);
@@ -148,7 +187,7 @@ export function TimerProvider({ children }) {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', sync);
     };
-  }, [restored, status, startedAt, elapsedBeforeStart]);
+  }, [restored, status, startedAt, elapsedBeforeStart, toast]);
 
   const prepareAlarm = useCallback(() => {
     try {
@@ -190,6 +229,8 @@ export function TimerProvider({ children }) {
     sessionNote,
     savedStartTime,
     savedSessionDate,
+    sessionId,
+    kind = 'focus',
   }) => {
     const durationMinutes = Math.floor(durationSeconds / 60);
     if (durationMinutes < 1) {
@@ -206,6 +247,9 @@ export function TimerProvider({ children }) {
       duration_minutes: durationMinutes,
       duration_hours: Number((durationMinutes / 60).toFixed(4)),
       note: sessionNote || null,
+      client_session_id: sessionId,
+      source: 'timer',
+      kind,
     });
 
     window.dispatchEvent(new Event('devtracker-session-saved'));
@@ -213,6 +257,14 @@ export function TimerProvider({ children }) {
   }, []);
 
   const start = useCallback((options = {}) => {
+    if (status !== 'idle') {
+      toast.warning('Save or reset the current stopwatch before starting another session');
+      return;
+    }
+    if (countdownStatus !== 'idle') {
+      toast.warning('Finish or reset the countdown before starting another timer');
+      return;
+    }
     const sessionTechnologyId = options.technologyId ?? technologyId;
     const sessionProjectId = options.projectId ?? projectId;
     if (!sessionTechnologyId && !sessionProjectId) {
@@ -229,8 +281,9 @@ export function TimerProvider({ children }) {
     setStartedAt(Date.now());
     setStartTime(formatLocalTime(now));
     setSessionDate(formatLocalDate(now));
+    setClientSessionId(makeSessionId());
     setStatus('running');
-  }, [technologyId, projectId, toast]);
+  }, [status, technologyId, projectId, countdownStatus, toast]);
 
   const pause = useCallback(() => {
     const elapsed = getStopwatchSeconds();
@@ -241,19 +294,27 @@ export function TimerProvider({ children }) {
   }, [getStopwatchSeconds]);
 
   const resume = useCallback(() => {
+    if (countdownStatus !== 'idle') return;
+    if (getStopwatchSeconds() >= MAX_SESSION_SECONDS) {
+      toast.warning('This session reached the 12-hour limit. Save it or reset the stopwatch first.');
+      return;
+    }
+    setElapsedBeforeStart(getStopwatchSeconds());
     setStartedAt(Date.now());
     setStatus('running');
-  }, []);
+  }, [countdownStatus, getStopwatchSeconds, toast]);
 
   const reset = useCallback(() => {
+    if ((status !== 'idle' || seconds > 0) && !window.confirm('Discard this unsaved stopwatch session?')) return;
     setSeconds(0);
     setStatus('idle');
     setElapsedBeforeStart(0);
     setStartedAt(null);
     setStartTime(null);
     setSessionDate(null);
+    setClientSessionId(null);
     setNote('');
-  }, []);
+  }, [status, seconds]);
 
   const stop = useCallback(async () => {
     if (stopwatchSavingRef.current) return null;
@@ -278,6 +339,7 @@ export function TimerProvider({ children }) {
         sessionNote: note,
         savedStartTime: startTime,
         savedSessionDate: sessionDate,
+        sessionId: clientSessionId,
       });
       const xpText = result?.xpEarned ? ` +${result.xpEarned} XP earned` : '';
       toast.success(`Session saved!${xpText}`);
@@ -289,7 +351,7 @@ export function TimerProvider({ children }) {
     } finally {
       stopwatchSavingRef.current = false;
     }
-  }, [getStopwatchSeconds, technologyId, projectId, note, startTime, sessionDate, saveSession, toast, reset]);
+  }, [getStopwatchSeconds, technologyId, projectId, note, startTime, sessionDate, clientSessionId, saveSession, toast, reset]);
 
   const countdownLeft = useCallback(() => {
     if (countdownStatus !== 'running' || !countdownDeadline) return countdownRemainingSeconds;
@@ -302,6 +364,8 @@ export function TimerProvider({ children }) {
     setCountdownRemainingSeconds(countdownTotalSeconds);
     setCountdownStartTime(null);
     setCountdownSessionDate(null);
+    setCountdownClientSessionId(null);
+    setCountdownKind('focus');
     setCountdownNote('');
   }, [countdownTotalSeconds]);
 
@@ -313,6 +377,12 @@ export function TimerProvider({ children }) {
     setCountdownDeadline(null);
     setCountdownRemainingSeconds(0);
     playCompletionChime();
+    if (countdownKind === 'break') {
+      toast.success('Break complete — ready when you are.');
+      clearCompletedCountdown();
+      countdownCompletingRef.current = false;
+      return;
+    }
     startAlarm();
     toast.info('Timer complete — saving your study time…');
 
@@ -324,6 +394,8 @@ export function TimerProvider({ children }) {
         sessionNote: countdownNote,
         savedStartTime: countdownStartTime,
         savedSessionDate: countdownSessionDate,
+        sessionId: countdownClientSessionId,
+        kind: countdownKind,
       });
       const xpText = result?.xpEarned ? ` (+${result.xpEarned} XP)` : '';
       toast.success(`Timer complete! ${Math.floor(countdownTotalSeconds / 60)} minutes saved${xpText}`);
@@ -335,7 +407,7 @@ export function TimerProvider({ children }) {
     }
   }, [
     countdownTotalSeconds, countdownTechnologyId, countdownProjectId, countdownNote, countdownStartTime,
-    countdownSessionDate, startAlarm, toast, saveSession, clearCompletedCountdown,
+    countdownSessionDate, countdownClientSessionId, countdownKind, startAlarm, toast, saveSession, clearCompletedCountdown,
   ]);
 
   useEffect(() => {
@@ -358,24 +430,33 @@ export function TimerProvider({ children }) {
   }, [restored, countdownStatus, countdownDeadline, finishCountdown]);
 
   const setCountdownDuration = useCallback((totalSeconds) => {
-    const normalized = Math.max(60, Math.floor(Number(totalSeconds) || 0));
+    const normalized = Math.min(MAX_SESSION_SECONDS, Math.max(60, Math.floor(Number(totalSeconds) || 0)));
     if (countdownStatus !== 'idle') return;
     setCountdownTotalSeconds(normalized);
     setCountdownRemainingSeconds(normalized);
   }, [countdownStatus]);
 
   const startCountdown = useCallback((durationSeconds = countdownTotalSeconds, options = {}) => {
+    if (status !== 'idle') {
+      toast.warning('Finish or reset the stopwatch before starting another timer');
+      return;
+    }
+    if (countdownStatus !== 'idle') {
+      toast.warning('Finish or reset the current countdown first');
+      return;
+    }
     const totalSeconds = Math.floor(Number(durationSeconds) || 0);
+    const kind = options.kind || countdownKind;
     const sessionTechnologyId = options.technologyId ?? countdownTechnologyId;
     const sessionProjectId = options.projectId ?? countdownProjectId;
     const sessionNote = options.note ?? countdownNote;
 
-    if (!sessionTechnologyId && !sessionProjectId) {
+    if (kind !== 'break' && !sessionTechnologyId && !sessionProjectId) {
       toast.warning('Please select a technology or project first');
       return;
     }
-    if (totalSeconds < 60) {
-      toast.warning('Timer must be at least 1 minute');
+    if (totalSeconds < 60 || totalSeconds > MAX_SESSION_SECONDS) {
+      toast.warning('Timer must be between 1 minute and 12 hours');
       return;
     }
 
@@ -390,8 +471,10 @@ export function TimerProvider({ children }) {
     setCountdownDeadline(Date.now() + totalSeconds * 1000);
     setCountdownStartTime(formatLocalTime(now));
     setCountdownSessionDate(formatLocalDate(now));
+    setCountdownClientSessionId(makeSessionId());
+    setCountdownKind(kind);
     setCountdownStatus('running');
-  }, [countdownTotalSeconds, countdownTechnologyId, countdownProjectId, countdownNote, prepareAlarm, toast]);
+  }, [status, countdownStatus, countdownTotalSeconds, countdownTechnologyId, countdownProjectId, countdownNote, countdownKind, prepareAlarm, toast]);
 
   const pauseCountdown = useCallback(() => {
     const remaining = countdownLeft();
@@ -401,11 +484,12 @@ export function TimerProvider({ children }) {
   }, [countdownLeft]);
 
   const resumeCountdown = useCallback(() => {
+    if (status !== 'idle') return;
     if (countdownRemainingSeconds <= 0) return;
     prepareAlarm();
     setCountdownDeadline(Date.now() + countdownRemainingSeconds * 1000);
     setCountdownStatus('running');
-  }, [countdownRemainingSeconds, prepareAlarm]);
+  }, [status, countdownRemainingSeconds, prepareAlarm]);
 
   const stopCountdown = useCallback(async () => {
     const remaining = countdownLeft();
@@ -419,6 +503,11 @@ export function TimerProvider({ children }) {
     setCountdownDeadline(null);
     setCountdownStatus('paused');
 
+    if (countdownKind === 'break') {
+      clearCompletedCountdown();
+      return { xpEarned: 0 };
+    }
+
     try {
       const result = await saveSession({
         durationSeconds: elapsed,
@@ -427,6 +516,8 @@ export function TimerProvider({ children }) {
         sessionNote: countdownNote,
         savedStartTime: countdownStartTime,
         savedSessionDate: countdownSessionDate,
+        sessionId: countdownClientSessionId,
+        kind: countdownKind,
       });
       const xpText = result?.xpEarned ? ` +${result.xpEarned} XP earned` : '';
       toast.success(`Timer session saved!${xpText}`);
@@ -438,17 +529,22 @@ export function TimerProvider({ children }) {
     }
   }, [
     countdownLeft, countdownTotalSeconds, countdownTechnologyId, countdownProjectId, countdownNote,
-    countdownStartTime, countdownSessionDate, toast, saveSession, clearCompletedCountdown,
+    countdownStartTime, countdownSessionDate, countdownClientSessionId, countdownKind, toast, saveSession, clearCompletedCountdown,
   ]);
 
   const resetCountdown = useCallback(() => {
+    const hasUnsavedFocusTime = countdownKind === 'focus'
+      && (countdownStatus !== 'idle' || countdownRemainingSeconds < countdownTotalSeconds);
+    if (hasUnsavedFocusTime && !window.confirm('Discard this unsaved study timer?')) return;
     setCountdownStatus('idle');
     setCountdownDeadline(null);
     setCountdownRemainingSeconds(countdownTotalSeconds);
     setCountdownStartTime(null);
     setCountdownSessionDate(null);
+    setCountdownClientSessionId(null);
+    setCountdownKind('focus');
     setCountdownNote('');
-  }, [countdownTotalSeconds]);
+  }, [countdownKind, countdownRemainingSeconds, countdownStatus, countdownTotalSeconds]);
 
   return (
     <TimerContext.Provider value={{
@@ -479,6 +575,8 @@ export function TimerProvider({ children }) {
         technologyId: countdownTechnologyId,
         projectId: countdownProjectId,
         note: countdownNote,
+        kind: countdownKind,
+        setKind: setCountdownKind,
         setTechnologyId: setCountdownTechnologyId,
         setProjectId: setCountdownProjectId,
         setNote: setCountdownNote,

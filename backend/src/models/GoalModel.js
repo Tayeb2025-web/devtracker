@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
-import { DEFAULT_USER_ID, XP_PER_HOUR } from '../config/constants.js';
+import { DEFAULT_DAILY_GOAL, DEFAULT_USER_ID, XP_PER_HOUR } from '../config/constants.js';
 import { formatLocalDate, shiftLocalDate } from '../utils/date.js';
 import { getTargetUserIds } from '../utils/userHelper.js';
+import { calculateChallengeProgress } from '../utils/domainRules.js';
 
 // DailyGoal Schema
 const DailyGoalSchema = new mongoose.Schema({
   user_id: { type: String, required: true, index: true },
-  target_hours: { type: Number, default: 10.0 },
+  target_hours: { type: Number, default: DEFAULT_DAILY_GOAL },
   effective_date: { type: String, default: null },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 export const DailyGoal = mongoose.models.DailyGoal || mongoose.model('DailyGoal', DailyGoalSchema);
@@ -39,6 +40,10 @@ const XpHistorySchema = new mongoose.Schema({
   description: { type: String, default: null },
 }, { timestamps: { createdAt: 'created_at', updatedAt: false } });
 XpHistorySchema.index({ user_id: 1, created_at: 1 });
+XpHistorySchema.index({ user_id: 1, session_id: 1 }, {
+  unique: true,
+  partialFilterExpression: { session_id: { $type: 'string' }, source: 'study' },
+});
 export const XpHistory = mongoose.models.XpHistory || mongoose.model('XpHistory', XpHistorySchema);
 
 // Achievement Schema
@@ -61,7 +66,7 @@ const ChallengeSchema = new mongoose.Schema({
   challenge_description: { type: String, default: null },
   target_value: { type: Number, required: true },
   current_value: { type: Number, default: 0 },
-  unit: { type: String, default: 'days' },
+  unit: { type: String, enum: ['hours', 'days', 'lifetime_hours', 'streak_days'], default: 'hours' },
   status: { type: String, enum: ['active', 'completed', 'failed'], default: 'active' },
   started_at: { type: Date, default: Date.now },
   completed_at: { type: Date, default: null },
@@ -85,7 +90,7 @@ export const GoalModel = {
     const row = await DailyGoal.findOne({
       user_id: { $in: userIds }
     }).sort({ created_at: -1 }).lean();
-    return row || { target_hours: 10 };
+    return row || { target_hours: DEFAULT_DAILY_GOAL };
   },
 
   async update(targetHours, userId = DEFAULT_USER_ID) {
@@ -162,51 +167,31 @@ export const LevelModel = {
   },
 
   async addXp(amount, sessionId, userId = DEFAULT_USER_ID) {
-    const level = await this.get(userId);
-    let totalXp = (level.total_xp || 0) + Number(amount);
-    let currentLevel = 1;
-    let xpToNext = 1000;
-    let remaining = totalXp;
-
-    while (remaining >= xpToNext) {
-      remaining -= xpToNext;
-      currentLevel++;
-      xpToNext = currentLevel * 1000;
-    }
-
+    if (!sessionId) throw new Error('A session ID is required to award XP');
     const userIds = await getTargetUserIds(userId);
-    const updated = await Level.findOneAndUpdate(
-      { user_id: { $in: userIds } },
-      {
-        user_id: String(userId),
-        current_level: currentLevel,
-        current_xp: remaining,
-        total_xp: totalXp,
-        xp_to_next_level: xpToNext,
-      },
-      { new: true, upsert: true }
-    ).lean();
-
-    await XpHistory.create({
-      user_id: String(userId),
-      session_id: sessionId ? String(sessionId) : null,
-      xp_amount: Number(amount),
-      source: 'study',
-      description: `Earned ${amount} XP from study session`,
-    });
-
-    return updated;
+    try {
+      await XpHistory.updateOne(
+        { user_id: String(userId), session_id: String(sessionId), source: 'study' },
+        { $setOnInsert: {
+          user_id: String(userId), session_id: String(sessionId), xp_amount: Number(amount), source: 'study',
+          description: `Earned ${amount} XP from study session`,
+        } },
+        { upsert: true },
+      );
+    } catch (error) {
+      if (error.code !== 11000) throw error;
+    }
+    return this.recalculate(userId, userIds);
   },
 
-  async recalculate(userId = DEFAULT_USER_ID) {
+  async recalculate(userId = DEFAULT_USER_ID, resolvedUserIds = null) {
     const { StudySession } = await import('./SessionModel.js');
-    const userIds = await getTargetUserIds(userId);
-    const agg = await StudySession.aggregate([
-      { $match: { user_id: { $in: userIds } } },
-      { $group: { _id: null, totalHours: { $sum: '$duration_hours' } } }
-    ]);
-    const totalHours = agg[0]?.totalHours || 0;
-    const totalXp = Math.round(totalHours * XP_PER_HOUR);
+    const userIds = resolvedUserIds || await getTargetUserIds(userId);
+    const sessions = await StudySession.find({ user_id: { $in: userIds } }).select('duration_minutes duration_hours').lean();
+    const totalXp = sessions.reduce((total, session) => {
+      const minutes = Number(session.duration_minutes) || Number(session.duration_hours) * 60 || 0;
+      return total + Math.round((minutes / 60) * XP_PER_HOUR);
+    }, 0);
 
     let currentLevel = 1;
     let xpToNext = 1000;
@@ -273,44 +258,44 @@ export const DEFAULT_CHALLENGES = [
   {
     challenge_key: '7_days',
     challenge_name: '7 Days Streak',
-    challenge_description: 'Study consistently for 7 consecutive days',
+    challenge_description: 'Build a current streak of 7 consecutive study days',
     target_value: 7,
-    unit: 'days',
+    unit: 'streak_days',
   },
   {
     challenge_key: '30_days',
     challenge_name: '30 Days Challenge',
-    challenge_description: 'Study every day for 30 consecutive days',
+    challenge_description: 'Build a current streak of 30 consecutive study days',
     target_value: 30,
-    unit: 'days',
+    unit: 'streak_days',
   },
   {
     challenge_key: '50_hours',
     challenge_name: '50 Hours Milestone',
     challenge_description: 'Reach 50 hours of total study time',
     target_value: 50,
-    unit: 'hours',
+    unit: 'lifetime_hours',
   },
   {
     challenge_key: '100_hours',
     challenge_name: '100 Hours Challenge',
     challenge_description: 'Complete 100 hours of focused study',
     target_value: 100,
-    unit: 'hours',
+    unit: 'lifetime_hours',
   },
   {
     challenge_key: '250_hours',
     challenge_name: '250 Hours Deep Diver',
     challenge_description: 'Reach 250 hours of total study time',
     target_value: 250,
-    unit: 'hours',
+    unit: 'lifetime_hours',
   },
   {
     challenge_key: '365_days',
     challenge_name: '365 Days Challenge',
     challenge_description: 'Study every day for a full year',
     target_value: 365,
-    unit: 'days',
+    unit: 'streak_days',
   },
 ];
 
@@ -328,14 +313,16 @@ export const ChallengeModel = {
             $setOnInsert: {
               user_id: String(userId),
               challenge_key: def.challenge_key,
-              challenge_name: def.challenge_name,
-              challenge_description: def.challenge_description,
-              target_value: def.target_value,
               current_value: 0,
-              unit: def.unit,
               status: 'active',
               started_at: new Date(),
               completed_at: null,
+            },
+            $set: {
+              challenge_name: def.challenge_name,
+              challenge_description: def.challenge_description,
+              target_value: def.target_value,
+              unit: def.unit,
             }
           },
           { upsert: true }
@@ -385,14 +372,8 @@ export const ChallengeModel = {
   async updateProgress(userId = DEFAULT_USER_ID) {
     const { StudySession } = await import('./SessionModel.js');
     const userIds = await getTargetUserIds(userId);
-    const agg = await StudySession.aggregate([
-      { $match: { user_id: { $in: userIds } } },
-      { $group: { _id: null, total: { $sum: '$duration_hours' } } }
-    ]);
-    const totalHours = Math.floor(agg[0]?.total || 0);
-
+    const sessions = await StudySession.find({ user_id: { $in: userIds } }).select('session_date duration_hours').lean();
     const streak = await StreakModel.get(userId);
-    const streakValue = Math.max(streak.current_streak || 0, streak.longest_streak || 0);
 
     const allChallenges = await Challenge.find({
       user_id: { $in: userIds }
@@ -400,19 +381,21 @@ export const ChallengeModel = {
 
     for (const challenge of allChallenges) {
       try {
-        let currentValue = challenge.current_value || 0;
-        if (challenge.unit === 'hours') {
-          currentValue = totalHours;
-        } else if (challenge.unit === 'days') {
-          currentValue = streakValue;
-        }
+        const fromDate = formatLocalDate(challenge.started_at || new Date());
+        const currentValue = calculateChallengeProgress({
+          unit: challenge.unit,
+          challengeKey: challenge.challenge_key,
+          sessions,
+          currentStreak: streak.current_streak,
+          fromDate,
+        });
 
         const isCompleted = currentValue >= challenge.target_value;
-        const updateFields = { current_value: currentValue };
-        if (isCompleted && challenge.status !== 'completed') {
-          updateFields.status = 'completed';
-          updateFields.completed_at = new Date();
-        }
+        const updateFields = {
+          current_value: currentValue,
+          status: isCompleted ? 'completed' : 'active',
+          completed_at: isCompleted ? (challenge.completed_at || new Date()) : null,
+        };
 
         await Challenge.updateOne({ _id: challenge._id }, { $set: updateFields });
       } catch (e) {

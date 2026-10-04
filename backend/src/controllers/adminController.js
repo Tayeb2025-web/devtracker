@@ -1,13 +1,14 @@
 import mongoose from 'mongoose';
-import { User, UserModel, getDeterministicAvatar } from '../models/UserModel.js';
+import { AuthSession, User, UserModel, getDeterministicAvatar } from '../models/UserModel.js';
 import { StudySession } from '../models/SessionModel.js';
 import { Technology } from '../models/TechnologyModel.js';
 import { Project } from '../models/ProjectModel.js';
-import { UserFollow } from '../models/SocialModel.js';
+import { TechnologyCategory } from '../models/CategoryModel.js';
+import { Achievement, Challenge, DailyGoal, DailyNote, Level, Streak, XpHistory } from '../models/GoalModel.js';
+import { DirectConversation, DirectMessage, LeagueMembership, LeagueMessage, UserFollow } from '../models/SocialModel.js';
 import { AppError, asyncHandler } from '../middlewares/errorHandler.js';
+import { AdminAuditLog, recordAdminAudit } from '../models/AdminAuditModel.js';
 import { formatLocalDate, shiftLocalDate, getLocalWeekRange, getLocalMonthStart } from '../utils/date.js';
-
-const MASTER_ADMIN_EMAIL = 'sayedtayebpuya2024@gmail.com';
 
 function resolveAvatar(avatarUrl, seed) {
   if (avatarUrl && avatarUrl !== '/images/profile.jpg') return avatarUrl;
@@ -179,6 +180,12 @@ export const getAdminOverview = asyncHandler(async (req, res) => {
     };
   });
 
+  const recentAdminActions = await AdminAuditLog.find()
+    .sort({ created_at: -1, _id: -1 })
+    .limit(10)
+    .select('actor_username action target_user_id target_username details request_id created_at')
+    .lean();
+
   res.json({
     status: 'success',
     data: {
@@ -202,6 +209,7 @@ export const getAdminOverview = asyncHandler(async (req, res) => {
       studyTrend14,
       popularTechnologies,
       recentActivity,
+      recentAdminActions,
     },
   });
 });
@@ -660,11 +668,26 @@ export const updateUserRole = asyncHandler(async (req, res) => {
   const user = await UserModel.findById(id);
   if (!user) throw new AppError('User not found', 404);
 
-  if (user.email === MASTER_ADMIN_EMAIL && role !== 'admin') {
-    throw new AppError('Cannot demote the primary master admin account', 403);
+  if (user.id === String(req.user.id) && role !== 'admin') {
+    throw new AppError('You cannot remove your own administrator access', 403);
   }
-
-  const updated = await UserModel.update(id, { role });
+  if (user.role === 'admin' && role !== 'admin') {
+    const otherAdmins = await User.countDocuments({ role: 'admin', _id: { $ne: user.id } });
+    if (otherAdmins === 0) throw new AppError('At least one administrator account must remain', 409);
+  }
+  const updated = await User.findByIdAndUpdate(user.id, { role }, { new: true, runValidators: true }).lean();
+  if ((user.role || 'user') !== role) {
+    await recordAdminAudit({
+      actor_user_id: String(req.user.id),
+      actor_username: req.user.username || 'admin',
+      action: 'user.role.updated',
+      target_user_id: user.id,
+      target_username: user.username,
+      details: { previousRole: user.role || 'user', role },
+      request_id: req.requestId || null,
+    });
+  }
+  if (updated) { updated.id = updated._id.toString(); delete updated.password_hash; }
   res.json({
     status: 'success',
     message: `User role updated to ${role} successfully`,
@@ -677,21 +700,50 @@ export const deleteUser = asyncHandler(async (req, res) => {
   const user = await UserModel.findById(id);
   if (!user) throw new AppError('User not found', 404);
 
-  if (user.email === MASTER_ADMIN_EMAIL) {
-    throw new AppError('Cannot delete the primary master admin account', 403);
+  if (user.id === String(req.user.id)) throw new AppError('You cannot delete your own administrator account', 403);
+  if (user.role === 'admin' && await User.countDocuments({ role: 'admin', _id: { $ne: user.id } }) === 0) {
+    throw new AppError('At least one administrator account must remain', 409);
   }
 
   const matchIds = [user.id];
   if (user.legacy_id) matchIds.push(String(user.legacy_id));
   if (user.username) matchIds.push(user.username);
 
+  const conversations = await DirectConversation.find({
+    $or: [{ user_low_id: { $in: matchIds } }, { user_high_id: { $in: matchIds } }],
+  }).select('_id').lean();
+  const conversationIds = conversations.map(conversation => conversation._id.toString());
+
   await Promise.all([
     User.findByIdAndDelete(user.id),
+    AuthSession.deleteMany({ user_id: { $in: matchIds } }),
     StudySession.deleteMany({ user_id: { $in: matchIds } }),
     Technology.deleteMany({ user_id: { $in: matchIds } }),
     Project.deleteMany({ user_id: { $in: matchIds } }),
+    TechnologyCategory.deleteMany({ user_id: { $in: matchIds } }),
+    DailyGoal.deleteMany({ user_id: { $in: matchIds } }),
+    Streak.deleteMany({ user_id: { $in: matchIds } }),
+    Level.deleteMany({ user_id: { $in: matchIds } }),
+    XpHistory.deleteMany({ user_id: { $in: matchIds } }),
+    Achievement.deleteMany({ user_id: { $in: matchIds } }),
+    Challenge.deleteMany({ user_id: { $in: matchIds } }),
+    DailyNote.deleteMany({ user_id: { $in: matchIds } }),
+    LeagueMembership.deleteMany({ user_id: { $in: matchIds } }),
+    LeagueMessage.deleteMany({ sender_id: { $in: matchIds } }),
+    DirectMessage.deleteMany({ conversation_id: { $in: conversationIds } }),
+    DirectConversation.deleteMany({ _id: { $in: conversationIds } }),
     UserFollow.deleteMany({ $or: [{ follower_id: { $in: matchIds } }, { following_id: { $in: matchIds } }] }),
   ]);
+
+  await recordAdminAudit({
+    actor_user_id: String(req.user.id),
+    actor_username: req.user.username || 'admin',
+    action: 'user.deleted',
+    target_user_id: user.id,
+    target_username: user.username,
+    details: { role: user.role || 'user' },
+    request_id: req.requestId || null,
+  });
 
   res.json({
     status: 'success',
@@ -848,4 +900,3 @@ export const scanDatabase = asyncHandler(async (req, res) => {
     data: result,
   });
 });
-

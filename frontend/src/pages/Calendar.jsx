@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { sessionApi } from '../services/api';
+import { sessionApi, statsApi } from '../services/api';
 import { Card, LoadingSpinner, StatCard, Modal, Badge } from '../components/ui';
 import ContributionCalendar from '../components/ContributionCalendar';
 import { HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineSparkles, HiOutlineCalendar, HiOutlineClock, HiOutlineFire } from 'react-icons/hi';
-import { afghanToGregorianDate, shiftGregorianDate, formatHours } from '../constants';
+import { formatHours } from '../constants';
 import { useCalendar } from '../contexts/CalendarContextStore';
 
 export default function CalendarPage() {
@@ -27,26 +27,8 @@ export default function CalendarPage() {
       setLoading(true);
       setError('');
       try {
-        const isGregorian = calendar === 'gregorian';
-        const startDate = isGregorian
-          ? `${year}-01-01`
-          : afghanToGregorianDate(year, 1, 1);
-        const endDate = isGregorian
-          ? `${year}-12-31`
-          : shiftGregorianDate(afghanToGregorianDate(year + 1, 1, 1), -1);
-        const response = await sessionApi.getAll({ startDate, endDate });
-        const calendarData = (response.data || []).reduce((days, session) => {
-          const date = session.session_date;
-          const current = days[date] || { date, hours: 0, sessions: 0, technologies: new Set() };
-          current.hours += Number(session.duration_hours || 0);
-          current.sessions += 1;
-          const focusName = session.project_name || session.technology_name;
-          if (focusName) current.technologies.add(focusName);
-          days[date] = current;
-          return days;
-        }, {});
-        Object.values(calendarData).forEach(day => { day.hours = Number(day.hours.toFixed(4)); day.technologies = [...day.technologies].join(', '); });
-        if (active) setData(calendarData);
+        const response = await statsApi.getCalendar(year, calendar);
+        if (active) setData(response.data || {});
       } catch (loadError) {
         if (active) { setData({}); setError(loadError.message || 'Could not load study sessions.'); }
       } finally {

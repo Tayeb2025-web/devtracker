@@ -14,6 +14,7 @@ const ProjectSchema = new mongoose.Schema({
   toJSON: { virtuals: true, transform: (doc, ret) => { ret.id = ret._id.toString(); delete ret.__v; return ret; } },
   toObject: { virtuals: true, transform: (doc, ret) => { ret.id = ret._id.toString(); delete ret.__v; return ret; } },
 });
+ProjectSchema.index({ user_id: 1, name: 1 }, { unique: true });
 
 ProjectSchema.virtual('id').get(function () {
   return this._id.toString();
@@ -107,22 +108,17 @@ export const ProjectModel = {
   async recalculateHours(userId = DEFAULT_USER_ID) {
     const { StudySession } = await import('./SessionModel.js');
     const userIds = await getTargetUserIds(userId);
-    const projects = await this.findAll(userId);
-    for (const project of projects) {
-      const agg = await StudySession.aggregate([
-        {
-          $match: {
-            $or: [
-              { project_id: project.id },
-              { project_id: String(project.legacy_id || -1) }
-            ],
-            user_id: { $in: userIds }
-          }
-        },
-        { $group: { _id: null, total: { $sum: '$duration_hours' } } }
-      ]);
-      const total = agg[0]?.total || 0;
-      await Project.updateOne({ _id: project._id }, { total_hours: parseFloat(total.toFixed(4)) });
-    }
+    const projects = await Project.find({ user_id: { $in: userIds } }).select('_id legacy_id').lean();
+    const totals = await StudySession.aggregate([
+      { $match: { user_id: { $in: userIds }, project_id: { $ne: null } } },
+      { $group: { _id: '$project_id', total: { $sum: '$duration_hours' } } },
+    ]);
+    const totalMap = new Map(totals.map(row => [String(row._id), Number(row.total || 0)]));
+    if (projects.length) await Project.bulkWrite(projects.map(project => ({
+      updateOne: {
+        filter: { _id: project._id, user_id: { $in: userIds } },
+        update: { $set: { total_hours: Number((totalMap.get(project._id.toString()) || totalMap.get(String(project.legacy_id)) || 0).toFixed(4)) } },
+      },
+    })));
   },
 };

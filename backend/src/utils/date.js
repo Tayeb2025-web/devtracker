@@ -152,6 +152,36 @@ export function getLocalYear(value = new Date()) {
   return getAfghanDateParts(value).year;
 }
 
+export function getCalendarDateParts(value = new Date(), calendar = 'afghan') {
+  if (calendar === 'gregorian') {
+    const dateString = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)
+      ? value.slice(0, 10)
+      : formatLocalDate(value);
+    const [year, month, day] = dateString.split('-').map(Number);
+    return { year, month, day };
+  }
+  return getAfghanDateParts(value);
+}
+
+export function getCalendarYearStart(calendar = 'afghan', value = new Date()) {
+  const parts = getCalendarDateParts(formatLocalDate(value), calendar);
+  if (calendar === 'gregorian') return `${parts.year}-01-01`;
+  return afghanToGregorianDate(parts.year, 1, 1);
+}
+
+export function getCalendarYearRange(year, calendar = 'afghan') {
+  const selectedYear = Number(year);
+  if (!Number.isInteger(selectedYear) || !['afghan', 'iranian', 'gregorian'].includes(calendar)) {
+    throw new RangeError('A valid year and calendar are required');
+  }
+  if (calendar === 'gregorian') {
+    return { startDate: `${selectedYear}-01-01`, endDate: `${selectedYear}-12-31` };
+  }
+  const startDate = afghanToGregorianDate(selectedYear, 1, 1);
+  const nextYearStart = afghanToGregorianDate(selectedYear + 1, 1, 1);
+  return { startDate, endDate: shiftLocalDate(nextYearStart, -1) };
+}
+
 export function getLocalMonthStart(value = new Date()) {
   const { year, month } = getAfghanDateParts(value);
   return afghanToGregorianDate(year, month, 1);
