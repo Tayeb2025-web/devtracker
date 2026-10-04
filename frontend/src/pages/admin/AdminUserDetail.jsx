@@ -1,20 +1,22 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  HiOutlineArrowRight,
-  HiOutlineCalendar,
-  HiOutlineClock,
-  HiOutlineFire,
-  HiOutlineAcademicCap,
-  HiOutlineFolder,
-  HiOutlineUsers,
-  HiOutlineShieldCheck,
-  HiOutlineUser,
-  HiOutlineDocumentText,
-  HiOutlineRefresh,
-  HiOutlineExternalLink,
-  HiOutlineSparkles,
-} from 'react-icons/hi';
+  PiArrowRightDuotone,
+  PiCalendarDotsDuotone,
+  PiClockDuotone,
+  PiFireDuotone,
+  PiGraduationCapDuotone,
+  PiFolderOpenDuotone,
+  PiUsersThreeDuotone,
+  PiShieldCheckDuotone,
+  PiUserCircleDuotone,
+  PiNotebookDuotone,
+  PiArrowClockwiseDuotone,
+  PiArrowSquareOutDuotone,
+  PiSparkleDuotone,
+  PiChartLineUpDuotone,
+  PiUserGearDuotone,
+} from 'react-icons/pi';
 import { adminApi } from '../../services/api';
 import Avatar from '../../components/Avatar';
 import AdminFeedback from '../../components/admin/AdminFeedback';
@@ -94,9 +96,9 @@ export default function AdminUserDetail() {
         <div className="mb-4"><AdminFeedback message={error || 'کاربر یافت نشد'} onRetry={loadUser} loading={loading} /></div>
         <Link
           to="/admin/users"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-md"
+          className="admin-button admin-button-primary"
         >
-          <HiOutlineArrowRight size={14} /> بازگشت به لیست کاربران
+          <PiArrowRightDuotone aria-hidden="true" size={14} /> بازگشت به لیست کاربران
         </Link>
       </div>
     );
@@ -121,7 +123,7 @@ export default function AdminUserDetail() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs font-semibold text-text-muted">
           <Link to="/admin/users" className="hover:text-primary transition-colors flex items-center gap-1">
-            <HiOutlineArrowRight size={14} />
+            <PiArrowRightDuotone aria-hidden="true" size={14} />
             کاربران
           </Link>
           <span>/</span>
@@ -134,7 +136,7 @@ export default function AdminUserDetail() {
             disabled={loading || roleUpdating}
             className="admin-button admin-button-secondary"
           >
-            <HiOutlineRefresh size={16} className={loading ? 'animate-spin' : ''} /> {loading ? 'در حال دریافت...' : 'تازه‌سازی'}
+            <PiArrowClockwiseDuotone aria-hidden="true" size={16} className={loading ? 'animate-spin' : ''} /> {loading ? 'در حال دریافت...' : 'تازه‌سازی'}
           </button>
           {!isSelf && (
             <button
@@ -142,11 +144,11 @@ export default function AdminUserDetail() {
               disabled={roleUpdating || loading}
               className={`admin-button ${
                 profile.role === 'admin'
-                  ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30 hover:bg-amber-500/25'
-                  : 'bg-primary text-white hover:bg-primary-dark'
+                  ? 'admin-button-warning'
+                  : 'admin-button-primary'
               }`}
             >
-              <HiOutlineShieldCheck size={15} />
+              <PiUserGearDuotone size={22} aria-hidden="true" />
               {roleUpdating ? 'در حال تغییر نقش...' : profile.role === 'admin' ? 'تنزل به کاربر عادی' : 'ارتقا به مدیر'}
             </button>
           )}
@@ -173,12 +175,12 @@ export default function AdminUserDetail() {
                 </h1>
                 {profile.role === 'admin' ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-bold text-amber-500 border border-amber-500/30">
-                    <HiOutlineShieldCheck size={13} />
+                    <PiShieldCheckDuotone aria-hidden="true" size={13} />
                     مدیر سیستم
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-full bg-surface-lighter px-2.5 py-0.5 text-xs font-semibold text-text-muted">
-                    <HiOutlineUser size={13} />
+                    <PiUserCircleDuotone aria-hidden="true" size={13} />
                     کاربر عادی
                   </span>
                 )}
@@ -214,21 +216,21 @@ export default function AdminUserDetail() {
       </div>
 
       <div className="admin-detail-metrics">
-        <AdminMetricCard icon={HiOutlineFire} label="مطالعه امروز" value={study_stats.today_hours} unit="ساعت" tone="amber" />
-        <AdminMetricCard icon={HiOutlineClock} label="مطالعه دیروز" value={study_stats.yesterday_hours} unit="ساعت" tone="rose" />
-        <AdminMetricCard icon={HiOutlineCalendar} label="این هفته" value={study_stats.week_hours} unit="ساعت" tone="blue" />
-        <AdminMetricCard icon={HiOutlineAcademicCap} label="این ماه" value={study_stats.month_hours} unit="ساعت" tone="violet" />
-        <AdminMetricCard icon={HiOutlineSparkles} label="مجموع یادگیری" value={study_stats.total_hours} unit="ساعت" tone="cyan" detail={<>{formatAdminNumber(study_stats.sessions_count)} جلسه ثبت‌شده</>} />
+        <AdminMetricCard icon={PiFireDuotone} label="مطالعه امروز" value={study_stats.today_hours} unit="ساعت" tone="amber" />
+        <AdminMetricCard icon={PiClockDuotone} label="مطالعه دیروز" value={study_stats.yesterday_hours} unit="ساعت" tone="rose" />
+        <AdminMetricCard icon={PiCalendarDotsDuotone} label="این هفته" value={study_stats.week_hours} unit="ساعت" tone="blue" />
+        <AdminMetricCard icon={PiGraduationCapDuotone} label="این ماه" value={study_stats.month_hours} unit="ساعت" tone="violet" />
+        <AdminMetricCard icon={PiSparkleDuotone} label="مجموع یادگیری" value={study_stats.total_hours} unit="ساعت" tone="cyan" detail={<>{formatAdminNumber(study_stats.sessions_count)} جلسه ثبت‌شده</>} />
       </div>
 
       {/* Navigation Tabs for Details */}
       <div role="group" aria-label="بخش‌های پرونده کاربر" className="admin-detail-tabs">
         {[
-          { id: 'techs', label: `تکنولوژی‌ها (${formatAdminNumber(technologies?.length)})`, icon: HiOutlineAcademicCap },
-          { id: 'projects', label: `پروژه‌ها (${formatAdminNumber(projects?.length)})`, icon: HiOutlineFolder },
-          { id: 'social', label: 'ارتباطات', icon: HiOutlineUsers },
-          { id: 'trend', label: 'نمودار ۱۴ روزه', icon: HiOutlineClock },
-          { id: 'sessions', label: `جلسات اخیر (${formatAdminNumber(recent_sessions?.length)})`, icon: HiOutlineDocumentText },
+          { id: 'techs', label: `تکنولوژی‌ها (${formatAdminNumber(technologies?.length)})`, icon: PiGraduationCapDuotone },
+          { id: 'projects', label: `پروژه‌ها (${formatAdminNumber(projects?.length)})`, icon: PiFolderOpenDuotone },
+          { id: 'social', label: 'ارتباطات', icon: PiUsersThreeDuotone },
+          { id: 'trend', label: 'نمودار ۱۴ روزه', icon: PiChartLineUpDuotone },
+          { id: 'sessions', label: `جلسات اخیر (${formatAdminNumber(recent_sessions?.length)})`, icon: PiNotebookDuotone },
         ].map(t => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -238,13 +240,9 @@ export default function AdminUserDetail() {
               type="button"
               aria-pressed={isActive}
               onClick={() => setActiveTab(t.id)}
-              className={`admin-button ${
-                isActive
-                  ? 'bg-primary text-white shadow-md shadow-primary/20'
-                  : 'text-text-muted hover:text-text hover:bg-surface'
-              }`}
+              className="admin-button admin-detail-tab"
             >
-              <Icon size={16} />
+              <Icon size={21} aria-hidden="true" />
               {t.label}
             </button>
           );
@@ -291,7 +289,7 @@ export default function AdminUserDetail() {
               ))}
             </div>
           ) : (
-            <AdminEmptyState title="هنوز مهارتی ثبت نشده" description="مهارت‌های مطالعه‌شدهٔ کاربر در این بخش نمایش داده می‌شوند." icon={HiOutlineAcademicCap} />
+            <AdminEmptyState title="هنوز مهارتی ثبت نشده" description="مهارت‌های مطالعه‌شدهٔ کاربر در این بخش نمایش داده می‌شوند." icon={PiGraduationCapDuotone} />
           )}
         </div>
       )}
@@ -317,7 +315,7 @@ export default function AdminUserDetail() {
               ))}
             </div>
           ) : (
-            <AdminEmptyState title="هنوز پروژه‌ای ثبت نشده" description="پروژه‌های کاربر و زمان اختصاص‌یافته به آن‌ها در اینجا نمایش داده می‌شوند." icon={HiOutlineFolder} />
+            <AdminEmptyState title="هنوز پروژه‌ای ثبت نشده" description="پروژه‌های کاربر و زمان اختصاص‌یافته به آن‌ها در اینجا نمایش داده می‌شوند." icon={PiFolderOpenDuotone} />
           )}
         </div>
       )}
@@ -349,12 +347,12 @@ export default function AdminUserDetail() {
                       </p>
                       <p dir="ltr" className="text-right text-[11px] text-text-muted truncate" title={target.username}>@{target.username}</p>
                     </div>
-                    <HiOutlineExternalLink size={14} className="text-text-muted group-hover:text-primary" />
+                    <PiArrowSquareOutDuotone aria-hidden="true" size={14} className="text-text-muted group-hover:text-primary" />
                   </Link>
                 ))}
               </div>
             ) : (
-              <AdminEmptyState title="هنوز کسی را دنبال نمی‌کند" icon={HiOutlineUsers} />
+              <AdminEmptyState title="هنوز کسی را دنبال نمی‌کند" icon={PiUsersThreeDuotone} />
             )}
           </div>
 
@@ -382,12 +380,12 @@ export default function AdminUserDetail() {
                       </p>
                       <p dir="ltr" className="text-right text-[11px] text-text-muted truncate" title={follower.username}>@{follower.username}</p>
                     </div>
-                    <HiOutlineExternalLink size={14} className="text-text-muted group-hover:text-primary" />
+                    <PiArrowSquareOutDuotone aria-hidden="true" size={14} className="text-text-muted group-hover:text-primary" />
                   </Link>
                 ))}
               </div>
             ) : (
-              <AdminEmptyState title="هنوز دنبال‌کننده‌ای ندارد" icon={HiOutlineUsers} />
+              <AdminEmptyState title="هنوز دنبال‌کننده‌ای ندارد" icon={PiUsersThreeDuotone} />
             )}
           </div>
         </div>
@@ -461,7 +459,7 @@ export default function AdminUserDetail() {
               </table>
             </div>
           ) : (
-            <AdminEmptyState title="هنوز جلسه‌ای ثبت نشده" description="تازه‌ترین جلسات مطالعهٔ کاربر در این بخش نمایش داده می‌شوند." icon={HiOutlineClock} />
+            <AdminEmptyState title="هنوز جلسه‌ای ثبت نشده" description="تازه‌ترین جلسات مطالعهٔ کاربر در این بخش نمایش داده می‌شوند." icon={PiClockDuotone} />
           )}
         </div>
       )}

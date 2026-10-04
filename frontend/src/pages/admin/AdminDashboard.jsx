@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { HiOutlineUsers, HiOutlineClock, HiOutlineFire, HiOutlineAcademicCap, HiOutlineLightningBolt, HiOutlineArrowLeft, HiOutlineRefresh, HiOutlineCalendar, HiOutlineSparkles, HiOutlineShieldCheck } from 'react-icons/hi';
+import { PiUsersThreeDuotone, PiClockDuotone, PiFireDuotone, PiGraduationCapDuotone, PiLightningDuotone, PiArrowLeftDuotone, PiArrowClockwiseDuotone, PiCalendarDotsDuotone, PiSparkleDuotone, PiShieldCheckDuotone } from 'react-icons/pi';
 import { adminApi } from '../../services/api';
 import Avatar from '../../components/Avatar';
 import AdminFeedback from '../../components/admin/AdminFeedback';
@@ -35,37 +35,37 @@ export default function AdminDashboard() {
   const { metrics = {}, studyTrend14 = [], popularTechnologies = [], recentActivity = [], recentAdminActions = [] } = data || {};
   const maxTechHours = Math.max(1, ...popularTechnologies.map(tech => Number(tech.totalHours) || 0));
   const actions = <>
-    <button type="button" onClick={loadData} disabled={loading} className="admin-button admin-button-secondary"><HiOutlineRefresh size={17} className={loading ? 'animate-spin' : ''} />{loading ? 'در حال دریافت...' : 'به‌روزرسانی آمار'}</button>
-    <Link to="/admin/users" className="admin-button admin-button-primary"><HiOutlineUsers size={17} />مدیریت کاربران<HiOutlineArrowLeft size={16} /></Link>
+    <button type="button" onClick={loadData} disabled={loading} className="admin-button admin-button-secondary"><PiArrowClockwiseDuotone aria-hidden="true" size={17} className={loading ? 'animate-spin' : ''} />{loading ? 'در حال دریافت...' : 'به‌روزرسانی آمار'}</button>
+    <Link to="/admin/users" className="admin-button admin-button-primary"><PiUsersThreeDuotone aria-hidden="true" size={17} />مدیریت کاربران<PiArrowLeftDuotone aria-hidden="true" size={16} /></Link>
   </>;
 
   return <div className="admin-stack">
     {error && <AdminFeedback message={`${error} اطلاعات قبلی نمایش داده می‌شود.`} onRetry={loadData} loading={loading} />}
     <AdminPageHeader eyebrow="مرکز کنترل Codelume" title="نبض پلتفرم، در یک نگاه" description="از فعالیت امروز تا مسیر رشد جامعه؛ همهٔ اطلاعاتی که برای مدیریت نیاز دارید." actions={actions} className="admin-hero">
-      <span className="admin-update-time"><HiOutlineClock size={13} />آخرین دریافت آمار<time dateTime={updatedAt?.toISOString()}>{formatAdminDate(updatedAt, { hour: '2-digit', minute: '2-digit' })}</time></span>
+      <span className="admin-update-time"><PiClockDuotone aria-hidden="true" size={13} />آخرین دریافت آمار<time dateTime={updatedAt?.toISOString()}>{formatAdminDate(updatedAt, { hour: '2-digit', minute: '2-digit' })}</time></span>
     </AdminPageHeader>
 
     <div className="admin-metrics">
-      <AdminMetricCard icon={HiOutlineUsers} tone="violet" label="اعضای جامعه" value={metrics.totalUsers} detail={<><span className="admin-metric-pill">+{formatAdminNumber(metrics.newUsersToday)} عضو امروز</span>{formatAdminNumber(metrics.newUsersWeek)} عضو جدید این هفته</>} />
-      <AdminMetricCard icon={HiOutlineClock} tone="blue" label="مجموع زمان یادگیری" value={metrics.totalHours} unit="ساعت" detail={<><strong>{formatAdminNumber(metrics.totalSessions)} جلسه</strong> در کل پلتفرم ثبت شده</>} />
-      <AdminMetricCard icon={HiOutlineFire} tone="amber" label="مطالعهٔ امروز" value={metrics.todayHours} unit="ساعت" detail={<>دیروز <strong>{formatAdminNumber(metrics.yesterdayHours)}</strong> · این هفته <strong>{formatAdminNumber(metrics.weekHours)}</strong> ساعت</>} />
-      <AdminMetricCard icon={HiOutlineLightningBolt} tone="cyan" label="کاربران فعال امروز" value={metrics.activeTodayUsers} detail={<><span className="admin-metric-pill">{formatAdminNumber(metrics.active7DaysUsers)} کاربر فعال</span>در ۷ روز گذشته</>} />
+      <AdminMetricCard icon={PiUsersThreeDuotone} tone="violet" label="اعضای جامعه" value={metrics.totalUsers} detail={<><span className="admin-metric-pill">+{formatAdminNumber(metrics.newUsersToday)} عضو امروز</span>{formatAdminNumber(metrics.newUsersWeek)} عضو جدید این هفته</>} />
+      <AdminMetricCard icon={PiClockDuotone} tone="blue" label="مجموع زمان یادگیری" value={metrics.totalHours} unit="ساعت" detail={<><strong>{formatAdminNumber(metrics.totalSessions)} جلسه</strong> در کل پلتفرم ثبت شده</>} />
+      <AdminMetricCard icon={PiFireDuotone} tone="amber" label="مطالعهٔ امروز" value={metrics.todayHours} unit="ساعت" detail={<>دیروز <strong>{formatAdminNumber(metrics.yesterdayHours)}</strong> · این هفته <strong>{formatAdminNumber(metrics.weekHours)}</strong> ساعت</>} />
+      <AdminMetricCard icon={PiLightningDuotone} tone="cyan" label="کاربران فعال امروز" value={metrics.activeTodayUsers} detail={<><span className="admin-metric-pill">{formatAdminNumber(metrics.active7DaysUsers)} کاربر فعال</span>در ۷ روز گذشته</>} />
     </div>
 
     <div className="admin-analytics-grid">
-      <AdminPanel icon={HiOutlineCalendar} title="مسیر یادگیری جامعه" description="ساعات مطالعهٔ ثبت‌شده در دو هفتهٔ اخیر" action={<span className="admin-pill"><HiOutlineCalendar size={13} />۱۴ روز اخیر</span>} id="admin-trend-title">
+      <AdminPanel icon={PiCalendarDotsDuotone} title="مسیر یادگیری جامعه" description="ساعات مطالعهٔ ثبت‌شده در دو هفتهٔ اخیر" action={<span className="admin-pill"><PiCalendarDotsDuotone aria-hidden="true" size={13} />۱۴ روز اخیر</span>} id="admin-trend-title">
         <AdminStudyChart data={studyTrend14} label="نمودار ساعات مطالعه پلتفرم" />
       </AdminPanel>
-      <AdminPanel icon={HiOutlineAcademicCap} title="مهارت‌های محبوب" description="رتبه‌بندی بر اساس زمان مطالعه" action={<span className="admin-pill">{formatAdminNumber(metrics.totalTechs)} مهارت</span>} id="admin-tech-title">
+      <AdminPanel icon={PiGraduationCapDuotone} title="مهارت‌های محبوب" description="رتبه‌بندی بر اساس زمان مطالعه" action={<span className="admin-pill">{formatAdminNumber(metrics.totalTechs)} مهارت</span>} id="admin-tech-title">
         {popularTechnologies.length ? <div className="admin-tech-list">{popularTechnologies.map((tech, index) => <div key={tech.id || index} className="admin-tech-item" style={{ '--tech-color': tech.color || '#9582ef' }}>
           <div className="admin-tech-top"><span className="admin-tech-rank">{formatAdminNumber(index + 1)}</span><bdi className="admin-tech-name">{tech.name}</bdi><span className="admin-tech-hours"><strong>{formatAdminNumber(tech.totalHours)}</strong> ساعت</span></div>
           <div className="admin-tech-progress"><span style={{ width: `${Math.max(0, Math.min(100, Number(tech.totalHours) / maxTechHours * 100))}%` }} /></div>
           <div className="admin-tech-meta"><span>{formatAdminNumber(tech.studentsCount)} یادگیرنده</span><span>{formatAdminNumber(tech.sessions)} جلسه</span></div>
-        </div>)}</div> : <AdminEmptyState title="هنوز مهارتی ثبت نشده" description="با ثبت اولین جلسه، مهارت‌های محبوب اینجا نمایش داده می‌شوند." icon={HiOutlineAcademicCap} />}
+        </div>)}</div> : <AdminEmptyState title="هنوز مهارتی ثبت نشده" description="با ثبت اولین جلسه، مهارت‌های محبوب اینجا نمایش داده می‌شوند." icon={PiGraduationCapDuotone} />}
       </AdminPanel>
     </div>
 
-    <AdminPanel icon={HiOutlineSparkles} title="آخرین فعالیت‌های جامعه" description="تازه‌ترین جلسات مطالعه و جزئیات آن‌ها" action={<Link to="/admin/users" className="admin-text-link">مشاهدهٔ کاربران<HiOutlineArrowLeft size={14} /></Link>} id="admin-activity-title">
+    <AdminPanel icon={PiSparkleDuotone} title="آخرین فعالیت‌های جامعه" description="تازه‌ترین جلسات مطالعه و جزئیات آن‌ها" action={<Link to="/admin/users" className="admin-text-link">مشاهدهٔ کاربران<PiArrowLeftDuotone aria-hidden="true" size={14} /></Link>} id="admin-activity-title">
       {recentActivity.length ? <div className="admin-table-scroll" role="region" aria-label="آخرین جلسات مطالعه" tabIndex={0}>
         <table><thead><tr><th scope="col" className="px-3 text-right">کاربر</th><th scope="col" className="px-3 text-right">مهارت</th><th scope="col" className="px-3 text-right">زمان مطالعه</th><th scope="col" className="px-3 text-right">تاریخ و ساعت</th><th scope="col" className="px-3 text-right">یادداشت</th><th scope="col" className="px-3 text-left">پرونده</th></tr></thead>
         <tbody className="divide-y divide-border">{recentActivity.map(session => <tr key={session.id}>
@@ -74,17 +74,17 @@ export default function AdminDashboard() {
           <td className="whitespace-nowrap px-3 py-4"><p className="font-semibold">{formatAdminNumber(session.duration_hours)} ساعت</p><p className="text-[10px] text-text-muted">{formatAdminNumber(session.duration_minutes)} دقیقه</p></td>
           <td className="whitespace-nowrap px-3 py-4 text-text-muted"><p>{formatAdminDate(session.session_date)}</p><p dir="ltr" className="text-right text-[10px]">{session.start_time} – {session.end_time}</p></td>
           <td className="admin-note px-3 py-4 text-text-muted">{session.note || '—'}</td>
-          <td className="px-3 py-4 text-left"><Link to={`/admin/users/${session.user.id}`} className="admin-icon-control" aria-label={`مشاهده پرونده ${session.user.display_name || session.user.username}`}><HiOutlineArrowLeft size={17} /></Link></td>
+          <td className="px-3 py-4 text-left"><Link to={`/admin/users/${session.user.id}`} className="admin-icon-control" aria-label={`مشاهده پرونده ${session.user.display_name || session.user.username}`}><PiArrowLeftDuotone aria-hidden="true" size={17} /></Link></td>
         </tr>)}</tbody></table>
-      </div> : <AdminEmptyState title="هنوز فعالیتی ثبت نشده" description="جلسات مطالعهٔ اعضای جامعه اینجا نمایش داده می‌شوند." icon={HiOutlineClock} />}
+      </div> : <AdminEmptyState title="هنوز فعالیتی ثبت نشده" description="جلسات مطالعهٔ اعضای جامعه اینجا نمایش داده می‌شوند." icon={PiClockDuotone} />}
     </AdminPanel>
 
-    <AdminPanel icon={HiOutlineShieldCheck} title="رویدادهای مدیریتی" description="تاریخچهٔ آخرین تغییرات نقش و حساب‌های کاربری" action={<span className="admin-pill">سوابق مدیریت</span>} id="admin-audit-heading">
+    <AdminPanel icon={PiShieldCheckDuotone} title="رویدادهای مدیریتی" description="تاریخچهٔ آخرین تغییرات نقش و حساب‌های کاربری" action={<span className="admin-pill">سوابق مدیریت</span>} id="admin-audit-heading">
       {recentAdminActions.length ? <ul className="admin-audit-list">{recentAdminActions.map(action => {
         const roles = { admin: 'مدیر', user: 'کاربر عادی' };
         const description = action.action === 'user.role.updated' ? `${action.actor_username} نقش ${action.target_username} را از ${roles[action.details?.previousRole] || 'کاربر عادی'} به ${roles[action.details?.role] || 'کاربر عادی'} تغییر داد.` : `${action.actor_username} حساب ${action.target_username} را حذف کرد.`;
-        return <li key={action._id} className="admin-audit-item"><span className="admin-audit-symbol"><HiOutlineShieldCheck size={16} /></span><div><p>{description}</p><time dateTime={action.created_at} title={action.request_id || undefined}>{formatAdminDate(action.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</time></div></li>;
-      })}</ul> : <AdminEmptyState title="هنوز رویدادی ثبت نشده" description="تغییرات مدیریتی، همراه با زمان انجام آن‌ها، در این بخش ثبت می‌شوند." icon={HiOutlineShieldCheck} />}
+        return <li key={action._id} className="admin-audit-item"><span className="admin-audit-symbol"><PiShieldCheckDuotone aria-hidden="true" size={16} /></span><div><p>{description}</p><time dateTime={action.created_at} title={action.request_id || undefined}>{formatAdminDate(action.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</time></div></li>;
+      })}</ul> : <AdminEmptyState title="هنوز رویدادی ثبت نشده" description="تغییرات مدیریتی، همراه با زمان انجام آن‌ها، در این بخش ثبت می‌شوند." icon={PiShieldCheckDuotone} />}
     </AdminPanel>
   </div>;
 }

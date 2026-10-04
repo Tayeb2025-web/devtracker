@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { HiOutlineUsers, HiOutlineSearch, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineTrash, HiOutlineShieldCheck, HiOutlineUser, HiOutlineExternalLink } from 'react-icons/hi';
+import { PiUsersThreeDuotone, PiMagnifyingGlassDuotone, PiCaretLeftDuotone, PiCaretRightDuotone, PiTrashDuotone, PiShieldCheckDuotone, PiUserCircleDuotone, PiIdentificationCardDuotone, PiUserGearDuotone, PiLightningDuotone, PiSortAscendingDuotone, PiSortDescendingDuotone } from 'react-icons/pi';
 import { adminApi } from '../../services/api';
 import Avatar from '../../components/Avatar';
 import AdminFeedback from '../../components/admin/AdminFeedback';
@@ -9,7 +9,7 @@ import { formatAdminDate, formatAdminNumber } from '../../utils/adminFormat';
 import { useAuth } from '../../contexts/AuthContextStore';
 
 function RoleBadge({ role }) {
-  return role === 'admin' ? <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-1 text-xs font-bold text-amber-500"><HiOutlineShieldCheck size={14} />مدیر</span> : <span className="inline-flex items-center gap-1 rounded-full bg-surface-lighter px-2 py-1 text-xs text-text-muted"><HiOutlineUser size={14} />کاربر</span>;
+  return role === 'admin' ? <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-1 text-xs font-bold text-amber-500"><PiShieldCheckDuotone aria-hidden="true" size={14} />مدیر</span> : <span className="inline-flex items-center gap-1 rounded-full bg-surface-lighter px-2 py-1 text-xs text-text-muted"><PiUserCircleDuotone aria-hidden="true" size={14} />کاربر</span>;
 }
 
 function UserIdentity({ user }) {
@@ -101,11 +101,11 @@ export default function AdminUsers() {
 
   const renderActions = (user) => {
     const isSelf = String(user.id) === String(currentUser?.id);
-    return <div className="flex flex-nowrap items-center gap-2">
-      <Link to={`/admin/users/${user.id}`} className="admin-button bg-primary/10 text-primary hover:bg-primary hover:text-white" aria-label={`مشاهده پرونده ${user.display_name || user.username}`}>پرونده <HiOutlineExternalLink size={15} /></Link>
+    return <div className="admin-user-actions">
+      <Link to={`/admin/users/${user.id}`} className="admin-button admin-button-soft" aria-label={`مشاهده پرونده ${user.display_name || user.username}`}><PiIdentificationCardDuotone size={21} aria-hidden="true" />پرونده</Link>
       {!isSelf && <>
-        <button type="button" onClick={() => handleRoleToggle(user)} disabled={Boolean(actionInProgress) || loading} title={user.role === 'admin' ? 'تنزل به کاربر عادی' : 'ارتقا به مدیر'} aria-label={`${user.role === 'admin' ? 'تنزل نقش' : 'ارتقا به مدیر'}: ${user.username}`} className="admin-button admin-icon-button border border-border text-text-muted hover:bg-amber-500/10 hover:text-amber-500"><HiOutlineShieldCheck size={17} /></button>
-        <button type="button" onClick={() => handleDeleteUser(user)} disabled={Boolean(actionInProgress) || loading} title="حذف حساب کاربری" aria-label={`حذف حساب ${user.username}`} className="admin-button admin-icon-button border border-border text-text-muted hover:bg-red-500/10 hover:text-red-400"><HiOutlineTrash size={17} /></button>
+        <button type="button" onClick={() => handleRoleToggle(user)} disabled={Boolean(actionInProgress) || loading} title={user.role === 'admin' ? 'تنزل به کاربر عادی' : 'ارتقا به مدیر'} aria-label={`${user.role === 'admin' ? 'تنزل نقش' : 'ارتقا به مدیر'}: ${user.username}`} className="admin-button admin-icon-button admin-button-warning"><PiUserGearDuotone size={22} aria-hidden="true" /></button>
+        <button type="button" onClick={() => handleDeleteUser(user)} disabled={Boolean(actionInProgress) || loading} title="حذف حساب کاربری" aria-label={`حذف حساب ${user.username}`} className="admin-button admin-icon-button admin-button-danger"><PiTrashDuotone size={22} aria-hidden="true" /></button>
       </>}
       {actionInProgress === user.id && <span role="status" className="text-xs text-text-muted">در حال انجام...</span>}
     </div>;
@@ -114,25 +114,25 @@ export default function AdminUsers() {
   const hasFilters = search || filter !== 'all';
 
   return <div className="admin-stack">
-    <AdminPageHeader eyebrow="جامعهٔ Codelume" title="مدیریت کاربران" description="هر کاربر، یک مسیر یادگیری؛ حساب‌ها و فعالیت اعضای جامعه را مدیریت کنید." actions={<div className="admin-count-card"><HiOutlineUsers size={24} /><div><strong>{formatAdminNumber(pagination.total)}</strong><small>{hasFilters ? 'نتیجهٔ جستجو' : 'عضو جامعه'}</small></div></div>} />
+    <AdminPageHeader eyebrow="جامعهٔ Codelume" title="مدیریت کاربران" description="هر کاربر، یک مسیر یادگیری؛ حساب‌ها و فعالیت اعضای جامعه را مدیریت کنید." actions={<div className="admin-count-card"><PiUsersThreeDuotone aria-hidden="true" size={24} /><div><strong>{formatAdminNumber(pagination.total)}</strong><small>{hasFilters ? 'نتیجهٔ جستجو' : 'عضو جامعه'}</small></div></div>} />
     {actionError && <AdminFeedback message={actionError} />}
     <div className="admin-user-filters space-y-4">
       <div className="relative min-w-0">
         <label htmlFor="admin-user-search" className="sr-only">جستجوی کاربران</label>
-        <HiOutlineSearch className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={19} />
+        <PiMagnifyingGlassDuotone aria-hidden="true" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={19} />
         <input id="admin-user-search" type="search" disabled={Boolean(actionInProgress)} value={search} onChange={e => setSearch(e.target.value)} placeholder="جستجوی نام، نام کاربری یا ایمیل" className="min-h-11 w-full rounded-xl border border-border bg-surface-lighter/40 py-2.5 pr-11 pl-4 text-sm text-text placeholder:text-text-muted" />
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div role="group" aria-label="فیلتر کاربران" className="admin-filter-pills flex flex-wrap">{[{ id: 'all', label: 'همه' }, { id: 'active_today', label: 'فعال امروز' }, { id: 'admin', label: 'مدیران' }, { id: 'user', label: 'کاربران عادی' }].map(item => <button type="button" key={item.id} disabled={Boolean(actionInProgress)} onClick={() => setFilter(item.id)} aria-pressed={filter === item.id} className={`admin-button ${filter === item.id ? 'bg-primary text-white' : 'text-text-muted hover:bg-surface-lighter hover:text-text'}`}>{item.label}</button>)}</div>
+        <div role="group" aria-label="فیلتر کاربران" className="admin-filter-pills flex flex-wrap">{[{ id: 'all', label: 'همه', icon: PiUsersThreeDuotone }, { id: 'active_today', label: 'فعال امروز', icon: PiLightningDuotone }, { id: 'admin', label: 'مدیران', icon: PiShieldCheckDuotone }, { id: 'user', label: 'کاربران عادی', icon: PiUserCircleDuotone }].map(({ id, label, icon: Icon }) => <button type="button" key={id} disabled={Boolean(actionInProgress)} onClick={() => setFilter(id)} aria-pressed={filter === id} className="admin-button admin-filter-button"><Icon size={19} aria-hidden="true" />{label}</button>)}</div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <label htmlFor="admin-user-sort" className="sr-only text-xs text-text-muted sm:not-sr-only">مرتب‌سازی:</label>
           <select id="admin-user-sort" disabled={Boolean(actionInProgress)} value={sortBy} onChange={e => setSortBy(e.target.value)} className="min-h-11 rounded-xl border border-border bg-surface-lighter px-3 text-xs text-text"><option value="created_at">تاریخ عضویت</option><option value="last_seen_at">آخرین فعالیت</option><option value="username">نام کاربری</option></select>
-          <button type="button" disabled={Boolean(actionInProgress)} onClick={() => setOrder(prev => prev === 'asc' ? 'desc' : 'asc')} aria-label={`ترتیب ${order === 'asc' ? 'صعودی' : 'نزولی'}؛ تغییر ترتیب`} className="admin-button border border-border text-text-muted">{order === 'asc' ? 'صعودی' : 'نزولی'}</button>
+          <button type="button" disabled={Boolean(actionInProgress)} onClick={() => setOrder(prev => prev === 'asc' ? 'desc' : 'asc')} aria-label={`ترتیب ${order === 'asc' ? 'صعودی' : 'نزولی'}؛ تغییر ترتیب`} className="admin-button admin-button-secondary">{order === 'asc' ? <PiSortAscendingDuotone size={21} aria-hidden="true" /> : <PiSortDescendingDuotone size={21} aria-hidden="true" />}{order === 'asc' ? 'صعودی' : 'نزولی'}</button>
         </div>
       </div>
     </div>
     <div aria-busy={loading} className="admin-user-table">
-      {loading ? <AdminLoading label="در حال دریافت فهرست کاربران..." /> : error ? <div className="p-4"><AdminFeedback message={error} onRetry={() => fetchUsers(requestedPage.current)} /></div> : users.length === 0 ? <AdminEmptyState title={hasFilters ? 'کاربری با این مشخصات پیدا نشد.' : 'هنوز کاربری ثبت نشده است.'} description={hasFilters ? 'نام یا ایمیل دیگری جستجو کنید یا فیلترها را پاک کنید.' : 'اعضای جدید پس از ثبت‌نام در این بخش ظاهر می‌شوند.'} icon={HiOutlineUsers}>{hasFilters && <button type="button" onClick={clearFilters} className="admin-button admin-button-secondary">پاک کردن فیلترها</button>}</AdminEmptyState> : <>
+      {loading ? <AdminLoading label="در حال دریافت فهرست کاربران..." /> : error ? <div className="p-4"><AdminFeedback message={error} onRetry={() => fetchUsers(requestedPage.current)} /></div> : users.length === 0 ? <AdminEmptyState title={hasFilters ? 'کاربری با این مشخصات پیدا نشد.' : 'هنوز کاربری ثبت نشده است.'} description={hasFilters ? 'نام یا ایمیل دیگری جستجو کنید یا فیلترها را پاک کنید.' : 'اعضای جدید پس از ثبت‌نام در این بخش ظاهر می‌شوند.'} icon={PiUsersThreeDuotone}>{hasFilters && <button type="button" onClick={clearFilters} className="admin-button admin-button-secondary">پاک کردن فیلترها</button>}</AdminEmptyState> : <>
         <div className="grid gap-4 p-4 md:grid-cols-2 lg:hidden">
           {users.map(user => <article key={user.id} className="admin-user-card min-w-0 space-y-4">
             <div className="flex items-start justify-between gap-3"><div className="min-w-0 flex-1"><UserIdentity user={user} /></div><RoleBadge role={user.role} /></div>
@@ -170,7 +170,7 @@ export default function AdminUsers() {
       </>}
       {!error && pagination.totalPages > 1 && <nav aria-label="صفحه‌بندی کاربران" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-4 text-xs text-text-muted">
         <p>صفحهٔ <strong>{formatAdminNumber(pagination.page)}</strong> از <strong>{formatAdminNumber(pagination.totalPages)}</strong> · {formatAdminNumber(pagination.total)} کاربر</p>
-        <div className="flex gap-2"><button type="button" disabled={loading || Boolean(actionInProgress) || pagination.page <= 1} onClick={() => fetchUsers(pagination.page - 1)} className="admin-button border border-border hover:bg-surface-lighter"><HiOutlineChevronRight size={16} />قبلی</button><button type="button" disabled={loading || Boolean(actionInProgress) || pagination.page >= pagination.totalPages} onClick={() => fetchUsers(pagination.page + 1)} className="admin-button border border-border hover:bg-surface-lighter">بعدی<HiOutlineChevronLeft size={16} /></button></div>
+        <div className="flex gap-2"><button type="button" disabled={loading || Boolean(actionInProgress) || pagination.page <= 1} onClick={() => fetchUsers(pagination.page - 1)} className="admin-button border border-border hover:bg-surface-lighter"><PiCaretRightDuotone aria-hidden="true" size={16} />قبلی</button><button type="button" disabled={loading || Boolean(actionInProgress) || pagination.page >= pagination.totalPages} onClick={() => fetchUsers(pagination.page + 1)} className="admin-button border border-border hover:bg-surface-lighter">بعدی<PiCaretLeftDuotone aria-hidden="true" size={16} /></button></div>
       </nav>}
     </div>
   </div>;

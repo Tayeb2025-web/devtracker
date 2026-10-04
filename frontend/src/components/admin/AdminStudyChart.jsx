@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HiOutlineCursorClick } from 'react-icons/hi';
+import { PiCursorClickDuotone } from 'react-icons/pi';
 import { formatAdminDate, formatAdminNumber } from '../../utils/adminFormat';
 import { AdminEmptyState } from './AdminUI';
 
@@ -20,10 +20,10 @@ export default function AdminStudyChart({ data = [], label = 'روند مطال�
         const date = formatAdminDate(item.date, { month: 'short', day: 'numeric' });
         return <button type="button" key={item.date} className="admin-chart-column" aria-pressed={isSelected} aria-label={`${date}، ${formatAdminNumber(hours)} ساعت، ${formatAdminNumber(item.sessions)} جلسه`} onClick={() => setSelectedDate(item.date)} onFocus={() => setSelectedDate(item.date)}>
           <span className="admin-chart-track"><span className={`admin-chart-bar ${index === data.length - 1 ? 'is-latest' : ''} ${isSelected ? 'is-selected' : ''}`} style={{ height: `${maxHours ? hours / maxHours * 100 : 0}%` }} /></span>
-          <span className={`admin-chart-date ${isSelected ? 'text-primary' : 'text-text-muted'}`} dir="rtl">{date}</span>
+          <span className={`admin-chart-date ${isSelected ? 'text-primary' : 'text-text-muted'}`} dir="rtl"><span>{formatAdminDate(item.date, { day: 'numeric' })}</span><small>{formatAdminDate(item.date, { month: 'short' })}</small></span>
         </button>;
       })}</div>
     </div>
-    <div className="admin-chart-legend"><span><i aria-hidden="true" />ساعات مطالعه</span><span><HiOutlineCursorClick size={13} />یک روز را برای جزئیات انتخاب کنید</span></div>
+    <div className="admin-chart-legend"><span><i aria-hidden="true" />ساعات مطالعه</span><span><PiCursorClickDuotone aria-hidden="true" size={13} />یک روز را برای جزئیات انتخاب کنید</span></div>
   </div>;
 }
