@@ -19,6 +19,7 @@ import { adminApi } from '../../services/api';
 import Avatar from '../../components/Avatar';
 import AdminFeedback from '../../components/admin/AdminFeedback';
 import AdminStudyChart from '../../components/admin/AdminStudyChart';
+import { AdminMetricCard, AdminLoading, AdminEmptyState } from '../../components/admin/AdminUI';
 import { formatAdminDate, formatAdminNumber } from '../../utils/adminFormat';
 import { useAuth } from '../../contexts/AuthContextStore';
 
@@ -84,14 +85,7 @@ export default function AdminUserDetail() {
   };
 
   if ((loading && !data) || (loadedId !== id && !error)) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div role="status" className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-xs font-semibold text-text-muted">در حال آماده‌سازی پرونده کاربر...</p>
-        </div>
-      </div>
-    );
+    return <AdminLoading label="در حال آماده‌سازی پرونده کاربر..." />;
   }
 
   if (!data || loadedId !== id) {
@@ -120,7 +114,7 @@ export default function AdminUserDetail() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="admin-stack">
       {error && <AdminFeedback message={`${error} اطلاعات قبلی نمایش داده می‌شود.`} onRetry={loadUser} loading={loading} />}
       {actionError && <AdminFeedback message={actionError} />}
       {/* Top Breadcrumb & Actions */}
@@ -138,7 +132,7 @@ export default function AdminUserDetail() {
           <button
             onClick={loadUser}
             disabled={loading || roleUpdating}
-            className="admin-button border border-border/80 bg-surface text-text-muted hover:text-text"
+            className="admin-button admin-button-secondary"
           >
             <HiOutlineRefresh size={16} className={loading ? 'animate-spin' : ''} /> {loading ? 'در حال دریافت...' : 'تازه‌سازی'}
           </button>
@@ -160,7 +154,7 @@ export default function AdminUserDetail() {
       </div>
 
       {/* User Header Profile Card */}
-      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-surface p-6 sm:p-8 shadow-sm">
+      <div className="admin-profile-hero">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex min-w-0 w-full flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5 sm:w-auto sm:flex-1">
             <div className="admin-profile-avatar relative shrink-0">
@@ -174,7 +168,7 @@ export default function AdminUserDetail() {
 
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-text tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-text">
                   {profile.display_name}
                 </h1>
                 {profile.role === 'admin' ? (
@@ -202,7 +196,7 @@ export default function AdminUserDetail() {
           </div>
 
           {/* Quick Registration & Presence Meta */}
-          <div className="grid w-full min-w-0 grid-cols-2 gap-2.5 text-xs bg-surface-lighter/30 p-3.5 rounded-2xl border border-border/60 sm:w-auto sm:max-w-52 sm:shrink-0 sm:grid-cols-1">
+          <div className="admin-profile-meta grid w-full min-w-0 grid-cols-2 gap-3 text-xs sm:w-auto sm:max-w-52 sm:shrink-0 sm:grid-cols-1">
             <div>
               <span className="text-text-muted block text-[11px]">تاریخ عضویت:</span>
               <strong className="text-text font-bold">{formatPersianDate(profile.created_at)}</strong>
@@ -219,77 +213,16 @@ export default function AdminUserDetail() {
         </div>
       </div>
 
-      {/* 5 Main Study Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-        {/* Today */}
-        <div className="rounded-3xl border border-border/80 bg-surface p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs text-text-muted font-bold">
-            <span>مطالعه امروز</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500">
-              <HiOutlineFire size={16} />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-black text-text">
-            {formatAdminNumber(study_stats.today_hours)} <span className="text-xs font-semibold text-text-muted">ساعت</span>
-          </div>
-        </div>
-
-        {/* Yesterday */}
-        <div className="rounded-3xl border border-border/80 bg-surface p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs text-text-muted font-bold">
-            <span>مطالعه دیروز</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-orange-500/15 text-orange-500">
-              <HiOutlineClock size={16} />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-black text-text">
-            {formatAdminNumber(study_stats.yesterday_hours)} <span className="text-xs font-semibold text-text-muted">ساعت</span>
-          </div>
-        </div>
-
-        {/* This Week */}
-        <div className="rounded-3xl border border-border/80 bg-surface p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs text-text-muted font-bold">
-            <span>این هفته</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-500/15 text-blue-500">
-              <HiOutlineCalendar size={16} />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-black text-text">
-            {formatAdminNumber(study_stats.week_hours)} <span className="text-xs font-semibold text-text-muted">ساعت</span>
-          </div>
-        </div>
-
-        {/* This Month */}
-        <div className="rounded-3xl border border-border/80 bg-surface p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs text-text-muted font-bold">
-            <span>این ماه</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-500">
-              <HiOutlineAcademicCap size={16} />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-black text-text">
-            {formatAdminNumber(study_stats.month_hours)} <span className="text-xs font-semibold text-text-muted">ساعت</span>
-          </div>
-        </div>
-
-        {/* All Time Total */}
-        <div className="col-span-2 sm:col-span-1 rounded-3xl border border-border/80 bg-surface p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs text-text-muted font-bold">
-            <span>کل زمان مطالعه</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-500">
-              <HiOutlineSparkles size={16} />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-black text-text">
-            {formatAdminNumber(study_stats.total_hours)} <span className="text-xs font-semibold text-text-muted">ساعت</span>
-          </div>
-          <div className="text-[10px] text-text-muted mt-0.5">{formatAdminNumber(study_stats.sessions_count)} جلسه ثبت‌شده</div>
-        </div>
+      <div className="admin-detail-metrics">
+        <AdminMetricCard icon={HiOutlineFire} label="مطالعه امروز" value={study_stats.today_hours} unit="ساعت" tone="amber" />
+        <AdminMetricCard icon={HiOutlineClock} label="مطالعه دیروز" value={study_stats.yesterday_hours} unit="ساعت" tone="rose" />
+        <AdminMetricCard icon={HiOutlineCalendar} label="این هفته" value={study_stats.week_hours} unit="ساعت" tone="blue" />
+        <AdminMetricCard icon={HiOutlineAcademicCap} label="این ماه" value={study_stats.month_hours} unit="ساعت" tone="violet" />
+        <AdminMetricCard icon={HiOutlineSparkles} label="مجموع یادگیری" value={study_stats.total_hours} unit="ساعت" tone="cyan" detail={<>{formatAdminNumber(study_stats.sessions_count)} جلسه ثبت‌شده</>} />
       </div>
 
       {/* Navigation Tabs for Details */}
-      <div role="group" aria-label="بخش‌های پرونده کاربر" className="flex flex-wrap items-center gap-2 border-b border-border/80 pb-3">
+      <div role="group" aria-label="بخش‌های پرونده کاربر" className="admin-detail-tabs">
         {[
           { id: 'techs', label: `تکنولوژی‌ها (${formatAdminNumber(technologies?.length)})`, icon: HiOutlineAcademicCap },
           { id: 'projects', label: `پروژه‌ها (${formatAdminNumber(projects?.length)})`, icon: HiOutlineFolder },
@@ -320,7 +253,7 @@ export default function AdminUserDetail() {
 
       {/* TAB CONTENT: Technologies */}
       {activeTab === 'techs' && (
-        <div className="rounded-3xl border border-border/80 bg-surface p-6 shadow-sm animate-fade-in">
+        <div className="admin-detail-panel">
           <div className="mb-5">
             <h2 className="text-base font-extrabold text-text">تکنولوژی‌ها و مهارت‌های مطالعه‌شده</h2>
             <p className="text-xs text-text-muted">میزان زمان اختصاص‌داده‌شده به هر زبان یا فریمورک توسط این کاربر</p>
@@ -329,7 +262,7 @@ export default function AdminUserDetail() {
           {technologies && technologies.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {technologies.map(t => (
-                <div key={t.id} className="rounded-2xl border border-border/70 bg-surface-lighter/30 p-4 space-y-2">
+                <div key={t.id} className="admin-detail-tile space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
                       <span
@@ -358,14 +291,14 @@ export default function AdminUserDetail() {
               ))}
             </div>
           ) : (
-            <p className="py-12 text-center text-xs text-text-muted">این کاربر هنوز هیچ تکنولوژی را ثبت نکرده است.</p>
+            <AdminEmptyState title="هنوز مهارتی ثبت نشده" description="مهارت‌های مطالعه‌شدهٔ کاربر در این بخش نمایش داده می‌شوند." icon={HiOutlineAcademicCap} />
           )}
         </div>
       )}
 
       {/* TAB CONTENT: Projects */}
       {activeTab === 'projects' && (
-        <div className="rounded-3xl border border-border/80 bg-surface p-6 shadow-sm animate-fade-in">
+        <div className="admin-detail-panel">
           <div className="mb-5">
             <h2 className="text-base font-extrabold text-text">پروژه‌های کاربر</h2>
             <p className="text-xs text-text-muted">پروژه‌هایی که این کاربر روی آن‌ها زمان صرف کرده است</p>
@@ -374,7 +307,7 @@ export default function AdminUserDetail() {
           {projects && projects.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {projects.map(p => (
-                <div key={p.id} className="rounded-2xl border border-border/70 bg-surface-lighter/30 p-4">
+                <div key={p.id} className="admin-detail-tile">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <span dir="auto" className="min-w-0 break-words text-sm font-bold text-text">{p.name}</span>
                     <span className="shrink-0 font-black text-text text-sm">{formatAdminNumber(p.totalHours)} ساعت</span>
@@ -384,7 +317,7 @@ export default function AdminUserDetail() {
               ))}
             </div>
           ) : (
-            <p className="py-12 text-center text-xs text-text-muted">پروژه‌ای برای این کاربر ثبت نشده است.</p>
+            <AdminEmptyState title="هنوز پروژه‌ای ثبت نشده" description="پروژه‌های کاربر و زمان اختصاص‌یافته به آن‌ها در اینجا نمایش داده می‌شوند." icon={HiOutlineFolder} />
           )}
         </div>
       )}
@@ -393,7 +326,7 @@ export default function AdminUserDetail() {
       {activeTab === 'social' && (
         <div className="space-y-6 animate-fade-in">
           {/* Who User Follows (Following) */}
-          <div className="rounded-3xl border border-border/80 bg-surface p-6 shadow-sm">
+          <div className="admin-detail-panel">
             <div className="mb-4">
               <h2 className="text-base font-extrabold text-text">
                 دنبال‌شونده‌ها ({formatAdminNumber(social.following_count)})
@@ -421,12 +354,12 @@ export default function AdminUserDetail() {
                 ))}
               </div>
             ) : (
-              <p className="py-8 text-center text-xs text-text-muted">این کاربر هیچ کاربری را دنبال نمی‌کند.</p>
+              <AdminEmptyState title="هنوز کسی را دنبال نمی‌کند" icon={HiOutlineUsers} />
             )}
           </div>
 
           {/* Who Follows This User (Followers) */}
-          <div className="rounded-3xl border border-border/80 bg-surface p-6 shadow-sm">
+          <div className="admin-detail-panel">
             <div className="mb-4">
               <h2 className="text-base font-extrabold text-text">
                 دنبال‌کننده‌ها ({formatAdminNumber(social.followers_count)})
@@ -454,7 +387,7 @@ export default function AdminUserDetail() {
                 ))}
               </div>
             ) : (
-              <p className="py-8 text-center text-xs text-text-muted">هنوز کسی این کاربر را دنبال نکرده است.</p>
+              <AdminEmptyState title="هنوز دنبال‌کننده‌ای ندارد" icon={HiOutlineUsers} />
             )}
           </div>
         </div>
@@ -462,7 +395,7 @@ export default function AdminUserDetail() {
 
       {/* TAB CONTENT: 14-Day Study Trend Chart */}
       {activeTab === 'trend' && (
-        <div className="rounded-3xl border border-border/80 bg-surface p-6 shadow-sm animate-fade-in">
+        <div className="admin-detail-panel">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
             <div>
               <h2 className="text-base font-extrabold text-text">روند مطالعه ۱۴ روز اخیر</h2>
@@ -476,7 +409,7 @@ export default function AdminUserDetail() {
 
       {/* TAB CONTENT: Recent Sessions */}
       {activeTab === 'sessions' && (
-        <div className="rounded-3xl border border-border/80 bg-surface p-6 shadow-sm animate-fade-in">
+        <div className="admin-detail-panel">
           <div className="mb-5">
             <h2 className="text-base font-extrabold text-text">آخرین جلسات مطالعه کاربر</h2>
             <p className="text-xs text-text-muted">فهرست ۳۰ جلسه اخیر همراه با ساعت، مدت، و یادداشت ثبت‌شده</p>
@@ -528,7 +461,7 @@ export default function AdminUserDetail() {
               </table>
             </div>
           ) : (
-            <p className="py-12 text-center text-xs text-text-muted">هنوز هیچ جلسه‌ای برای این کاربر ثبت نشده است.</p>
+            <AdminEmptyState title="هنوز جلسه‌ای ثبت نشده" description="تازه‌ترین جلسات مطالعهٔ کاربر در این بخش نمایش داده می‌شوند." icon={HiOutlineClock} />
           )}
         </div>
       )}

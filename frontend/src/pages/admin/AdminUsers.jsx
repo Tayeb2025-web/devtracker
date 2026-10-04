@@ -4,6 +4,7 @@ import { HiOutlineUsers, HiOutlineSearch, HiOutlineChevronLeft, HiOutlineChevron
 import { adminApi } from '../../services/api';
 import Avatar from '../../components/Avatar';
 import AdminFeedback from '../../components/admin/AdminFeedback';
+import { AdminPageHeader, AdminEmptyState, AdminLoading } from '../../components/admin/AdminUI';
 import { formatAdminDate, formatAdminNumber } from '../../utils/adminFormat';
 import { useAuth } from '../../contexts/AuthContextStore';
 
@@ -112,20 +113,17 @@ export default function AdminUsers() {
   const clearFilters = () => { setSearch(''); setFilter('all'); };
   const hasFilters = search || filter !== 'all';
 
-  return <div className="space-y-6 animate-fade-in">
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div><h1 className="flex items-center gap-2 text-xl font-black text-text sm:text-2xl"><HiOutlineUsers className="text-primary" size={26} />مدیریت کاربران</h1><p className="mt-1 text-sm text-text-muted">اطلاعات حساب، وضعیت فعالیت و پروندهٔ مطالعهٔ کاربران</p></div>
-      <p className="rounded-xl border border-border bg-surface px-4 py-2 text-xs text-text-muted">{hasFilters ? 'نتایج جستجو:' : 'مجموع کاربران:'} <strong className="text-primary">{formatAdminNumber(pagination.total)}</strong></p>
-    </div>
+  return <div className="admin-stack">
+    <AdminPageHeader eyebrow="جامعهٔ Codelume" title="مدیریت کاربران" description="هر کاربر، یک مسیر یادگیری؛ حساب‌ها و فعالیت اعضای جامعه را مدیریت کنید." actions={<div className="admin-count-card"><HiOutlineUsers size={24} /><div><strong>{formatAdminNumber(pagination.total)}</strong><small>{hasFilters ? 'نتیجهٔ جستجو' : 'عضو جامعه'}</small></div></div>} />
     {actionError && <AdminFeedback message={actionError} />}
-    <div className="space-y-4 rounded-3xl border border-border bg-surface p-4">
+    <div className="admin-user-filters space-y-4">
       <div className="relative min-w-0">
         <label htmlFor="admin-user-search" className="sr-only">جستجوی کاربران</label>
         <HiOutlineSearch className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={19} />
         <input id="admin-user-search" type="search" disabled={Boolean(actionInProgress)} value={search} onChange={e => setSearch(e.target.value)} placeholder="جستجوی نام، نام کاربری یا ایمیل" className="min-h-11 w-full rounded-xl border border-border bg-surface-lighter/40 py-2.5 pr-11 pl-4 text-sm text-text placeholder:text-text-muted" />
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div role="group" aria-label="فیلتر کاربران" className="flex flex-wrap gap-1.5">{[{ id: 'all', label: 'همه' }, { id: 'active_today', label: 'فعال امروز' }, { id: 'admin', label: 'مدیران' }, { id: 'user', label: 'کاربران عادی' }].map(item => <button type="button" key={item.id} disabled={Boolean(actionInProgress)} onClick={() => setFilter(item.id)} aria-pressed={filter === item.id} className={`admin-button ${filter === item.id ? 'bg-primary text-white' : 'text-text-muted hover:bg-surface-lighter hover:text-text'}`}>{item.label}</button>)}</div>
+        <div role="group" aria-label="فیلتر کاربران" className="admin-filter-pills flex flex-wrap">{[{ id: 'all', label: 'همه' }, { id: 'active_today', label: 'فعال امروز' }, { id: 'admin', label: 'مدیران' }, { id: 'user', label: 'کاربران عادی' }].map(item => <button type="button" key={item.id} disabled={Boolean(actionInProgress)} onClick={() => setFilter(item.id)} aria-pressed={filter === item.id} className={`admin-button ${filter === item.id ? 'bg-primary text-white' : 'text-text-muted hover:bg-surface-lighter hover:text-text'}`}>{item.label}</button>)}</div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <label htmlFor="admin-user-sort" className="sr-only text-xs text-text-muted sm:not-sr-only">مرتب‌سازی:</label>
           <select id="admin-user-sort" disabled={Boolean(actionInProgress)} value={sortBy} onChange={e => setSortBy(e.target.value)} className="min-h-11 rounded-xl border border-border bg-surface-lighter px-3 text-xs text-text"><option value="created_at">تاریخ عضویت</option><option value="last_seen_at">آخرین فعالیت</option><option value="username">نام کاربری</option></select>
@@ -133,10 +131,10 @@ export default function AdminUsers() {
         </div>
       </div>
     </div>
-    <div aria-busy={loading} className="overflow-hidden rounded-3xl border border-border bg-surface">
-      {loading ? <div role="status" className="py-20 text-center"><div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /><p className="mt-3 text-sm text-text-muted">در حال دریافت فهرست کاربران...</p></div> : error ? <div className="p-4"><AdminFeedback message={error} onRetry={() => fetchUsers(requestedPage.current)} /></div> : users.length === 0 ? <div className="space-y-4 px-4 py-16 text-center"><p className="text-sm text-text-muted">{hasFilters ? 'کاربری با این مشخصات پیدا نشد.' : 'هنوز کاربری ثبت نشده است.'}</p>{hasFilters && <button type="button" onClick={clearFilters} className="admin-button bg-primary/10 text-primary">پاک کردن فیلترها</button>}</div> : <>
+    <div aria-busy={loading} className="admin-user-table">
+      {loading ? <AdminLoading label="در حال دریافت فهرست کاربران..." /> : error ? <div className="p-4"><AdminFeedback message={error} onRetry={() => fetchUsers(requestedPage.current)} /></div> : users.length === 0 ? <AdminEmptyState title={hasFilters ? 'کاربری با این مشخصات پیدا نشد.' : 'هنوز کاربری ثبت نشده است.'} description={hasFilters ? 'نام یا ایمیل دیگری جستجو کنید یا فیلترها را پاک کنید.' : 'اعضای جدید پس از ثبت‌نام در این بخش ظاهر می‌شوند.'} icon={HiOutlineUsers}>{hasFilters && <button type="button" onClick={clearFilters} className="admin-button admin-button-secondary">پاک کردن فیلترها</button>}</AdminEmptyState> : <>
         <div className="grid gap-4 p-4 md:grid-cols-2 lg:hidden">
-          {users.map(user => <article key={user.id} className="min-w-0 space-y-4 rounded-2xl border border-border bg-surface-lighter/20 p-4">
+          {users.map(user => <article key={user.id} className="admin-user-card min-w-0 space-y-4">
             <div className="flex items-start justify-between gap-3"><div className="min-w-0 flex-1"><UserIdentity user={user} /></div><RoleBadge role={user.role} /></div>
             <p dir="ltr" className="break-all text-right text-xs text-text-muted">{user.email || '—'}</p>
             <dl className="grid grid-cols-2 gap-x-3 gap-y-3 text-xs">
