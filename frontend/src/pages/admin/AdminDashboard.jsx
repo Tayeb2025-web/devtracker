@@ -13,19 +13,25 @@ import {
 } from 'react-icons/hi';
 import { adminApi } from '../../services/api';
 import Avatar from '../../components/Avatar';
+import AdminFeedback from '../../components/admin/AdminFeedback';
+import AdminStudyChart from '../../components/admin/AdminStudyChart';
+import { formatAdminDate, formatAdminNumber } from '../../utils/adminFormat';
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [updatedAt, setUpdatedAt] = useState(null);
 
   const loadData = async () => {
     setLoading(true);
     setError('');
     try {
       const res = await adminApi.getOverview();
+      if (!res?.data) throw new Error('آمار سیستم دریافت نشد. دوباره تلاش کنید.');
       if (res?.data) {
         setData(res.data);
+        setUpdatedAt(new Date());
       }
     } catch (err) {
       setError(err.message || 'خطا در بارگذاری آمار سیستم');
@@ -41,7 +47,7 @@ export default function AdminDashboard() {
   if (loading && !data) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
+        <div role="status" className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-sm font-medium text-text-muted">در حال بارگذاری آمار و اطلاعات سیستم...</p>
         </div>
@@ -52,55 +58,41 @@ export default function AdminDashboard() {
   if (error && !data) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center p-6">
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-center max-w-md">
-          <p className="text-sm font-bold text-red-400 mb-3">{error}</p>
-          <button
-            onClick={loadData}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-primary-hover"
-          >
-            <HiOutlineRefresh size={16} /> تلاش مجدد
-          </button>
-        </div>
+        <AdminFeedback message={error} onRetry={loadData} loading={loading} />
       </div>
     );
   }
 
   const { metrics, studyTrend14, popularTechnologies, recentActivity, recentAdminActions } = data || {};
-  const maxTrendHours = Math.max(1, ...(studyTrend14?.map(d => d.hours) || [1]));
 
   return (
     <div className="space-y-8 animate-fade-in">
+      {error && <AdminFeedback message={`${error} اطلاعات قبلی نمایش داده می‌شود.`} onRetry={loadData} loading={loading} />}
       {/* Top Banner / Welcome */}
       <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-r from-primary/15 via-surface to-accent/10 p-6 sm:p-8 shadow-sm">
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-500 border border-emerald-500/30">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-                سامانه فعال و آنلاین
-              </span>
-              <span className="text-xs text-text-muted">آخرین به‌روزرسانی: همین لحظه</span>
-            </div>
+            <p className="text-xs text-text-muted">آخرین دریافت آمار: <time>{updatedAt ? formatAdminDate(updatedAt, { hour: '2-digit', minute: '2-digit' }) : '—'}</time></p>
             <h1 className="text-2xl sm:text-3xl font-black text-text tracking-tight">
-              داشبورد نظارت و آمار جامع پلتفرم 👑
+              داشبورد مدیریت
             </h1>
             <p className="text-sm text-text-muted max-w-2xl">
-              گزارش عملکرد لحظه‌ای کاربران، ساعات مطالعه ثبت شده در کل سیستم، محبوب‌ترین مهارت‌ها و فعالیت‌های زنده.
+              مرور عملکرد کاربران، ساعات مطالعه و فعالیت‌های ثبت‌شده در پلتفرم.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <button
               onClick={loadData}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-2xl border border-border/80 bg-surface px-4 py-2.5 text-xs font-bold text-text-muted hover:text-text hover:bg-surface-lighter transition-all shadow-sm"
+              className="admin-button flex-1 border border-border/80 bg-surface text-text-muted hover:text-text hover:bg-surface-lighter sm:flex-none"
             >
               <HiOutlineRefresh size={16} className={loading ? 'animate-spin' : ''} />
-              به‌روزرسانی آمار
+              {loading ? 'در حال دریافت...' : 'به‌روزرسانی آمار'}
             </button>
             <Link
               to="/admin/users"
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-accent px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-primary/25 hover:opacity-95 transition-all"
+              className="admin-button flex-1 bg-primary text-white hover:bg-primary-dark sm:flex-none"
             >
               <HiOutlineUsers size={16} />
               مدیریت کاربران
@@ -121,12 +113,12 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-black text-text">{metrics?.totalUsers ?? 0}</div>
+            <div className="text-3xl font-black text-text">{formatAdminNumber(metrics?.totalUsers ?? 0)}</div>
             <div className="mt-2 flex items-center gap-2 text-xs text-text-muted">
               <span className="font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg">
-                +{metrics?.newUsersToday ?? 0} امروز
+                +{formatAdminNumber(metrics?.newUsersToday ?? 0)} امروز
               </span>
-              <span>+{metrics?.newUsersWeek ?? 0} در این هفته</span>
+              <span>+{formatAdminNumber(metrics?.newUsersWeek ?? 0)} در این هفته</span>
             </div>
           </div>
         </div>
@@ -141,11 +133,11 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3">
             <div className="text-3xl font-black text-text">
-              {metrics?.totalHours ?? 0} <span className="text-sm font-semibold text-text-muted">ساعت</span>
+              {formatAdminNumber(metrics?.totalHours ?? 0)} <span className="text-sm font-semibold text-text-muted">ساعت</span>
             </div>
             <div className="mt-2 flex items-center gap-2 text-xs text-text-muted">
               <span className="font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-lg">
-                {metrics?.totalSessions ?? 0} جلسه
+                {formatAdminNumber(metrics?.totalSessions ?? 0)} جلسه
               </span>
               <span>در کل پلتفرم</span>
             </div>
@@ -162,12 +154,12 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3">
             <div className="text-3xl font-black text-text">
-              {metrics?.todayHours ?? 0} <span className="text-sm font-semibold text-text-muted">ساعت</span>
+              {formatAdminNumber(metrics?.todayHours ?? 0)} <span className="text-sm font-semibold text-text-muted">ساعت</span>
             </div>
             <div className="mt-2 flex items-center gap-2 text-xs text-text-muted">
-              <span>دیروز: <strong className="text-text font-bold">{metrics?.yesterdayHours ?? 0}h</strong></span>
+              <span>دیروز: <strong className="text-text font-bold">{formatAdminNumber(metrics?.yesterdayHours ?? 0)} ساعت</strong></span>
               <span>•</span>
-              <span>این هفته: <strong className="text-text font-bold">{metrics?.weekHours ?? 0}h</strong></span>
+              <span>این هفته: <strong className="text-text font-bold">{formatAdminNumber(metrics?.weekHours ?? 0)} ساعت</strong></span>
             </div>
           </div>
         </div>
@@ -181,10 +173,10 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-black text-text">{metrics?.activeTodayUsers ?? 0}</div>
+            <div className="text-3xl font-black text-text">{formatAdminNumber(metrics?.activeTodayUsers ?? 0)}</div>
             <div className="mt-2 flex items-center gap-2 text-xs text-text-muted">
               <span className="font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg">
-                {metrics?.active7DaysUsers ?? 0} فعال
+                {formatAdminNumber(metrics?.active7DaysUsers ?? 0)} فعال
               </span>
               <span>در ۷ روز گذشته</span>
             </div>
@@ -205,49 +197,16 @@ export default function AdminDashboard() {
               <p className="text-xs text-text-muted">مجموع ساعات مطالعه ثبت شده توسط تمام کاربران در هر روز</p>
             </div>
             <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-xl">
-              سقف روزانه: {maxTrendHours} ساعت
+              ۱۴ روز اخیر
             </span>
           </div>
 
-          {/* Bar Chart Visualization */}
-          <div className="flex h-56 items-end gap-2 pt-6 pb-2 px-2">
-            {studyTrend14?.map((item, idx) => {
-              const heightPercent = maxTrendHours > 0 ? Math.max(8, Math.round((item.hours / maxTrendHours) * 100)) : 8;
-              const isToday = idx === studyTrend14.length - 1;
-              const dateLabel = item.date.slice(5); // e.g. "09-16"
-
-              return (
-                <div key={item.date} className="group relative flex-1 flex flex-col items-center h-full justify-end">
-                  {/* Tooltip on Hover */}
-                  <div className="pointer-events-none absolute -top-12 z-20 hidden rounded-xl bg-surface-dark px-2.5 py-1.5 text-center text-[11px] font-bold text-white shadow-xl group-hover:block border border-border whitespace-nowrap">
-                    <p>{item.date}</p>
-                    <p className="text-amber-400">{item.hours} ساعت ({item.sessions} جلسه)</p>
-                  </div>
-
-                  {/* Bar */}
-                  <div
-                    style={{ height: `${heightPercent}%` }}
-                    className={`w-full max-w-[28px] rounded-t-xl transition-all duration-500 group-hover:brightness-125 ${
-                      isToday
-                        ? 'bg-gradient-to-t from-primary to-accent shadow-md shadow-primary/30'
-                        : item.hours > 0
-                        ? 'bg-gradient-to-t from-primary/60 to-primary/85'
-                        : 'bg-surface-lighter/50'
-                    }`}
-                  />
-                  {/* Date Label */}
-                  <span className={`mt-2 text-[10px] font-semibold truncate ${isToday ? 'text-primary font-black' : 'text-text-muted'}`}>
-                    {dateLabel}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          <AdminStudyChart data={studyTrend14} label="نمودار ساعات مطالعه پلتفرم" />
         </div>
 
         {/* Most Popular Technologies (1 Column) */}
         <div className="rounded-3xl border border-border/80 bg-surface p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
             <div>
               <h2 className="text-base font-extrabold text-text flex items-center gap-2">
                 <HiOutlineAcademicCap className="text-amber-500" size={18} />
@@ -256,7 +215,7 @@ export default function AdminDashboard() {
               <p className="text-xs text-text-muted">بر اساس مجموع ساعات مطالعه کاربران</p>
             </div>
             <span className="text-xs font-bold text-text-muted bg-surface-lighter px-2.5 py-1 rounded-xl">
-              {metrics?.totalTechs ?? 0} تکنولوژی
+              {formatAdminNumber(metrics?.totalTechs ?? 0)} تکنولوژی
             </span>
           </div>
 
@@ -264,20 +223,20 @@ export default function AdminDashboard() {
             {popularTechnologies && popularTechnologies.length > 0 ? (
               popularTechnologies.map((tech, index) => {
                 const maxTechHours = popularTechnologies[0]?.totalHours || 1;
-                const percent = Math.max(12, Math.round((tech.totalHours / maxTechHours) * 100));
+                const percent = Math.max(0, Math.min(100, (tech.totalHours / maxTechHours) * 100));
 
                 return (
                   <div key={tech.id || index} className="rounded-2xl border border-border/60 bg-surface-lighter/30 p-3">
-                    <div className="flex items-center justify-between text-xs mb-1.5">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-between gap-3 text-xs mb-1.5">
+                      <div className="flex min-w-0 items-center gap-2">
                         <span
-                          className="h-3 w-3 rounded-full shadow-sm"
+                          className="h-3 w-3 shrink-0 rounded-full shadow-sm"
                           style={{ backgroundColor: tech.color || '#6366f1' }}
                         />
-                        <span className="font-bold text-text">{tech.name}</span>
+                        <span dir="auto" className="min-w-0 break-words font-bold text-text">{tech.name}</span>
                       </div>
-                      <div className="text-right">
-                        <span className="font-black text-text">{tech.totalHours}</span>
+                      <div className="shrink-0 text-right">
+                        <span className="font-black text-text">{formatAdminNumber(tech.totalHours)}</span>
                         <span className="text-[10px] text-text-muted mr-1">ساعت</span>
                       </div>
                     </div>
@@ -289,8 +248,8 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div className="mt-1 flex items-center justify-between text-[10px] text-text-muted">
-                      <span>{tech.studentsCount} یادگیرنده</span>
-                      <span>{tech.sessions} جلسه مطالعه</span>
+                      <span>{formatAdminNumber(tech.studentsCount)} یادگیرنده</span>
+                      <span>{formatAdminNumber(tech.sessions)} جلسه مطالعه</span>
                     </div>
                   </div>
                 );
@@ -308,7 +267,7 @@ export default function AdminDashboard() {
           <div>
             <h2 className="text-base font-extrabold text-text flex items-center gap-2">
               <HiOutlineSparkles className="text-amber-400" size={18} />
-              فید فعالیت‌های زنده پلتفرم (آخرین جلسات مطالعه)
+              آخرین جلسات مطالعه
             </h2>
             <p className="text-xs text-text-muted">جلسات ثبت شده توسط اعضا همراه با جزئیات زمان و تکنولوژی</p>
           </div>
@@ -322,7 +281,7 @@ export default function AdminDashboard() {
         </div>
 
         {recentActivity && recentActivity.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="admin-table-scroll" role="region" aria-label="آخرین جلسات مطالعه" tabIndex={0}>
             <table className="w-full text-right text-xs">
               <thead>
                 <tr className="border-b border-border/80 text-text-muted font-bold">
@@ -342,41 +301,40 @@ export default function AdminDashboard() {
                         to={`/admin/users/${session.user.id}`}
                         className="flex items-center gap-2.5 group"
                       >
-                        <Avatar src={session.user.avatar_url} seed={session.user.username} size="sm" />
-                        <div>
+                        <Avatar profile={session.user} showOnline={false} seed={session.user.username} size="sm" />
+                        <div className="min-w-0 max-w-44">
                           <p className="font-bold text-text group-hover:text-primary transition-colors">
                             {session.user.display_name}
                           </p>
-                          <p className="text-[11px] text-text-muted">@{session.user.username}</p>
+                          <p dir="ltr" className="truncate text-right text-[11px] text-text-muted" title={session.user.username}>@{session.user.username}</p>
                         </div>
                       </Link>
                     </td>
                     <td className="py-3.5 px-3">
                       <span
-                        className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-bold"
+                        className="admin-tech-badge inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-bold"
                         style={{
-                          backgroundColor: `${session.technology.color}18`,
-                          color: session.technology.color,
+                          '--tech-color': session.technology.color,
                         }}
                       >
                         <span
                           className="h-2 w-2 rounded-full"
                           style={{ backgroundColor: session.technology.color }}
                         />
-                        {session.technology.name}
+                        <bdi>{session.technology.name}</bdi>
                       </span>
                     </td>
                     <td className="py-3.5 px-3 font-extrabold text-text">
-                      {session.duration_hours} ساعت
+                      {formatAdminNumber(session.duration_hours)} ساعت
                       <span className="text-[11px] font-normal text-text-muted mr-1">
-                        ({session.duration_minutes} دقیقه)
+                        ({formatAdminNumber(session.duration_minutes)} دقیقه)
                       </span>
                     </td>
                     <td className="py-3.5 px-3 text-text-muted">
-                      <div>{session.session_date}</div>
-                      <div className="text-[10px]">{session.start_time} - {session.end_time}</div>
+                      <div>{formatAdminDate(session.session_date)}</div>
+                      <div dir="ltr" className="text-right text-[10px]">{session.start_time} – {session.end_time}</div>
                     </td>
-                    <td className="py-3.5 px-3 max-w-[200px] truncate text-text-muted">
+                    <td className="admin-note py-3.5 px-3 text-text-muted">
                       {session.note || '—'}
                     </td>
                     <td className="py-3.5 pl-2 text-left">
@@ -414,7 +372,7 @@ export default function AdminDashboard() {
                 <li key={action._id} className="flex flex-col gap-1 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-text">{description}</span>
                   <time className="shrink-0 text-xs text-text-muted" dateTime={action.created_at} title={action.request_id || undefined}>
-                    {new Intl.DateTimeFormat('fa-AF', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(action.created_at))}
+                    {formatAdminDate(action.created_at, { dateStyle: 'medium', timeStyle: 'short' })}
                   </time>
                 </li>
               );

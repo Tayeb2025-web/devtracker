@@ -1,0 +1,47 @@
+.admin-shell {
+  --color-text-muted: #98a5ba;
+  font-family: Tahoma, 'Segoe UI', var(--font-sans);
+  line-height: 1.8;
+}
+body.light .admin-shell { --color-text-muted: #56627a; }
+.admin-shell main { min-width: 0; }
+.admin-shell main .bg-surface { background-color: var(--color-surface-light); }
+.admin-shell main .grid > * { min-width: 0; }
+.admin-shell .text-xs { font-size: .8125rem; line-height: 1.8; }
+.admin-shell [class~="text-[10px]"], .admin-shell [class~="text-[11px]"] { font-size: .75rem; line-height: 1.7; }
+.admin-shell h1, .admin-shell h2, .admin-shell p { overflow-wrap: anywhere; }
+.admin-shell button, .admin-shell a, .admin-shell select { -webkit-tap-highlight-color: transparent; }
+.admin-shell button { cursor: pointer; }
+.admin-shell button:disabled { cursor: not-allowed; opacity: .5; }
+.admin-shell :is(a, button, input, select, [tabindex]):focus-visible { outline: 2px solid var(--color-primary-light); outline-offset: 3px; }
+.admin-shell svg { flex-shrink: 0; }
+.admin-button { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: .5rem .875rem; border-radius: .75rem; font-size: .8125rem; font-weight: 700; transition: background-color .15s, color .15s; }
+.admin-icon-button { width: 44px; min-width: 44px; padding: 0; }
+.admin-toolbar :is(button, a) { min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+.admin-shell .admin-table-scroll { overflow-x: auto; max-width: 100%; }
+.admin-shell table { min-width: 760px; }
+.admin-shell th { white-space: nowrap; }
+.admin-shell td { vertical-align: middle; }
+.admin-shell .admin-ltr { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+.admin-shell .admin-note { min-width: 180px; max-width: 320px; white-space: normal; overflow-wrap: anywhere; line-height: 1.8; }
+.admin-chart-scroll { max-width: 100%; overflow-x: auto; padding: 5px; }
+.admin-chart { display: flex; min-width: 560px; gap: 6px; background: repeating-linear-gradient(to top, transparent 0, transparent 43px, var(--color-border) 44px, transparent 45px); background-size: 100% 180px; background-repeat: no-repeat; }
+.admin-chart-column { flex: 1; min-width: 0; border-radius: 6px; padding: 0 2px; text-align: center; }
+.admin-chart-track { display: flex; height: 180px; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--color-border); }
+.admin-chart-bar { display: block; width: 100%; max-width: 26px; flex-shrink: 0; border-radius: 6px 6px 0 0; background: color-mix(in srgb, var(--color-primary) 65%, var(--color-surface-light)); transition: height .25s, background-color .15s; }
+.admin-chart-bar.is-latest { background: var(--color-accent); }
+.admin-chart-bar.is-selected { background: var(--color-primary); }
+.admin-chart-column:hover .admin-chart-bar { background: var(--color-primary-light); }
+.admin-chart-date { display: block; margin-top: 8px; font-size: 10px; white-space: nowrap; }
+.admin-shell .admin-tech-badge { color: color-mix(in srgb, var(--tech-color, #6366f1) 55%, var(--color-text)); background: color-mix(in srgb, var(--tech-color, #6366f1) 12%, var(--color-surface-light)); }
+body.light .admin-shell .admin-tech-badge { color: color-mix(in srgb, var(--tech-color, #6366f1) 35%, var(--color-text)); }
+body.light .admin-shell .text-amber-500, body.light .admin-shell .text-amber-400 { color: #946200; }
+body.light .admin-shell .text-emerald-500 { color: #047857; }
+body.light .admin-shell .text-indigo-400 { color: #4f46e5; }
+body.light .admin-shell .text-red-400 { color: #b91c1c; }
+@media (max-width: 639px) {
+  .admin-profile-avatar img { width: 64px; height: 64px; }
+  .admin-shell main .rounded-3xl { border-radius: 1.25rem; }
+  .admin-shell main .p-6 { padding: 1rem; }
+  .admin-shell h1 { line-height: 1.6; }
+}
